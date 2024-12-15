@@ -1,0 +1,72 @@
+.body {
+  font-size: Roboto;
+}
+
+.company-logo {
+  width: 125px;
+  height: 75px;
+  max-width: 100%;
+  max-height: 100%;
+  transition: box-shadow 0.2s;
+  object-fit: contain;
+}
+
+.button {
+  min-width: 150px;
+}
+
+h2 {
+  text-align: center;
+  color: #333;
+  padding-bottom: 1rem;
+  margin: 0px;
+  border-bottom: 1px solid lightgrey;
+  margin-bottom: 2rem;
+}
+
+.row {
+  display: inline-flex;
+  width: 100%;
+}
+
+.save-btn {
+  margin: 2rem 0 0 0;
+}
+
+.save-btn button {
+  margin-left: auto;
+  margin-right: auto;
+  min-width: 150px;
+}
+
+.container {
+  font-family: 'Roboto', sans-serif;
+  background: linear-gradient(to right, #f8f9fa, #e9ecef);
+  padding: 2rem;
+  display: flex;
+  min-height: 80vh;
+  border-radius: 5px;
+}
+
+.listTableHeader {
+  background-color: #1976d2;
+  color: #fff;
+}
+
+.MuiTableCell-head {
+  font-weight: bold !important;
+  color: #fff !important;
+}
+
+.MuiTableCell-head :hover,
+.MuiTableSortLabel-root.Mui-active,
+.MuiTableSortLabel-root.Mui-active .MuiTableSortLabel-icon {
+  color: #fff !important;
+}
+
+.form-group {
+  margin: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}

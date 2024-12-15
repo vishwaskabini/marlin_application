@@ -1,0 +1,10 @@
+[
+    { "title": "Today's Registration", "count": 300 },
+    { "title": "Current Month Registrations", "count": 100 },
+    { "title": "Total Active Members", "count": 100 },
+    { "title": "Members with Expired Packages", "count": 100 },
+    { "title": "Total Guests Today", "count": 100 },
+    { "title": "Today Payment", "count": 100 },
+    { "title": "Current Month's Payment", "count": 100 },
+    { "title": "Total Payments Pending", "count": 100 }
+  ]

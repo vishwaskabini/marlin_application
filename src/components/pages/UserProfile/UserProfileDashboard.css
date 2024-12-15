@@ -1,0 +1,66 @@
+/* UserProfileDashboard.css */
+
+/* Container Styles */
+.user-profile-containerr {
+    padding: 20px;
+    margin: 0 auto; /* Centering the container */
+    max-width: 1200px; /* Limiting the maximum width */
+}
+
+/* Message Section Styles */
+.message-section {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.message-card {
+    background-color: #f1f1f1;
+    padding: 10px;
+    border-radius: 12px;
+    height: 100px;
+}
+
+/* Grid Layout for the Card Sections */
+.card-grid {
+    display: flex;
+    justify-content: space-between; /* Space between cards */
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+}
+
+/* Card Styles */
+.card {
+  
+    max-width: 400px; /* Set max width for cards */
+    text-align: center;
+    border-radius: 12px;
+    margin: 10px; /* Margin for spacing between cards */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Light shadow for depth */
+    display: flex; /* Enable flexbox */
+    flex-direction: column; /* Stack elements vertically */
+    align-items: center; /* Center align items */
+    padding: 20px; /* Padding inside cards */
+    color: white;
+}
+
+/* p-card-content Styles */
+.p-card-content {
+    flex: 1; /* Allow this section to grow and fill space */
+    width: 100%; /* Ensure it takes full width of the card */
+    display: flex; /* Use flexbox for alignment */
+    flex-direction: column; /* Stack content vertically */
+    justify-content: center; /* Center content vertically */
+    align-items: center; /* Center content horizontally */
+    padding: 10px; /* Padding around the content */
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .card-grid {
+        flex-direction: column; /* Stack cards vertically on smaller screens */
+        align-items: center; /* Center cards horizontally */
+    }
+
+    .card {
+        max-width: 100%; /* Allow cards to take full width on smaller screens */
+    }
+}

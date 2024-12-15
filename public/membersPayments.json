@@ -1,0 +1,7 @@
+{
+    "membersData": [
+      { "name": "John Doe", "contact": "john@example.com", "package": "Premium", "amount": 200, "paymentMethod": "Cash" },
+      { "name": "Jane Smith", "contact": "jane@example.com", "package": "Basic", "amount": 100, "paymentMethod": "UPI" },
+      { "name": "Alice Johnson", "contact": "alice@example.com", "package": "Standard", "amount": 150, "paymentMethod": "Card" }
+    ]
+  }

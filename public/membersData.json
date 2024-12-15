@@ -1,0 +1,17 @@
+{
+    "membersExpiringToday": [
+      { "id": 1, "name": "Srinidhi", "contact": "1234567890", "paymentStatus": "Paid", "payment": "5000", "package": "Basic" },
+      { "id": 2, "name": "Vijay", "contact": "0987654321", "paymentStatus": "Pending", "payment": "2000", "package": "Premium" },
+      { "id": 3, "name": "Pavan", "contact": "1112223334", "paymentStatus": "Partial", "payment": "1200", "package": "Standard" }
+    ],
+    "membersExpiringIn5Days": [
+      { "id": 1, "name": "Pavan", "contact": "1112223334", "paymentStatus": "Partial", "payment": "1400", "package": "Standard" },
+      { "id": 2, "name": "Srinidhi", "contact": "1234567890", "paymentStatus": "Paid", "payment": "5000", "package": "Basic" },
+      { "id": 3, "name": "Vijay", "contact": "0987654321", "paymentStatus": "Paid", "payment": "10000", "package": "Premium" }
+    ],
+    "allMembers": [
+      { "id": 1, "name": "Bhuvan", "contact": "2223334445", "paymentStatus": "Pending", "payment": "5000", "daysLeft": "10", "package": "Basic" },
+      { "id": 2, "name": "Srinidhi", "contact": "1234567890", "paymentStatus": "Paid", "payment": "15000", "package": "Basic" },
+      { "id": 3, "name": "Vijay", "contact": "0987654321", "paymentStatus": "Partial", "payment": "2000", "package": "Premium" }
+    ]
+  }

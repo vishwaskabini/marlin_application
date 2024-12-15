@@ -1,0 +1,119 @@
+/* General styles for the user profile container */
+.user-profile-container {
+    max-width: 600px; /* Limit the width for a more centered layout */
+    margin: 0 auto; /* Center the container */
+    padding: 2rem; /* Add padding for spacing */
+    border-radius: 12px; /* Rounded corners */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    background-color: #fff; /* White background for contrast */
+}
+
+/* Title styles */
+.profile-title {
+    font-size: 1.5rem; /* Larger font size for the title */
+    font-weight: 600; /* Semi-bold text */
+    margin-bottom: 1.5rem; /* Space below the title */
+    text-align: center; /* Center-align the title */
+}
+
+/* Styles for the form */
+.profile-form {
+    display: flex; /* Use flexbox for layout */
+    flex-direction: column; /* Stack form fields vertically */
+}
+
+/* Styles for each form field */
+.form-field {
+    margin-bottom: 1.5rem; /* Space between fields */
+}
+
+/* Label styles */
+.form-label {
+    font-weight: 500; /* Medium font weight for labels */
+    margin-bottom: 0.5rem; /* Space below labels */
+    display: block; /* Block display to take full width */
+}
+
+/* Input styles */
+.form-input {
+    width: 100%; /* Full width for inputs */
+    padding: 0.75rem; /* Padding inside inputs */
+    border: 1px solid #ccc; /* Light border for inputs */
+    border-radius: 6px; /* Slightly rounded corners */
+    font-size: 1rem; /* Standard font size */
+    transition: border-color 0.3s; /* Smooth transition on focus */
+}
+
+/* Input focus styles */
+.form-input:focus {
+    border-color: #007bff; /* Change border color on focus */
+    outline: none; /* Remove outline */
+}
+
+/* Error message styles */
+.error-message {
+    color: #d9534f; /* Red color for error messages */
+    font-size: 0.875rem; /* Smaller font size for errors */
+    margin-top: 0.5rem; /* Adds space between input and error message */
+}
+
+/* Styles for input groups */
+.input-group {
+    display: flex; /* Use flexbox for input groups */
+    align-items: center; /* Center items vertically */
+}
+
+/* Button styles */
+.update-button,
+.cancel-button,
+.otp-button {
+    padding: 0.5rem 1rem; /* Padding for buttons */
+    border-radius: 6px; /* Slightly rounded corners for buttons */
+    border: none; /* Remove default border */
+    font-weight: 500; /* Medium font weight for buttons */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+
+/* Update button styles */
+.update-button {
+    background-color: #28a745; /* Green background for update button */
+    color: white; /* White text for visibility */
+}
+
+/* Cancel button styles */
+.cancel-button {
+    background-color: #dc3545; /* Red background for cancel button */
+    color: white; /* White text for visibility */
+    margin-left: 0.5rem; /* Space between buttons */
+}
+
+/* OTP button styles */
+.otp-button {
+    background-color: #007bff; /* Blue background for OTP button */
+    color: white; /* White text for visibility */
+    margin-left: 0.5rem; /* Space between input and button */
+}
+
+/* Button hover effects */
+.update-button:hover {
+    background-color: #218838; /* Darker green on hover */
+}
+
+.cancel-button:hover {
+    background-color: #c82333; /* Darker red on hover */
+}
+
+.otp-button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .user-profile-container {
+        padding: 1rem; /* Reduce padding on smaller screens */
+    }
+
+    .profile-title {
+        font-size: 1.25rem; /* Adjust font size for smaller screens */
+    }
+}

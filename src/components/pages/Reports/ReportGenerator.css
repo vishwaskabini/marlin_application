@@ -1,0 +1,244 @@
+/* ReportGenerator.css */
+
+/* General Styles */
+.report-generator-unique {
+    max-width: 700px;
+    max-height: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.report-header-unique {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Panel Styles */
+.p-panel {
+    margin-bottom: 20px;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.p-panel label {
+    font-weight: 600;
+    color: #555;
+}
+
+/* Dropdown and Calendar Styles */
+.p-dropdown,
+.p-calendar {
+    width: 100%;
+    margin-top: 10px;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 14px;
+}
+
+/* Calendar Specific Styles */
+.p-calendar {
+    background-color: #ffffff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.p-calendar .p-datepicker {
+    border: 1px solid #007ad9;
+    border-radius: 5px;
+}
+
+.p-calendar .p-datepicker-header {
+    background-color: #007ad9;
+    color: #ffffff;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+.p-calendar .p-datepicker-table {
+    border-radius: 5px;
+}
+
+.p-calendar .p-datepicker-table td {
+    padding: 10px;
+}
+
+.p-calendar .p-datepicker-table td:hover {
+    background-color: #e9ecef;
+}
+
+/* Dialog Header/Footer */
+.p-dialog-header {
+    background-color: #007ad9;
+    color: #fff;
+    padding: 10px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.p-dialog-footer {
+    display: flex; /* Flexbox layout for horizontal alignment */
+    justify-content: flex-end; /* Align buttons to the right */
+    padding: 16px; /* Padding around the footer */
+    background-color: #f1f1f1; /* Light background color */
+    border-top: 1px solid #ccc; /* Top border for separation */
+}
+
+/* Table Styles */
+.p-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.p-table th,
+.p-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.p-table th {
+    background-color: #007ad9;
+    color: white;
+    font-weight: bold;
+}
+
+.p-table tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+.p-button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+.p-button[disabled] {
+    background-color: #e0e0e0; /* Light grey background for disabled state */
+    color: #aaa; /* Light grey text */
+    cursor: not-allowed; /* Not-allowed cursor for disabled state */
+}
+
+/* Close Button Styles */
+.p-dialog-header-close {
+    background: white; /* Transparent background */
+    border: none; /* Remove border */
+    cursor: pointer; /* Pointer cursor on hover */
+    padding: 0; /* Remove default padding */
+    display: flex; /* Flexbox for centering the icon */
+    align-items: center; /* Center vertically */
+    justify-content: center; /* Center horizontally */
+    transition: background-color 0.2s ease; /* Smooth transition for hover effect */
+}
+
+/* Hover Effect */
+.p-dialog-header-close:hover {
+    background-color: rgba(238, 225, 225, 0.1); /* Light background on hover */
+    border-radius: 4px; /* Slightly rounded corners on hover */
+}
+
+/* Icon Styles */
+.p-dialog-header-close-icon {
+    width: 1rem; /* Set icon width */
+    height: 1rem; /* Set icon height */
+    fill: #333; /* Set icon color */
+}
+
+/* Accessibility */
+.p-dialog-header-close:focus {
+    outline: none; /* Remove default outline */
+    box-shadow: 0 0 0 3px rgba(224, 230, 236, 0.5); /* Add custom focus outline */
+}
+
+/* Button Styles for Dialog Footer */
+.p-button-secondary {
+    margin-left: 8px; /* Spacing between buttons */
+    padding: 8px 16px; /* Padding for button content */
+    font-size: 14px; /* Font size for button text */
+    border: none; /* Remove default border */
+    border-radius: 4px; /* Slightly rounded corners */
+    transition: background-color 0.3s, transform 0.2s; /* Smooth transitions */
+}
+
+.p-button-secondary:hover {
+    background-color: #e7e7e7; /* Light grey on hover */
+}
+
+/* Close Button Specific Styles */
+.p-button-close {
+    background-color: #ff4d4f; /* Red background for close button */
+    color: white; /* White text color */
+}
+
+/* Hover Effect for Close Button */
+.p-button-close:hover {
+    background-color: #ff1a1a; /* Darker red on hover */
+}
+
+/* Icon Styles for Secondary Buttons */
+.p-button-secondary .pi {
+    margin-right: 5px; /* Space between icon and label */
+    font-size: 16px; /* Icon size */
+}
+
+/* Card Styles */
+.p-card {
+    margin-bottom: 20px; /* Spacing between cards */
+    border: 1px solid #ddd; /* Light border around cards */
+    border-radius: 8px; /* Rounded corners */
+    background-color:#3498e4 ; /* White background for cards */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for cards */
+    padding: 10px; /* Padding inside cards */
+    margin: 10px 0;
+}
+
+.p-card h5 {
+    font-size: 18px; /* Title font size */
+    color: #007ad9; /* Title color */
+    margin-bottom: 10px; /* Space below title */
+}
+
+.p-card p {
+    margin: 5px 0; /* Spacing for paragraphs within cards */
+}
+
+/* Responsive Design Adjustments */
+@media (max-width: 600px) {
+    .report-generator-unique {
+        padding: 25px;
+    }
+
+    .p-panel {
+        padding: 15px;
+    }
+
+    .p-dialog {
+        width: 90vw;
+    }
+
+    .p-dialog-footer {
+        flex-direction: column; /* Stack buttons on smaller screens */
+        align-items: flex-end; /* Align buttons to the right */
+        display: flex;
+        justify-content: center;
+    }
+
+    .p-button-secondary {
+        margin-left: 0; /* Remove left margin */
+        margin-top: 8px; /* Add top margin for stacked buttons */
+    }
+}
+
+/* Container for the Button */
+.p-my-2 {
+    margin: 16px 0; /* Vertical spacing (top and bottom) around the button */
+    display: flex; /* Use flexbox for alignment */
+    justify-content: center; /* Center the button horizontally */
+}

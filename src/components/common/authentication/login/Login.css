@@ -1,0 +1,79 @@
+/* Center the login container using Flexbox */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Full viewport height */
+    background-color: #f0f2f5; /* Light grey background */
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  
+  /* Define the appearance of the login form box */
+  .login-form {
+    background-color: white;
+    padding: 60px 50px; /* Ample padding for comfort */
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px; /* Increased max-width */
+    min-height: 400px; /* Ensure some height for better proportion */
+    box-sizing: border-box;
+    text-align: center;
+  }
+  
+  /* Style for form labels to ensure consistent look */
+  .login-form label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  /* Style for input fields to improve user experience */
+  .login-form .form-control {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+  
+  /* Style for buttons to make them look appealing */
+  .login-form .btn {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border: none;
+    border-radius: 20px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  /* Specific styles for the primary button */
+  .login-form .btn-primary {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .login-form .btn-primary:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Specific styles for the secondary button */
+  .login-form .btn-secondary {
+    background-color: #6c757d;
+    color: white;
+  }
+  
+  .login-form .btn-secondary:hover {
+    background-color: #5a6268;
+  }
+  .error {
+    color: red;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+  }

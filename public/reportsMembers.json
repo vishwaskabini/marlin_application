@@ -1,0 +1,14 @@
+{
+    "activeMembers": [
+      { "name": "John Doe", "contact": "123-456-7890", "package": "Standard", "amountPaid": "$100", "amountRemaining": "$50", "duration": "6 months", "registrationDate": "2024-09-15" },
+      { "name": "Jane Smith", "contact": "987-654-3210", "package": "Premium", "amountPaid": "$200", "amountRemaining": "$0", "duration": "1 year", "registrationDate": "2024-09-20" }
+    ],
+    "expiredMembers": [
+      { "name": "Alice Johnson", "contact": "555-555-5555", "package": "Standard", "amountPaid": "$100", "amountRemaining": "$0", "duration": "Expired 2 months ago", "registrationDate": "2024-07-15" },
+      { "name": "Bob Brown", "contact": "444-444-4444", "package": "Basic", "amountPaid": "$50", "amountRemaining": "$20", "duration": "Expired 1 month ago", "registrationDate": "2024-08-20" }
+    ],
+    "guestDetails": [
+      { "name": "Tom Hanks", "contact": "111-222-3333", "package": "Guest", "amountPaid": "$0", "amountRemaining": "$0", "duration": "N/A", "registrationDate": "2024-09-10" },
+      { "name": "Emma Watson", "contact": "222-333-4444", "package": "Guest", "amountPaid": "$0", "amountRemaining": "$0", "duration": "N/A", "registrationDate": "2024-09-11" }
+    ]
+  }
