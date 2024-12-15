@@ -4,11 +4,13 @@ import { useAuth } from '../AuthContext';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { useNavigate } from 'react-router-dom';
+import apiClient from '../../../services/apiClientService';
+import { toast } from 'react-toastify';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -17,8 +19,14 @@ const Login = () => {
   const handleSubmit = (e) => {
     e.preventDefault();    
     if (email && password) {
-      login(token);
-      navigate("/");
+      apiClient.post("/api/Users/login", {email: email, password: password}).then((data) =>  {
+        login(token);
+        navigate("/");
+      }).catch((error) => {
+        toast.error("Error while create user" + error, {
+          position: "top-right"
+        });
+      });      
     } else {
       setError('Please fill out both fields');
     }

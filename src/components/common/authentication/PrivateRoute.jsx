@@ -3,7 +3,14 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 
 const PrivateRoute = ({ element}) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, setAuthentication } = useAuth();
+
+  let token = localStorage.getItem("token");
+  if(token) {
+    setAuthentication(true);
+  } else {
+    setAuthentication(false);
+  }   
 
   if(isLoading) {
     return <div>Loading...</div>;
