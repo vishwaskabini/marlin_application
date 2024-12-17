@@ -29,7 +29,7 @@ const App = () => {
         </Box>        
       </Box>
       <Footer/>
-      <ToastContainer/>
+      <ToastContainer/>     
     </Box>
   );
 };

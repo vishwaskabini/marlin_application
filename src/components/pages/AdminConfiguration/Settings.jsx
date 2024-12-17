@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextField, Button, Box, Card, CardContent } from '@mui/material';
+import { TextField, Button, Box, Card, CardContent, Typography } from '@mui/material';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 
@@ -32,9 +32,12 @@ const Settings = () => {
   return (
     <div className="container">
       <Box sx={{ width: '100%', overflowX: 'auto' }}>
+        <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+          <Typography variant='h5' className='header-text'>Settings         
+          </Typography>
+        </Box>
         <Card sx={{marginBottom: "10px"}}>
           <CardContent>
-            <h2>Settings</h2>
             <Formik
               initialValues={initialValues}
               validationSchema={validationSchema}

@@ -6,6 +6,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../../services/apiClientService';
 import { toast } from 'react-toastify';
+import LoadingIndicator from '../../components/LoadingIndicator';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -15,17 +16,21 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const token = "dummy-token";
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();    
     if (email && password) {
+      setIsLoading(true);
       apiClient.post("/api/Users/login", {email: email, password: password}).then((data) =>  {
+        setIsLoading(false);
         login(token);
         navigate("/");
       }).catch((error) => {
-        toast.error("Error while create user" + error, {
+        setIsLoading(false);
+        toast.error("Error while login, Invalid is username or password!", {
           position: "top-right"
-        });
+        });        
       });      
     } else {
       setError('Please fill out both fields');
@@ -38,6 +43,25 @@ const Login = () => {
 
   return (
     <Box sx={{ display: 'flex', height: '95vh' }}>
+      <Box
+        sx={{
+          width: '30%',
+          backgroundColor: "#1976d2",
+          color: 'white',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 3,
+          flexDirection: 'column',
+        }}>
+        <img src="/img/MARLIN.png" style={{paddingBottom: "2rem"}}/>
+        <Typography variant="h6" gutterBottom>
+          Welcome to Our App!
+        </Typography>
+        <Typography variant="body1" sx={{ textAlign: 'center' }}>
+          We are happy to have you! Please log in to continue.
+        </Typography>
+      </Box>
       <Container maxWidth="sm" sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <Paper elevation={6} sx={{ padding: 4 }}>
           <Typography variant="h5" pb={3} align="center">
@@ -85,25 +109,7 @@ const Login = () => {
           </form>
         </Paper>
       </Container>
-      <Box
-        sx={{
-          width: '30%',
-          backgroundColor: "#1976d2",
-          color: 'white',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: 3,
-          flexDirection: 'column',
-        }}>
-        <img src="/img/MARLIN.png" style={{paddingBottom: "2rem"}}/>
-        <Typography variant="h6" gutterBottom>
-          Welcome to Our App!
-        </Typography>
-        <Typography variant="body1" sx={{ textAlign: 'center' }}>
-          We are happy to have you! Please log in to continue.
-        </Typography>
-      </Box>
+      <LoadingIndicator isLoading={isLoading}/>
     </Box>
   );
 };

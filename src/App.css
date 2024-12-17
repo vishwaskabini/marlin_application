@@ -70,3 +70,35 @@ h2 {
   flex-wrap: wrap;
   width: 100%;
 }
+
+.header-text {
+  display: flex;
+  padding: 10px;
+  font-weight: bold;
+  color: #4a4a4a;
+  align-items: center;
+  width: 100%;
+}
+
+.members-summary {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.members-summary-div {
+  display: flex;
+  align-items: center;
+  padding: 1rem 5rem;
+  background-color: lightblue;
+}
+
+.member-summary-fullwidth {
+  padding: 1rem;
+}
+
+.summary-image {
+  width: 4rem;
+  height: 4rem;
+}

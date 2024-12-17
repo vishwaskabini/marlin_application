@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Formik, Form, Field } from 'formik';
 import Button from '@mui/material/Button';
 import * as Yup from 'yup';
-import { Box, Card, CardContent, FormControl, FormHelperText, InputAdornment, InputLabel, MenuItem, Select, TextField } from '@mui/material';
+import { Box, Card, CardContent, FormControl, FormHelperText, InputAdornment, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
 import apiClient from '../../services/apiClientService';
 import { toast } from 'react-toastify';
+import LoadingIndicator from '../../common/components/LoadingIndicator';
 
 const GuestScreen = () => {
   const paymentTypeOnline = '22220087-c3c2-4268-a25a-13baa6f3625f';
@@ -13,6 +14,25 @@ const GuestScreen = () => {
   const userTypeId = 'a4e1f874-9c36-41aa-8af4-f94615c6c365';
   const userStatusActiveId = 'a4e1f874-9c36-41aa-8af4-f94615c6c371';
   const packageId = '8bbc5302-c668-4635-bcea-f54cf11e230f';
+  const [isLoading, setIsLoading] = useState(false);
+  const [slots, setSlots] = useState([]);
+
+  const getSlotDetails = () => {
+    setIsLoading(true);
+    apiClient.get("/api/Timeslots").then((data) => {
+      setIsLoading(false);
+      setSlots(data);
+    }).catch((error) => {
+      setIsLoading(false);
+      toast.error("Error while get " + error, {
+        position: "top-right"
+      });
+    });
+  }
+
+  useEffect(() => {
+    getSlotDetails();
+  }, [])
 
   const initialValues = {
     firstName: '',
@@ -23,6 +43,7 @@ const GuestScreen = () => {
     paymentType: '',
     transactionId: '',
     numberOfPersons: 1,
+    slot: ''
   };
 
   const validationSchema = Yup.object({
@@ -48,9 +69,11 @@ const GuestScreen = () => {
     numberOfPersons: Yup.number()
       .required('Number of Persons is required')
       .min(1, 'Number of Persons cannot be less than 1'),
+    slots: Yup.string().required("Slot is required")
   });
 
   const handleSubmit = (values, { resetForm }) => {
+    setIsLoading(true);
     var requestData = {
       "usertype": userTypeId,
       "firstname": values.firstName,
@@ -65,6 +88,7 @@ const GuestScreen = () => {
     apiClient.post("/api/Users/create", requestData).then((data) =>  {
       savePayments(values, data, { resetForm });
     }).catch((error) => {
+      setIsLoading(false);
       toast.error("Error while create user" + error, {
         position: "top-right"
       });
@@ -79,12 +103,14 @@ const GuestScreen = () => {
       "transactionid": values.transactionId,
       "roundedpayment": values.amount
     }
-    apiClient.post("/api/UsersPaymentMappingService/create", requestData).then((data) =>  {
+    apiClient.post("/api/UsersPaymentMappingService/create", requestData).then((data) =>  {      
       resetForm();
+      setIsLoading(false);
       toast.success("Guest Created Successfully !", {
         position: "top-right"
       });
     }).catch((error) => {
+      setIsLoading(false);
       toast.error("Error while create payment" + error, {
         position: "top-right"
       });
@@ -94,15 +120,18 @@ const GuestScreen = () => {
   return (
     <div className="container">
       <Box sx={{ width: '100%', overflowX: 'auto' }}>
+        <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+          <Typography variant='h5' className='header-text'>Guest Registration            
+          </Typography>
+        </Box>
         <Card sx={{marginBottom: "10px"}}>
           <CardContent>
-            <h2>Guest Registration</h2>
             <Formik
               initialValues={initialValues}
               validationSchema={validationSchema}
               onSubmit={handleSubmit}
             >
-              {({ touched, errors, isSubmitting, values, setFieldValue }) => (
+              {({ touched, errors, isSubmitting, values, setFieldValue, handleChange }) => (
                 <Form>                  
                   <div className='row'>
                     <div className="form-group">            
@@ -251,6 +280,25 @@ const GuestScreen = () => {
                       )}
                     </div>
                   </div>
+                  <div className='row'>
+                    <div className='form-group'>
+                      <Field
+                        name="slots"
+                        as={TextField}
+                        label="Time Slots"
+                        select
+                        fullWidth
+                        value={values.slots}
+                        onChange={handleChange}
+                        error={touched.slots && Boolean(errors.slots)}
+                        helperText={touched.slots && errors.slots}
+                      >
+                        {slots.map((slot) => (
+                          <MenuItem key={slot.id} value={slot.id}>{slot.name}</MenuItem>
+                        ))}
+                      </Field>
+                    </div>
+                  </div>
                   <Box className='row save-btn'>
                     <Button variant="contained" type="submit" color='primary'>Save Changes</Button>
                   </Box>              
@@ -260,6 +308,7 @@ const GuestScreen = () => {
           </CardContent>
         </Card>
       </Box>
+      <LoadingIndicator isLoading={isLoading}/>
     </div>
   );
 };

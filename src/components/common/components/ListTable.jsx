@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, IconButton, Paper, Box, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions, Button, Menu, MenuItem } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, IconButton, Paper, Box, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions, Button, Menu, MenuItem, TextField, InputAdornment } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
-import MoreVertIcon from '@mui/icons-material/MoreVert'
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import SearchIcon from '@mui/icons-material/Search';
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -38,6 +39,7 @@ const ListTable = ({ columns, rows, onEdit, onDelete, tableName, onPackage }) =>
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [currentRowId, setCurrentRowId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -52,6 +54,10 @@ const ListTable = ({ columns, rows, onEdit, onDelete, tableName, onPackage }) =>
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(+event.target.value);
     setPage(0);
+  };
+
+  const handleSearchChange = (event) => {
+    setSearchQuery(event.target.value);  // Update search query state
   };
 
   const handleEdit = (id) => {
@@ -91,12 +97,26 @@ const ListTable = ({ columns, rows, onEdit, onDelete, tableName, onPackage }) =>
     setCurrentRowId(rowId);
   };
 
-  const sortedRows = stableSort(rows, getComparator(order, orderBy));
+  const filteredRows = rows.filter((row) => {
+    return columns.some((column) =>
+      row[column.id] ? row[column.id].toString().toLowerCase().includes(searchQuery.toLowerCase()) : false
+    );
+  });
+
+  const sortedRows = stableSort(filteredRows, getComparator(order, orderBy));
   const displayedRows = sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   return (
     <Box sx={{ width: '100%', overflowX: 'auto', marginBottom: '20px' }}>
-      <h2>{tableName}</h2>
+      <TextField
+        size="small"
+        label="Search"
+        variant="outlined"
+        value={searchQuery}
+        onChange={handleSearchChange}
+        sx={{ marginLeft: "auto", marginBottom: 2}}
+        slotProps={{input: {endAdornment: <InputAdornment position='end'><SearchIcon/></InputAdornment>}}}
+      />          
       <TableContainer component={Paper}>
         <Table sx={{ minWidth: 650 }} aria-label="sortable table">
           <TableHead>
@@ -141,7 +161,6 @@ const ListTable = ({ columns, rows, onEdit, onDelete, tableName, onPackage }) =>
                       }}
                     >
                       <MenuItem onClick={() => handlePackage(row.id)}>Packages & Payments</MenuItem>
-                      <MenuItem onClick={handleClose}>Schedule Slot</MenuItem>
                       <MenuItem onClick={() => handleEdit(row.id)}>Edit</MenuItem>
                       <MenuItem onClick={() => handleDeleteOpen(row.id)}>Delete</MenuItem>
                     </Menu>

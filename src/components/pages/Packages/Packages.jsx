@@ -1,4 +1,4 @@
-import {Box, Button, Card, CardContent, TextField, Grid, Dialog, DialogContent, DialogTitle} from '@mui/material';
+import {Box, Button, Card, CardContent, TextField, Dialog, DialogContent, DialogTitle, Typography} from '@mui/material';
 import ListTable from '../../common/components/ListTable';
 import AddIcon from '@mui/icons-material/Add';
 import { useEffect, useState } from 'react';
@@ -6,17 +6,22 @@ import * as Yup from 'yup';
 import { Formik, Field, Form } from 'formik';
 import apiClient from '../../services/apiClientService';
 import { toast } from 'react-toastify';
+import LoadingIndicator from '../../common/components/LoadingIndicator';
 
 const Packages = () => {
   const [packages, setPackages] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [initialValues, setInitialValues] = useState();
+  const [isLoading, setIsLoading] = useState(false);
 
   const getData = () => {
+    setIsLoading(true);
     apiClient.get("/api/Packages").then((data) => {
+      setIsLoading(false);
       setPackages(data);
     }).catch((error) => {
+      setIsLoading(false);
       toast.error("Error while get " + error, {
         position: "top-right"
       });
@@ -41,12 +46,14 @@ const Packages = () => {
   }
 
   const handleDeleteRole = (id) => {
+    setIsLoading(true);
     apiClient.delete("/api/Packages/"+id).then(() =>{
       getData();
       toast.success("Package Deleted Successfully !", {
         position: "top-right"
       });
     }).catch((error) =>{
+      setIsLoading(false);
       toast.error("Error while delete " + error, {
         position: "top-right"
       });
@@ -58,6 +65,7 @@ const Packages = () => {
   }
 
   const handleFormSubmit = (values) => {
+    setIsLoading(true);
     values.cost = values.cost.toString();
     if (isEdit) {
       apiClient.put("/api/Packages/update", values).then((data) => {
@@ -67,6 +75,7 @@ const Packages = () => {
           position: "top-right"
         });
       }).catch((error) => {
+        setIsLoading(false);
         toast.error("Error while Update " + error, {
           position: "top-right"
         });
@@ -79,6 +88,7 @@ const Packages = () => {
           position: "top-right"
         });
       }).catch((error) => {
+        setIsLoading(false);
         toast.error("Error while Create " + error, {
           position: "top-right"
         });
@@ -97,7 +107,9 @@ const Packages = () => {
     <div className="container">
       <Box sx={{ width: '100%', overflowX: 'auto' }}>
         <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
-          <Button variant="contained" sx={{marginLeft: "auto"}} startIcon={<AddIcon />} onClick={handleAddRoleDiaglog}>Add Packages</Button>
+          <Typography variant='h5' className='header-text'>Packages      
+            <Button variant="contained" sx={{marginLeft: "auto"}} startIcon={<AddIcon />} onClick={handleAddRoleDiaglog}>Add Packages</Button>
+          </Typography>          
         </Box>
         <Card sx={{marginBottom: "10px"}}>
           <CardContent>
@@ -108,6 +120,7 @@ const Packages = () => {
       <PackagesDialog open={isDialogOpen} handleClose={onDialogClose} isEdit={isEdit}
         initialValues={initialValues}
         handleFormSubmit={handleFormSubmit}/>
+      <LoadingIndicator isLoading={isLoading}/>
     </div>
   );
 };
@@ -181,8 +194,8 @@ const PackagesDialog = ({open, handleClose, isEdit, initialValues, handleFormSub
                 </div>
               </div>
               <div className='row save-btn'>
-                <Button type="submit" variant="contained" color="primary">
-                  Save Changes
+                <Button type="submit" color="primary" variant="contained">
+                  {isEdit ? 'Save Changes' : 'Save'}
                 </Button>
               </div>
             </Form>

@@ -1,22 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
-import { Button, Card, CardContent, Box, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
+import { Button, Card, CardContent, Box, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography } from '@mui/material';
 import ListTable from '../../common/components/ListTable';
 import AddIcon from '@mui/icons-material/Add';
 import apiClient from '../../services/apiClientService';
 import { toast } from 'react-toastify';
+import LoadingIndicator from '../../common/components/LoadingIndicator';
 
 const Roles = () => {
   const [roles, setRoles] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [initialValues, setInitialValues] = useState({ id: '', name: ''});
+  const [isLoading, setIsLoading] = useState(false);
 
   const getData = () => {
+    setIsLoading(true);
     apiClient.get("/api/Roles").then((data) => {
       setRoles(data);
+      setIsLoading(false);
     }).catch((error) => {
+      setIsLoading(false);
       toast.error("Error while get " + error, {
         position: "top-right"
       });
@@ -28,14 +33,16 @@ const Roles = () => {
   }, []);
 
   const handleFormSubmit = (values) => {
+    setIsLoading(true);
     if (isEdit) {
-      apiClient.put("/api/Roles/update", values).then((data) => {
+      apiClient.put("/api/Roles/update", values).then((data) => {        
         getData();
         setIsDialogOpen(false);
         toast.success("Role Updated Successfully !", {
           position: "top-right"
         });
       }).catch((error) => {
+        setIsLoading(false);
         toast.error("Error while update " + error, {
           position: "top-right"
         });
@@ -48,6 +55,7 @@ const Roles = () => {
           position: "top-right"
         });
       }).catch((error) => {
+        setIsLoading(false);
         toast.error("Error while create " + error, {
           position: "top-right"
         });
@@ -56,12 +64,14 @@ const Roles = () => {
   }
 
   const handleDeleteRole = (id) => {
+    setIsLoading(true);
     apiClient.delete("/api/Roles/"+id).then(() =>{
       getData();
       toast.success("Role Deleted Successfully !", {
         position: "top-right"
       });
     }).catch((error) =>{
+      setIsLoading(false);
       toast.error("Error while delete " + error, {
         position: "top-right"
       });
@@ -93,7 +103,9 @@ const Roles = () => {
     <div className="container">
       <Box sx={{ width: '100%', overflowX: 'auto' }}>
         <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
-          <Button variant="contained" sx={{marginLeft: "auto"}} startIcon={<AddIcon />} onClick={handleAddRoleDiaglog}>Add Role</Button>
+          <Typography variant='h5' className='header-text'>Roles      
+            <Button variant="contained" sx={{marginLeft: "auto"}} startIcon={<AddIcon />} onClick={handleAddRoleDiaglog}>Add Role</Button>
+          </Typography>
         </Box>
         <Card sx={{marginBottom: "10px"}}>
           <CardContent>
@@ -104,6 +116,7 @@ const Roles = () => {
       <RoleDialog open={isDialogOpen} handleClose={onDialogClose} isEdit={isEdit}
         initialValues={initialValues}
         handleFormSubmit={handleFormSubmit}/>
+      <LoadingIndicator isLoading={isLoading}/>
     </div>
   );
 };

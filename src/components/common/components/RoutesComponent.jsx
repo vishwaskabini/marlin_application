@@ -6,7 +6,6 @@ import Settings from "../../pages/AdminConfiguration/Settings";
 import GuestScreen from '../../pages/Guest/GuestScreen';
 import ReportGenerator from '../../pages/Reports/ReportGenerator';
 import PaymentReportGenerator from '../../pages/Reports/PaymentReportGenerator';
-import NewMemberRegistration from '../../pages/Members/NewMemberRegistration';
 import Packages from '../../pages/Packages/Packages';
 import Scheduler from '../../pages/Schedular/Scheduler';
 import UserProfileScreen from '../../pages/UserProfile/userProfile';
@@ -26,7 +25,6 @@ const RoutesComponent = () => {
             <Route path="/guest" element={<PrivateRoute element={<GuestScreen />} /> }/>
             <Route path="/reports/members-guests" element={<PrivateRoute element={<ReportGenerator />} /> }/>
             <Route path="/reports/payments" element={<PrivateRoute element={<PaymentReportGenerator />} /> }/>
-            <Route path="/NewMemberRegistration" element={<PrivateRoute element={<NewMemberRegistration />} /> }/>
             <Route path="/packages" element={<PrivateRoute element={<Packages/> } /> }/>
             <Route path="/scheduler" element={<PrivateRoute element={<Scheduler />} /> }/>
             <Route path="/user/profile" element={<PrivateRoute element={<UserProfileScreen />} /> }/>

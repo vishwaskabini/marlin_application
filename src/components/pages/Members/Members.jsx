@@ -6,14 +6,16 @@ import * as Yup from 'yup';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import apiClient from '../../services/apiClientService';
 import { toast } from 'react-toastify';
+import LoadingIndicator from '../../common/components/LoadingIndicator';
 
 const Members = () => {
   const [membersExpiringToday, setMembersExpiringToday] = useState([]);
   const [membersExpiringIn5Days, setMembersExpiringIn5Days] = useState([]);
+  const [membersExpired, setMembersExpired] = useState([]);
   const [allMembers, setAllMembers] = useState([]);
+  const [rowsData, setRowsData] = useState([]);
   const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [initialValues, setInitialValues] = useState();
   const [initialValuesPackages, setInitialValuesPackages] = useState();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -46,12 +48,14 @@ const Members = () => {
   };
 
   const handleDelete = (id) => {
-    apiClient.delete("/api/Users/"+id).then(() =>{
+    setIsLoading(true);
+    apiClient.delete("/api/Users/"+id).then(() =>{      
       getData();
       toast.success("Member Deleted Successfully !", {
         position: "top-right"
       });
     }).catch((error) =>{
+      setIsLoading(false);
       toast.error("Error while delete " + error, {
         position: "top-right"
       });
@@ -59,6 +63,7 @@ const Members = () => {
   };
 
   const getData = () => {
+    setIsLoading(true);
     apiClient.get("/api/Users/GetAllWithDetails").then((data) => {
       var members = data.filter((user) => user.usertype == userTypeId);
       setMembers(members);
@@ -91,8 +96,16 @@ const Members = () => {
 
         return endDate >= today && endDate <= fiveDaysFromNow;
       }));
+      setMembersExpired(membersData.filter((item) => {
+        const packageEndDate = new Date(item.packageenddate);
+        const currentDate = new Date();
+        return packageEndDate < currentDate;
+      }));
       setAllMembers(membersData);
-    }).catch((error) => {
+      setRowsData(membersData);
+      setIsLoading(false);      
+    }).catch((error) => {      
+      setIsLoading(false);
       toast.error("Error while get " + error, {
         position: "top-right"
       });
@@ -100,17 +113,8 @@ const Members = () => {
   }
 
   useEffect(() => {
-    getData();
-    setLoading(false);
+    getData();    
   }, []);
-
-  if (loading) {
-    return <div className="loading">Loading...</div>;
-  }
-
-  if (error) {
-    return <div className="error">Error: {error}</div>;
-  }
 
   const columns = [
     { id: 'name', label: 'Name' },
@@ -128,11 +132,13 @@ const Members = () => {
     setIsDialogOpenPackage(false);
   }
 
-  const handleFormSubmit = (values) => {    
+  const handleFormSubmit = (values) => {
+    setIsLoading(true);
     if (isEdit) {
       apiClient.put("/api/Users/update", values).then((data) => {
         saveDocuments(values, values.id);
       }).catch((error) => {
+        setIsLoading(false);
         toast.error("Error while updated " + error, {
           position: "top-right"
         });
@@ -141,6 +147,7 @@ const Members = () => {
       apiClient.post("/api/Users/create", values).then((data) => {
         saveDocuments(values, data);
       }).catch((error) => {
+        setIsLoading(false);
         toast.error("Error while Create " + error, {
           position: "top-right"
         });
@@ -149,6 +156,7 @@ const Members = () => {
   }
 
   const handleFormSubmitPackage = (values) => {
+    setIsLoading(true);
     apiClient.post("/api/UsersPaymentMappingService/create", values).then((data) =>  {
       getData();
       setIsDialogOpenPackage(false);
@@ -156,6 +164,7 @@ const Members = () => {
         position: "top-right"
       });
     }).catch((error) => {
+      setIsLoading(false);
       toast.error("Error while create payment" + error, {
         position: "top-right"
       });
@@ -220,6 +229,7 @@ const Members = () => {
         });
       }      
     }).catch((error) => {
+      setIsLoading(false);
       toast.error("Error while Create upload " + error, {
         position: "top-right"
       });
@@ -247,25 +257,60 @@ const Members = () => {
     setIsDialogOpen(true);
   }
 
+  const handleSummary = (rowData) => {
+    console.log(rowData);
+    setRowsData(rowData);
+  }
+
   return (
     <div className="container">
       <Box sx={{ width: '100%', overflowX: 'auto' }}>
         <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
-          <Button variant="contained" sx={{marginLeft: "auto"}} startIcon={<AddIcon />} onClick={handleAddMemberDiaglog}>Add Member</Button>
+          <Typography variant='h5' className='header-text'>Members
+            <Button variant="contained" sx={{marginLeft: "auto"}} startIcon={<AddIcon />} onClick={handleAddMemberDiaglog}>Add Member</Button>
+          </Typography>          
+        </Box>
+        <Box sx={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
+          <Card sx={{ width: "23%", cursor: "pointer" }} onClick={() => handleSummary(allMembers)}>
+            <CardContent className='members-summary-div'>
+              <img src='/img/team.png' className='summary-image'/>
+              <Box className='members-summary'>
+                <Typography variant="h6" color="textSecondary">Active</Typography>
+                <Typography variant="h5">{allMembers.length}</Typography>
+              </Box>              
+            </CardContent>
+          </Card>
+          <Card sx={{ width: "23%", cursor: "pointer" }} onClick={() => handleSummary(membersExpired)}>
+            <CardContent className='members-summary-div'>
+              <img src='/img/expired.png' className='summary-image'/>
+              <Box className='members-summary'>
+                <Typography variant="h6" color="textSecondary">Expired</Typography>
+                <Typography variant="h5">{membersExpired.length}</Typography>
+              </Box>
+            </CardContent>
+          </Card>
+          <Card sx={{ width: "23%", cursor: "pointer" }} onClick={() => handleSummary(membersExpiringToday)}>
+            <CardContent className='members-summary-div member-summary-fullwidth'>
+              <img src='/img/subscribe.png' className='summary-image'/>
+              <Box className='members-summary'>
+                <Typography variant="h6" color="textSecondary">Package Expiring Today</Typography>
+                <Typography variant="h5">{membersExpiringToday.length}</Typography>
+              </Box>
+            </CardContent>
+          </Card>
+          <Card sx={{ width: "23%", cursor: "pointer" }} onClick={() => handleSummary(membersExpiringIn5Days)}>
+            <CardContent className='members-summary-div member-summary-fullwidth'>
+              <img src='/img/subscription-model.png' className='summary-image'/>
+              <Box className='members-summary'>
+                <Typography variant="h6" color="textSecondary">Package Expiring in 5 Days</Typography>
+                <Typography variant="h5">{membersExpiringIn5Days.length}</Typography>
+              </Box>
+            </CardContent>
+          </Card>
         </Box>
         <Card sx={{marginBottom: "10px"}}>
           <CardContent>
-            <ListTable columns={columns} rows={membersExpiringToday} onEdit={handleEdit} onDelete={handleDelete} tableName="Members List - Expiring Today"/>
-          </CardContent>
-        </Card>
-        <Card sx={{marginBottom: "10px"}}>
-          <CardContent>
-            <ListTable columns={columns} rows={membersExpiringIn5Days} onEdit={handleEdit} onDelete={handleDelete} tableName="Members List - Expiring in 5 Days"/>
-          </CardContent>
-        </Card>
-        <Card sx={{marginBottom: "10px"}}>
-          <CardContent>
-            <ListTable columns={columns} rows={allMembers} onEdit={handleEdit} onDelete={handleDelete} onPackage={handlePackages} tableName="Full Members List"/>
+            <ListTable columns={columns} rows={rowsData} onEdit={handleEdit} onDelete={handleDelete} onPackage={handlePackages} tableName="Full Members List"/>
           </CardContent>
         </Card>
       </Box>
@@ -275,6 +320,7 @@ const Members = () => {
       <PackageDialog open={isDialogOpenPackage} handleClose={onDialogClosePackage} isEdit={isEditPackage}
         initialValues={initialValuesPackages}
         handleFormSubmit={handleFormSubmitPackage}/>
+      <LoadingIndicator isLoading={isLoading}/>
     </div>
   );
 };
@@ -420,6 +466,9 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
                     variant="outlined"
                     error={touched.primarycontactnumber && Boolean(errors.primarycontactnumber)}
                     helperText={touched.primarycontactnumber && errors.primarycontactnumber}
+                    InputProps={{
+                      startAdornment: (<InputAdornment position="start">+91</InputAdornment>)
+                    }}
                   />
                 </div>
               </div>
@@ -484,8 +533,8 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
                 </div>
               </div>
               <div className='row save-btn'>
-                <Button type="submit" variant="contained" color="primary">
-                  Save Changes
+                <Button type="submit" color="primary" variant="contained">
+                  {isEdit ? 'Save Changes' : 'Save'}
                 </Button>
               </div>
             </Form>
