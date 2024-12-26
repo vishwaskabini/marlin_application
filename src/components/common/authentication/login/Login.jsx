@@ -19,6 +19,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = (e) => {
+    setError("");
     e.preventDefault();    
     if (email && password) {
       setIsLoading(true);
@@ -28,6 +29,7 @@ const Login = () => {
         navigate("/");
       }).catch((error) => {
         setIsLoading(false);
+        setError("Error while login, Invalid is username or password!")
         toast.error("Error while login, Invalid is username or password!", {
           position: "top-right"
         });        
@@ -70,7 +72,11 @@ const Login = () => {
           <Typography variant='subtitle1' align='center' pb={3}>
             Login to continue on Marlin Admin Application
           </Typography>
-          {error && <Typography color="error">{error}</Typography>}
+          {error && <Typography
+                color="error"
+                variant="body2"
+                sx={{ marginBottom: "16px", textAlign: "center" }}
+              >{error}</Typography>}
           <form onSubmit={handleSubmit}>
             <TextField
               fullWidth

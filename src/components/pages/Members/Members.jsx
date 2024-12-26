@@ -12,6 +12,7 @@ const Members = () => {
   const [membersExpiringToday, setMembersExpiringToday] = useState([]);
   const [membersExpiringIn5Days, setMembersExpiringIn5Days] = useState([]);
   const [membersExpired, setMembersExpired] = useState([]);
+  const [activeMembers, setActiveMembers] = useState([]);
   const [allMembers, setAllMembers] = useState([]);
   const [rowsData, setRowsData] = useState([]);
   const [members, setMembers] = useState([]);
@@ -99,7 +100,12 @@ const Members = () => {
       setMembersExpired(membersData.filter((item) => {
         const packageEndDate = new Date(item.packageenddate);
         const currentDate = new Date();
-        return packageEndDate < currentDate;
+        return packageEndDate <= currentDate;
+      }));
+      setActiveMembers(membersData.filter((item) => {
+        const packageEndDate = new Date(item.packageenddate);
+        const currentDate = new Date();
+        return packageEndDate >= currentDate;
       }));
       setAllMembers(membersData);
       setRowsData(membersData);
@@ -156,8 +162,24 @@ const Members = () => {
   }
 
   const handleFormSubmitPackage = (values) => {
+    console.log(values);
     setIsLoading(true);
     apiClient.post("/api/UsersPaymentMappingService/create", values).then((data) =>  {
+      updateSlot(values);
+    }).catch((error) => {
+      setIsLoading(false);
+      toast.error("Error while create payment" + error, {
+        position: "top-right"
+      });
+    });
+  }
+
+  const updateSlot = (values) => {
+    var data = {
+      userid: values.userid,
+      timeslotid: values.slots
+    }
+    apiClient.post("/api/UsersScheduleMapping/create", data).then((result) =>  {
       getData();
       setIsDialogOpenPackage(false);
       toast.success("Package Updated Successfully !", {
@@ -186,7 +208,8 @@ const Members = () => {
         paymentType: data.payment.paymenttype,
         paymentStatus: data.payment.paymentStatus,
         balanceAmount: '',
-        transactionid: data.payment.transactionId
+        transactionid: data.payment.transactionId,
+        slots: (data.schedule && data.schedule.length > 0 ? data.schedule[0].timeslotid : '')
       });
     } else {
       setInitialValuesPackages({
@@ -201,7 +224,8 @@ const Members = () => {
         paymentType: '',
         paymentStatus: '',
         balanceAmount: '',
-        transactionid: ''
+        transactionid: '',
+        slots: ''
       });
     }
     setIsDialogOpenPackage(true);
@@ -271,16 +295,25 @@ const Members = () => {
           </Typography>          
         </Box>
         <Box sx={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
-          <Card sx={{ width: "23%", cursor: "pointer" }} onClick={() => handleSummary(allMembers)}>
+          <Card sx={{ width: "19%", cursor: "pointer" }} onClick={() => handleSummary(allMembers)}>
             <CardContent className='members-summary-div'>
               <img src='/img/team.png' className='summary-image'/>
               <Box className='members-summary'>
-                <Typography variant="h6" color="textSecondary">Active</Typography>
+                <Typography variant="h6" color="textSecondary">All</Typography>
                 <Typography variant="h5">{allMembers.length}</Typography>
               </Box>              
             </CardContent>
           </Card>
-          <Card sx={{ width: "23%", cursor: "pointer" }} onClick={() => handleSummary(membersExpired)}>
+          <Card sx={{ width: "19%", cursor: "pointer" }} onClick={() => handleSummary(activeMembers)}>
+            <CardContent className='members-summary-div'>
+              <img src='/img/active.png' className='summary-image'/>
+              <Box className='members-summary'>
+                <Typography variant="h6" color="textSecondary">Active</Typography>
+                <Typography variant="h5">{activeMembers.length}</Typography>
+              </Box>              
+            </CardContent>
+          </Card>
+          <Card sx={{ width: "19%", cursor: "pointer" }} onClick={() => handleSummary(membersExpired)}>
             <CardContent className='members-summary-div'>
               <img src='/img/expired.png' className='summary-image'/>
               <Box className='members-summary'>
@@ -289,20 +322,20 @@ const Members = () => {
               </Box>
             </CardContent>
           </Card>
-          <Card sx={{ width: "23%", cursor: "pointer" }} onClick={() => handleSummary(membersExpiringToday)}>
+          <Card sx={{ width: "19%", cursor: "pointer" }} onClick={() => handleSummary(membersExpiringToday)}>
             <CardContent className='members-summary-div member-summary-fullwidth'>
               <img src='/img/subscribe.png' className='summary-image'/>
               <Box className='members-summary'>
-                <Typography variant="h6" color="textSecondary">Package Expiring Today</Typography>
+                <Typography variant="h6" color="textSecondary">Expiring Today</Typography>
                 <Typography variant="h5">{membersExpiringToday.length}</Typography>
               </Box>
             </CardContent>
           </Card>
-          <Card sx={{ width: "23%", cursor: "pointer" }} onClick={() => handleSummary(membersExpiringIn5Days)}>
+          <Card sx={{ width: "19%", cursor: "pointer" }} onClick={() => handleSummary(membersExpiringIn5Days)}>
             <CardContent className='members-summary-div member-summary-fullwidth'>
               <img src='/img/subscription-model.png' className='summary-image'/>
               <Box className='members-summary'>
-                <Typography variant="h6" color="textSecondary">Package Expiring in 5 Days</Typography>
+                <Typography variant="h6" color="textSecondary">Expiring in 5 Days</Typography>
                 <Typography variant="h5">{membersExpiringIn5Days.length}</Typography>
               </Box>
             </CardContent>
@@ -551,6 +584,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
   const paymentTypeOnline = '22220087-c3c2-4268-a25a-13baa6f3625f';
   const paymentTypeCash = '22220087-c3c2-4268-a25a-13baa6f3625e';
   const [packageTypes, setPackageTypes] = useState([]);
+  const [slots, setSlots] = useState([]);
 
   const getPackages = () => {
     apiClient.get("/api/Packages").then((data) => {
@@ -562,8 +596,19 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
     });
   }
 
+  const getSlotDetails = () => {
+    apiClient.get("/api/Timeslots").then((data) => {
+      setSlots(data);
+    }).catch((error) => {
+      toast.error("Error while get " + error, {
+        position: "top-right"
+      });
+    });
+  }
+
   useEffect(() => {
     getPackages();
+    getSlotDetails();
   }, [])
 
   const validationSchema = Yup.object().shape({
@@ -593,6 +638,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
         then: (schema) => schema.required('Balance amount is required').min(0, 'Balance must be positive'),
         otherwise: (schema) => schema.notRequired(),
       }),
+    slots: Yup.string().required("slots is required")
   });
 
   return (
@@ -760,6 +806,23 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                 </div>
               </div>
               <div className='row'>
+                <div className='form-group'>
+                  <Field
+                    name="slots"
+                    as={TextField}
+                    label="Time Slots"
+                    select
+                    fullWidth
+                    value={values.slots}
+                    onChange={handleChange}
+                    error={touched.slots && Boolean(errors.slots)}
+                    helperText={touched.slots && errors.slots}
+                  >
+                    {slots.map((slot) => (
+                      <MenuItem key={slot.id} value={slot.id}>{slot.name} - {slot.time}</MenuItem>
+                    ))}
+                  </Field>
+                </div>
                 {values.paymentType === paymentTypeOnline && (
                   <div className="form-group">
                     <Field

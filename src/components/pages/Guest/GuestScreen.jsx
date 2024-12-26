@@ -104,6 +104,21 @@ const GuestScreen = () => {
       "roundedpayment": values.amount
     }
     apiClient.post("/api/UsersPaymentMappingService/create", requestData).then((data) =>  {      
+      updateSlot(values.slots, id, {resetForm});
+    }).catch((error) => {
+      setIsLoading(false);
+      toast.error("Error while create payment" + error, {
+        position: "top-right"
+      });
+    });
+  }
+
+  const updateSlot = (slotId, userId, {resetForm}) => {
+    var data = {
+      userid: userId,
+      timeslotid: slotId
+    }
+    apiClient.post("/api/UsersScheduleMapping/create", data).then((result) =>  {
       resetForm();
       setIsLoading(false);
       toast.success("Guest Created Successfully !", {
@@ -111,7 +126,7 @@ const GuestScreen = () => {
       });
     }).catch((error) => {
       setIsLoading(false);
-      toast.error("Error while create payment" + error, {
+      toast.error("Error while create guest" + error, {
         position: "top-right"
       });
     });
@@ -294,7 +309,7 @@ const GuestScreen = () => {
                         helperText={touched.slots && errors.slots}
                       >
                         {slots.map((slot) => (
-                          <MenuItem key={slot.id} value={slot.id}>{slot.name}</MenuItem>
+                          <MenuItem key={slot.id} value={slot.id}>{slot.name} - {slot.time}</MenuItem>
                         ))}
                       </Field>
                     </div>
