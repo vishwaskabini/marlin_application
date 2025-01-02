@@ -18,15 +18,54 @@ const Login = () => {
   const token = "dummy-token";
   const [isLoading, setIsLoading] = useState(false);
 
+  const users = [
+    {
+      "id": "c09a605e-4b8b-437a-9b36-158e10304070",
+      "name": "Guest"
+    },
+    {
+      "id": "c09a605e-4b8b-437a-9b36-158e10304071",
+      "name": "Employee"
+    },
+    {
+      "id": "c09a605e-4b8b-437a-9b36-158e10304072",
+      "name": "SuperAdmin"
+    },
+    {
+      "id": "c09a605e-4b8b-437a-9b36-158e10304069",
+      "name": "Admin"
+    }
+  ];
+
+  const handleRole = (id) => {
+    const user = users.find((user) => user.id === id);
+    if(user?.name === "SuperAdmin") {
+      return true;
+    }
+    return false;
+  };
+  const handleUserType = (id) => {
+    if(id === "a4e1f874-9c36-41aa-8af4-f94615c6c363" || id === "a4e1f874-9c36-41aa-8af4-f94615c6c365") {
+      return true;
+    }
+    return false;
+  };
+
   const handleSubmit = (e) => {
     setError("");
     e.preventDefault();    
     if (email && password) {
       setIsLoading(true);
       apiClient.post("/api/Users/login", {email: email, password: password}).then((data) =>  {
+        let isSuperAdmin = handleRole(data.roleid);
+        let isMember = handleUserType(data.usertype);
         setIsLoading(false);
-        login(token);
-        navigate("/");
+        login(token, isSuperAdmin, isMember);
+        if(isMember) {
+          navigate("/member/dashboard");
+        } else {
+          navigate("/");
+        }        
       }).catch((error) => {
         setIsLoading(false);
         setError("Error while login, Invalid is username or password!")

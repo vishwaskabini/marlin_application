@@ -10,6 +10,8 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [isMember, setIsMember] = useState(true);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
@@ -20,7 +22,9 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(false);
   }, []);
 
-  const login = (token) => {
+  const login = (token, isSuperAdminIn, isMemberIn) => {
+    setIsMember(isMemberIn);
+    setIsSuperAdmin(isSuperAdminIn);
     setToken(token);
     setIsAuthenticated(true);
     localStorage.setItem("token", token); 
@@ -37,7 +41,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, token, login, logout, isLoading, setAuthentication }}>
+    <AuthContext.Provider value={{ isAuthenticated, token, login, logout, isLoading, setAuthentication, isSuperAdmin, isMember }}>
       {children}
     </AuthContext.Provider>
   );

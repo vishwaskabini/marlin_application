@@ -14,6 +14,11 @@ import * as Yup from 'yup';
 import apiClient from '../../services/apiClientService';
 import LoadingIndicator from '../../common/components/LoadingIndicator';
 import { toast } from 'react-toastify';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const Scheduler = () => {
   const [selectedSlot, setSelectedSlot] = useState(null);
@@ -26,7 +31,7 @@ const Scheduler = () => {
     evening: true,
   });
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(dayjs());
+  const [selectedDate, setSelectedDate] = useState(null);
   const [initialValues, setInitialValues] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
@@ -36,7 +41,7 @@ const Scheduler = () => {
       var batchdata = sortAndCategorize(data)      
       setSlots(batchdata);
       initializeAvailableSlots(batchdata);
-      getAssignedUsers();
+      setSelectedDate(dayjs());
     }).catch((error) => {
       setIsLoading(false);
       toast.error("Error while get " + error, {
@@ -45,45 +50,43 @@ const Scheduler = () => {
     });
   }
 
-  const getAssignedUsers = () => {
-    setIsLoading(true);
-    apiClient.get("/api/Users/GetAllWithDetails").then((data) => {
-      const transformedData = data.filter(user => user.schedule && user.schedule.length > 0)
-      .reduce((acc, user) => {
-        user.schedule.forEach((slot) => {
-          if (!acc[slot.timeslotid]) {
-            acc[slot.timeslotid] = [];
-          }
-          acc[slot.timeslotid].push({
-            id: user.id,
-            firstname: user.firstname,
-            lastname: user.lastname,
+  const convertDate = (date) => {
+    return dayjs(date).tz('Asia/Kolkata').format('YYYY-MM-DDT00:00:00');
+  };
+
+  const getAssignedUsers = (selectDate) => {
+    if(selectDate !== "Invalid Date") {
+      setIsLoading(true);
+      apiClient.get("/api/UsersScheduleMapping/GetAllByDateRange?fromDate="+selectDate+"&toDate="+selectDate).then((data) => {
+        const transformedData = data.reduce((acc, userSchedule) => {
+          userSchedule.forEach((slot) => {
+            if (!acc[slot.timeslotid]) {
+              acc[slot.timeslotid] = [];
+            }
+            acc[slot.timeslotid].push({
+              id: slot.userid,
+              firstname: slot.user.firstname,
+              lastname: slot.user.lastname,
+            });
+            updateAvailableSlots(slot.timeslotid);
           });
-          updateAvailableSlots(slot.timeslotid);
-        });
-        return acc;
-      }, {});
-      setAssignedMembers(transformedData);
+          return acc;
+        }, {});
+        setAssignedMembers(transformedData);
 
-      setIsLoading(false);
-    }).catch((error) => {
-      setIsLoading(false);
-      toast.error("Error while get " + error, {
-        position: "top-right"
+        setIsLoading(false);
+      }).catch((error) => {
+        setIsLoading(false);
+        toast.error("Error while get " + error, {
+          position: "top-right"
+        });
       });
-    });
+    }    
   }
 
-  const convertToMinutes = (timeString, period) => {
+  const convertToMinutes = (timeString) => {
     const [hours, minutes] = timeString.split(":").map(Number);
-    let totalMinutes = hours * 60 + minutes;
-        
-    if (period === "PM" && hours !== 12) {
-        totalMinutes += 12 * 60;
-    } else if (period === "AM" && hours === 12) {
-        totalMinutes -= 12 * 60;
-    }
-    
+    const totalMinutes = hours * 60 + minutes;    
     return totalMinutes;
   };
 
@@ -94,13 +97,13 @@ const Scheduler = () => {
 
     timeSlots.forEach((slot) => {
         const [start, end] = slot.name.split("-");
-        const startMinutes = convertToMinutes(start, slot.time);
+        const startMinutes = convertToMinutes(start);
                 
-        if (slot.batch === "Morning" && startMinutes >= convertToMinutes("06:00", "AM") && startMinutes < convertToMinutes("12:00", "PM")) {
+        if (slot.batch === "Morning" && startMinutes >= convertToMinutes("06:00") && startMinutes < convertToMinutes("12:00")) {
             morning.push(slot);
         } else if (slot.batch === "Public") {
             guest.push(slot);
-        } else if (slot.batch === "Evening" && startMinutes >= convertToMinutes("02:00", "PM") && startMinutes < convertToMinutes("08:00", "PM")) {
+        } else if (slot.batch === "Evening" && startMinutes >= convertToMinutes("14:00") && startMinutes < convertToMinutes("20:00")) {
             evening.push(slot);
         }
     });
@@ -108,17 +111,24 @@ const Scheduler = () => {
     const sortByStartTime = (a, b) => {
         const [startA] = a.name.split("-");
         const [startB] = b.name.split("-");
-        const startMinutesA = convertToMinutes(startA, a.time);
-        const startMinutesB = convertToMinutes(startB, b.time);
+        const startMinutesA = convertToMinutes(startA);
+        const startMinutesB = convertToMinutes(startB);
         return startMinutesA - startMinutesB;
     };
 
     return {
         morning: morning.sort(sortByStartTime),
-        guest: guest.sort(sortByStartTime),
+        guest: guest.slice(0, 1).map(item => ({
+          ...item,
+          name: "11:00-14:00"
+        })),
         evening: evening.sort(sortByStartTime),
     };
   };
+
+  useEffect(() => {
+    getAssignedUsers(convertDate(selectedDate));
+  },[selectedDate])
 
   useEffect(() => {
     getTimeSlots();    

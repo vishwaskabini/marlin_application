@@ -4,7 +4,7 @@ import { CircularProgress, Backdrop, Typography } from '@mui/material';
 const LoadingIndicator = ({isLoading}) => {
   if (!isLoading) return null;
   return (
-    <Backdrop open={isLoading} sx={{zIndex: (theme) => theme.zIndex.drawer + 1, display: 'flex',
+    <Backdrop open={isLoading} sx={{zIndex: '10000', display: 'flex',
       flexDirection: 'column',
       justifyContent: 'center',
       alignItems: 'center',

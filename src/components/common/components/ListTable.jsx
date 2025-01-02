@@ -160,7 +160,8 @@ const ListTable = ({ columns, rows, onEdit, onDelete, tableName, onPackage }) =>
                         horizontal: 'right',
                       }}
                     >
-                      <MenuItem onClick={() => handlePackage(row.id)}>Packages & Payments</MenuItem>
+                      <MenuItem onClick={() => handlePackage(row.id)}>Edit Package</MenuItem>
+                      <MenuItem onClick={() => handlePackage(row.id)}>Add Upcoming Package</MenuItem>
                       <MenuItem onClick={() => handleEdit(row.id)}>Edit</MenuItem>
                       <MenuItem onClick={() => handleDeleteOpen(row.id)}>Delete</MenuItem>
                     </Menu>

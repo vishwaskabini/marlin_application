@@ -7,12 +7,13 @@ import GuestScreen from '../../pages/Guest/GuestScreen';
 import ReportGenerator from '../../pages/Reports/ReportGenerator';
 import PaymentReportGenerator from '../../pages/Reports/PaymentReportGenerator';
 import Packages from '../../pages/Packages/Packages';
-import Scheduler from '../../pages/Schedular/Scheduler';
+import Scheduler from '../../pages/Scheduler/Scheduler';
 import UserProfileScreen from '../../pages/UserProfile/userProfile';
 import UserProfiledashbord from '../../pages/UserProfile/userProfiledashbord';
 import Login from "../authentication/login/Login";
 import PrivateRoute from "../authentication/PrivateRoute";
 import Members from "../../pages/Members/Members";
+import MemberDashboard from "../../pages/Dashboard/MemberDashboard";
 
 const RoutesComponent = () => {
     return(
@@ -29,6 +30,7 @@ const RoutesComponent = () => {
             <Route path="/scheduler" element={<PrivateRoute element={<Scheduler />} /> }/>
             <Route path="/user/profile" element={<PrivateRoute element={<UserProfileScreen />} /> }/>
             <Route path="/user/dashboard" element={<PrivateRoute element={<UserProfiledashbord />} /> }/>
+            <Route path="/member/dashboard" element={<PrivateRoute element={<MemberDashboard />} /> }/>
             <Route path="/login" element={<Login/>}/>
         </Routes>
     );
