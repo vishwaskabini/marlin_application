@@ -58,12 +58,13 @@ const Scheduler = () => {
     if(selectDate !== "Invalid Date") {
       setIsLoading(true);
       apiClient.get("/api/UsersScheduleMapping/GetAllByDateRange?fromDate="+selectDate+"&toDate="+selectDate).then((data) => {
-        const transformedData = data.reduce((acc, {timeslotid, userid, userName}) => {
+        const transformedData = data.reduce((acc, {timeslotid, userid, userName, id}) => {
           if (!acc[timeslotid]) {
             acc[timeslotid] = [];
           }
           acc[timeslotid].push({
-            id: userid,
+            userid: userid,
+            id: id,
             name: userName
           });
           updateAvailableSlots(timeslotid);
@@ -170,19 +171,31 @@ const Scheduler = () => {
     }
   };
 
-  const handleRemoveMember = (slot, memberId) => {
-    setAssignedMembers((prevAssignedMembers) => {
-      const updatedMembers = {
-        ...prevAssignedMembers,
-        [slot]: prevAssignedMembers[slot]?.filter((member) => member.id !== memberId),
-      };
-      return updatedMembers;
-    });
-
-    setAvailableSlots((prevAvailableSlots) => {
-      const updatedAvailableSlots = { ...prevAvailableSlots, [slot]: prevAvailableSlots[slot] + 1 };
-      return updatedAvailableSlots;
-    });
+  const handleRemoveMember = (slot, userScheduleId) => {
+    setIsLoading(true);
+    apiClient.delete("/api/UsersScheduleMapping/"+userScheduleId).then(() =>{
+      setAssignedMembers((prevAssignedMembers) => {
+        const updatedMembers = {
+          ...prevAssignedMembers,
+          [slot]: prevAssignedMembers[slot]?.filter((member) => member.id !== userScheduleId),
+        };
+        return updatedMembers;
+      });
+  
+      setAvailableSlots((prevAvailableSlots) => {
+        const updatedAvailableSlots = { ...prevAvailableSlots, [slot]: prevAvailableSlots[slot] + 1 };
+        return updatedAvailableSlots;
+      });
+      setIsLoading(false);
+      toast.success("Removed User for Slot Successfully !", {
+        position: "top-right"
+      });
+    }).catch((error) =>{
+      setIsLoading(false);
+      toast.error("Error while delete " + error, {
+        position: "top-right"
+      });
+    });    
   };
 
   const handleToggleBatch = (batch) => {
@@ -257,7 +270,7 @@ const Scheduler = () => {
             <Collapse in={openBatch.morning}>
               <Box display="flex" flexWrap="wrap" gap={2} p={2}>
                 {slots?.morning?.map((slot, index) => (
-                  <Box key={index} width="30%" mb={2}>
+                  <Box key={index} width="32.5%" mb={2}>
                     <Paper
                       elevation={3}
                       style={{
@@ -267,6 +280,7 @@ const Scheduler = () => {
                         backgroundColor: '#f5f5f5',
                         color: '#000',
                         position: 'relative',
+                        height: "200px"
                       }}
                       onClick={() => setSelectedSlot(slot.id)}
                     >
@@ -295,7 +309,7 @@ const Scheduler = () => {
                         <div style={{ marginTop: '10px', textAlign: 'left', maxHeight: '150px', overflowY: 'auto' }}>
                           {assignedMembers[slot.id].map((member) => (
                             <Chip
-                              key={member.id}
+                              key={member.userid}
                               label= {member.name}
                               onDelete={() => handleRemoveMember(slot.id, member.id)}
                               color="primary"
@@ -322,7 +336,7 @@ const Scheduler = () => {
             <Collapse in={openBatch.guest}>
               <Box display="flex" flexWrap="wrap" gap={2} p={2}>
                 {slots?.guest?.map((slot, index) => (
-                  <Box key={index} width="30%" mb={2}>
+                  <Box key={index} width="32.5%" mb={2}>
                     <Paper
                       elevation={3}
                       style={{
@@ -332,6 +346,7 @@ const Scheduler = () => {
                         backgroundColor: '#f5f5f5',
                         color: '#000',
                         position: 'relative',
+                        height: "200px"
                       }}
                       onClick={() => setSelectedSlot(slot.id)}
                     >
@@ -360,7 +375,7 @@ const Scheduler = () => {
                         <div style={{ marginTop: '10px', textAlign: 'left', maxHeight: '150px', overflowY: 'auto' }}>
                           {assignedMembers[slot.id].map((member) => (
                             <Chip
-                              key={member.id}
+                              key={member.userid}
                               label= {member.name}
                               onDelete={() => handleRemoveMember(slot.id, member.id)}
                               color="primary"
@@ -385,9 +400,9 @@ const Scheduler = () => {
               </IconButton>
             </Box>
             <Collapse in={openBatch.evening}>
-              <Box display="flex" flexWrap="wrap" gap={2} p={2}>
+              <Box display="flex" flexWrap="wrap" gap={2} p={2} width={"100%"} justifyContent={'space-between'}>
                 {slots?.evening?.map((slot, index) => (
-                  <Box key={index} width="30%" mb={2}>
+                  <Box key={index} width="32.5%" mb={2}>
                     <Paper
                       elevation={3}
                       style={{
@@ -397,6 +412,7 @@ const Scheduler = () => {
                         backgroundColor: '#f5f5f5',
                         color: '#000',
                         position: 'relative',
+                        height: "200px"
                       }}
                       onClick={() => setSelectedSlot(slot.id)}
                     >
@@ -425,7 +441,7 @@ const Scheduler = () => {
                         <div style={{ marginTop: '10px', textAlign: 'left', maxHeight: '150px', overflowY: 'auto' }}>
                           {assignedMembers[slot.id].map((member) => (
                             <Chip
-                              key={member.id}
+                              key={member.userid}
                               label={member.name}
                               onDelete={() => handleRemoveMember(slot.id, member.id)}
                               color="primary"
