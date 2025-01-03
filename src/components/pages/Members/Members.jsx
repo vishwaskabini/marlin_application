@@ -733,7 +733,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
         then: (schema) => schema.required('Balance amount is required').min(0, 'Balance must be positive'),
         otherwise: (schema) => schema.notRequired(),
       }),
-    notes: Yup.string().required('Note is required'),
+    notes: Yup.string(),
     slots: Yup.string().required("slots is required")
   });
 
@@ -1030,7 +1030,6 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                           onChange={handleChange}
                           error={touched.slots && Boolean(errors.slots)}
                           helperText={touched.slots && errors.slots}
-                          disabled={isEdit}
                         >
                           {slots.map((slot) => (
                             <MenuItem key={slot.id} value={slot.id}>{slot.name} - {slot.time}</MenuItem>

@@ -58,18 +58,15 @@ const Scheduler = () => {
     if(selectDate !== "Invalid Date") {
       setIsLoading(true);
       apiClient.get("/api/UsersScheduleMapping/GetAllByDateRange?fromDate="+selectDate+"&toDate="+selectDate).then((data) => {
-        const transformedData = data.reduce((acc, userSchedule) => {
-          userSchedule.forEach((slot) => {
-            if (!acc[slot.timeslotid]) {
-              acc[slot.timeslotid] = [];
-            }
-            acc[slot.timeslotid].push({
-              id: slot.userid,
-              firstname: slot.user.firstname,
-              lastname: slot.user.lastname,
-            });
-            updateAvailableSlots(slot.timeslotid);
+        const transformedData = data.reduce((acc, {timeslotid, userid, userName}) => {
+          if (!acc[timeslotid]) {
+            acc[timeslotid] = [];
+          }
+          acc[timeslotid].push({
+            id: userid,
+            name: userName
           });
+          updateAvailableSlots(timeslotid);
           return acc;
         }, {});
         setAssignedMembers(transformedData);
@@ -142,9 +139,14 @@ const Scheduler = () => {
     setAvailableSlots(initialAvailableSlots);
   }
 
-  const updateAvailableSlots = (slot) => {
+  const updateAvailableSlots = (timeslotid) => {
     setAvailableSlots((prevAvailableSlots) => {
-      const updatedAvailableSlots = { ...prevAvailableSlots, [slot]: prevAvailableSlots[slot] - 1 };
+      const updatedAvailableSlots = { ...prevAvailableSlots };
+      if (updatedAvailableSlots[timeslotid] !== undefined) {
+        updatedAvailableSlots[timeslotid] -= 1;
+      } else {
+        updatedAvailableSlots[timeslotid] = 50;
+      }
       return updatedAvailableSlots;
     });
   }
@@ -294,7 +296,7 @@ const Scheduler = () => {
                           {assignedMembers[slot.id].map((member) => (
                             <Chip
                               key={member.id}
-                              label= {member.firstname + " " + member.lastname}
+                              label= {member.name}
                               onDelete={() => handleRemoveMember(slot.id, member.id)}
                               color="primary"
                               style={{ margin: '5px' }}
@@ -359,7 +361,7 @@ const Scheduler = () => {
                           {assignedMembers[slot.id].map((member) => (
                             <Chip
                               key={member.id}
-                              label= {member.firstname + " " + member.lastname}
+                              label= {member.name}
                               onDelete={() => handleRemoveMember(slot.id, member.id)}
                               color="primary"
                               style={{ margin: '5px' }}
@@ -424,7 +426,7 @@ const Scheduler = () => {
                           {assignedMembers[slot.id].map((member) => (
                             <Chip
                               key={member.id}
-                              label={member.firstname + " " + member.lastname}
+                              label={member.name}
                               onDelete={() => handleRemoveMember(slot.id, member.id)}
                               color="primary"
                               style={{ margin: '5px' }}
