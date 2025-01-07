@@ -166,26 +166,6 @@ const Scheduler = () => {
     });
   }
 
-  const handleAssignMember = (slot) => {
-
-    // if (assignedMembers[slot]?.length < 10) {
-    //   const newMemberId = assignedMembers[slot]?.length + 1 || 1;
-    //   const newMember = { id: newMemberId, name: `Member ${newMemberId}` };
-
-    //   setAssignedMembers((prevAssignedMembers) => {
-    //     const updatedMembers = { ...prevAssignedMembers, [slot]: [...(prevAssignedMembers[slot] || []), newMember] };
-    //     return updatedMembers;
-    //   });
-
-    //   setAvailableSlots((prevAvailableSlots) => {
-    //     const updatedAvailableSlots = { ...prevAvailableSlots, [slot]: prevAvailableSlots[slot] - 1 };
-    //     return updatedAvailableSlots;
-    //   });
-    // } else {
-    //   alert('This time slot has reached the maximum number of members (10)');
-    // }
-  };
-
   const handleRemoveMember = (slot, userScheduleId) => {
     setIsLoading(true);
     apiClient.delete("/api/UsersScheduleMapping/"+userScheduleId).then(() =>{

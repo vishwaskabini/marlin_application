@@ -242,12 +242,12 @@ const Members = () => {
       });
     }
     else {
-      apiClient.post("/api/UsersPackageMapping/create", packegeObj).then((data) =>  {
-        updateSlot(values);
+      apiClient.post("/api/UsersPackageMapping/create", packegeObj).then((data) =>  {        
         if(values.paymentstatus !== "Pending") {
           values.userpackagemappingid = data;
-          addPayment(values);
+          addPayment(values, false);
         }
+        updateSlot(values);
       }).catch((error) => {
         setIsLoading(false);
         toast.error("Error while create payment" + error, {
@@ -258,7 +258,7 @@ const Members = () => {
   }
 
   const handleFormSubmitPayment = (values) => {
-    addPayment(values);
+    addPayment(values, true);
   }
 
   const updateSlot = (values) => {
@@ -282,7 +282,7 @@ const Members = () => {
     });
   }
 
-  const addPayment = (values) => {
+  const addPayment = (values, shouldShowMsg) => {
     const payment = {
       userpackagemappingid: values.userpackagemappingid,
       paymenttype: values.paymenttype,
@@ -301,9 +301,11 @@ const Members = () => {
       getData();
       setIsDialogOpenPackage(false);
       setIsDialogOpenPayment(false);
-      toast.success("Payment Added Successfully !", {
-        position: "top-right"
-      });
+      if(shouldShowMsg) {
+        toast.success("Payment Added Successfully !", {
+          position: "top-right"
+        });
+      }      
     }).catch((error) => {
       setIsLoading(false);
       toast.error("Error while create payment" + error, {
@@ -561,12 +563,12 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
     aadharUpload: Yup.mixed().when('idproofname', {
       is: (idproofname) => !idproofname || idproofname.trim() === "",
       then: () => Yup.mixed().required('Aadhar upload is required'),
-      otherwise: () => Yup.mixed()
+      otherwise: () => Yup.mixed().nullable()
     }),
     photoUpload: Yup.mixed().when('photoname', {
       is: (photoname) => !photoname || photoname.trim() === "",
       then: () => Yup.mixed().required('Photo upload is required'),
-      otherwise: () => Yup.mixed()
+      otherwise: () => Yup.mixed().nullable()
     }),
   });
 
@@ -578,6 +580,7 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
           onSubmit={handleFormSubmit}
         >
           {({errors, touched, setFieldValue, isSubmitting}) => (
+            console.log(errors),
             <Form>
               <div className='row'>
                 <div className='form-group'>
@@ -1189,7 +1192,8 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
 
 const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => {
   const paymentTypeOnline = '22220087-c3c2-4268-a25a-13baa6f3625f';
-  const paymentTypeCash = '22220087-c3c2-4268-a25a-13baa6f3625e'; 
+  const paymentTypeCash = '22220087-c3c2-4268-a25a-13baa6f3625e';
+  const [previousPayment, setPreviousPayment] = useState(0);
 
   const validationSchema = Yup.object().shape({
     amount: Yup.number().required('Amount is required').min(1, 'Amount must be greater than 0'),
@@ -1217,6 +1221,14 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
       }),
     notes: Yup.string(),
   });
+
+  useEffect(() => {
+    if(initialValues) {
+      if(initialValues.paymentstatus === "Partial") {
+        setPreviousPayment(initialValues.roundedpayment);
+      }
+    }
+  }, [initialValues])
 
   return (
     <Dialog open={open} onClose={handleClose} PaperProps={{sx: {minWidth: "80%"}}}>
@@ -1362,7 +1374,11 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
                             setFieldValue("pendingamount", 0);
                           } else {
                             setFieldValue('roundedpayment', roundedValue);
-                            setFieldValue("pendingamount", (parseFloat(values.payableamount) - roundedValue));                              
+                            if(previousPayment !== 0) {
+                              setFieldValue("pendingamount", (parseFloat(previousPayment) - roundedValue));
+                            } else {
+                              setFieldValue("pendingamount", (parseFloat(values.payableamount) - roundedValue));
+                            }                            
                           }
                           setFieldTouched('pendingamount', true);
                         }}
