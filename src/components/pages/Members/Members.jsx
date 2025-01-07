@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ListTable from '../../common/components/ListTable';
 import AddIcon from '@mui/icons-material/Add';
-import { Box, Button, Card, CardContent, Chip, Dialog, DialogContent, DialogTitle, FormControl, FormHelperText, Input, InputAdornment, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
+import { Box, Button, Card, CardContent, Chip, Dialog, DialogContent, DialogTitle, Divider, FormControl, FormHelperText, Input, InputAdornment, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
 import * as Yup from 'yup';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import apiClient from '../../services/apiClientService';
@@ -34,11 +34,14 @@ const Members = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [initialValues, setInitialValues] = useState();
   const [initialValuesPackages, setInitialValuesPackages] = useState();
+  const [initialValuesPayments, setInitialValuesPayments] = useState();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDialogOpenPackage, setIsDialogOpenPackage] = useState(false);
+  const [isDialogOpenPayment, setIsDialogOpenPayment] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [isEditPackage, setIsEditPackage] = useState(false);  
-  const userTypeId = 'a4e1f874-9c36-41aa-8af4-f94615c6c363';  
+  const userTypeId = 'a4e1f874-9c36-41aa-8af4-f94615c6c363';
+  const [packageTypes, setPackageTypes] = useState([]); 
 
   const handleEdit = (id) => {
     setIsEdit(true);
@@ -83,7 +86,7 @@ const Members = () => {
 
   const getData = () => {
     setIsLoading(true);
-    apiClient.get("/api/Users/GetAllWithDetails").then((data) => {
+    apiClient.get("/api/Users/GetAllWithDetailsActive").then((data) => {
       var members = data.filter((user) => user.usertype == userTypeId);
       setMembers(members);
       let membersData = members.map((item) => {
@@ -91,10 +94,11 @@ const Members = () => {
           id: item.id,
           name: item.firstname + " " + item.lastname,
           contact: item.primarycontactnumber,
-          paymentstatus: item.payment && item.payment.length > 0 ? item.payment[0].paymentstatus : "",
-          payment: item.payment && item.payment.length > 0 ? item.payment[0].amount : "",
-          package: item.payment && item.payment.length > 0 ? item.package[0].name : "",
-          packageenddate: item.payment && item.payment.length > 0 ? formatDate(item.payment[0].actualenddate) : ""
+          paymentstatus: item.packagepaymentDetails && item.packagepaymentDetails.length > 0 ? item.packagepaymentDetails[0].paymentstatus : "Pending",
+          payment: item.packagepaymentDetails && item.packagepaymentDetails.length > 0 ? item.packagepaymentDetails[0].amount : "",
+          package: item.packageDetails && item.packageDetails.length > 0 ? getPackageName(item.packageDetails[0].packageid) : "",
+          packageenddate: item.packageDetails && item.packageDetails.length > 0 ? formatDate(item.packageDetails[0].actualenddate) : "",
+          paymentstatusAction: item.packagepaymentDetails && item.packagepaymentDetails.length > 0 && item.packagepaymentDetails[0].paymentstatus === "Paid" ? true : false
         }
       });
       setMembersExpiringToday(membersData.filter((user) => {
@@ -136,8 +140,24 @@ const Members = () => {
     });
   }
 
+  const getPackages = () => {
+    apiClient.get("/api/Packages").then((data) => {
+      setPackageTypes(data);
+      if(data && data.length > 0 && initialValuesPackages && !data.package && !data.payment) {
+        initialValuesPackages.amount = data[0].cost;
+        initialValuesPackages.payableamount = data[0].cost;
+        initialValuesPackages.roundedpayment = data[0].cost;
+      }
+    }).catch((error) => {
+      toast.error("Error while get " + error, {
+        position: "top-right"
+      });
+    });
+  }
+
   useEffect(() => {
-    getData();    
+    getPackages();
+    getData();     
   }, []);
 
   const columns = [
@@ -155,6 +175,10 @@ const Members = () => {
 
   const onDialogClosePackage = () => {
     setIsDialogOpenPackage(false);
+  }
+
+  const onDialogClosePayment = () => {
+    setIsDialogOpenPayment(false);
   }
 
   const handleFormSubmit = (values) => {
@@ -193,14 +217,23 @@ const Members = () => {
     values.actualstartdate = convertToDate(values.actualstartdate).toISOString();
     values.packageenddate = convertToDate(values.packageenddate).toISOString();
     values.actualenddate = convertToDate(values.actualenddate).toISOString();
+    const packegeObj = {
+      userid: values.userid,
+      packageid: values.packageid,
+      packagestartdate: values.packagestartdate,
+      packageenddate: values.packageenddate,
+      actualstartdate: values.actualstartdate,
+      actualenddate: values.actualenddate,
+      id: values.id
+    }
     setIsLoading(true);
     if (isEditPackage) {
-      apiClient.put("/api/UsersPaymentMappingService/update", values).then((data) =>  {
+      apiClient.put("/api/UsersPackageMapping/update", packegeObj).then((data) =>  {        
         getData();
         setIsDialogOpenPackage(false);
         toast.success("Package Updated Successfully !", {
           position: "top-right"
-        });
+        });               
       }).catch((error) => {
         setIsLoading(false);
         toast.error("Error while create payment" + error, {
@@ -209,15 +242,23 @@ const Members = () => {
       });
     }
     else {
-      apiClient.post("/api/UsersPaymentMappingService/create", values).then((data) =>  {
+      apiClient.post("/api/UsersPackageMapping/create", packegeObj).then((data) =>  {
         updateSlot(values);
+        if(values.paymentstatus !== "Pending") {
+          values.userpackagemappingid = data;
+          addPayment(values);
+        }
       }).catch((error) => {
         setIsLoading(false);
         toast.error("Error while create payment" + error, {
           position: "top-right"
         });
       });
-    }    
+    }
+  }
+
+  const handleFormSubmitPayment = (values) => {
+    addPayment(values);
   }
 
   const updateSlot = (values) => {
@@ -241,27 +282,58 @@ const Members = () => {
     });
   }
 
+  const addPayment = (values) => {
+    const payment = {
+      userpackagemappingid: values.userpackagemappingid,
+      paymenttype: values.paymenttype,
+      amount: values.amount,
+      transactionid: values.transactionid,
+      employeeid: "",
+      notes: values.notes,
+      extendby: 0,
+      roundedpayment: values.roundedpayment,
+      paymentstatus: values.paymentstatus,
+      pendingamount: values.pendingamount,
+      payableamount: values.payableamount,
+      discount: values.discount,
+    }
+    apiClient.post("/api/UsersPaymentMapping/create", payment).then((result) =>  {
+      getData();
+      setIsDialogOpenPackage(false);
+      setIsDialogOpenPayment(false);
+      toast.success("Payment Added Successfully !", {
+        position: "top-right"
+      });
+    }).catch((error) => {
+      setIsLoading(false);
+      toast.error("Error while create payment" + error, {
+        position: "top-right"
+      });
+    });
+  }
+
   const handlePackages = (id) => {
     var data = members.find(item => item.id == id);
-    if(data.package && data.package.length > 0 && data.payment && data.payment.length > 0) {
+    if(data.packageDetails && data.packageDetails.length > 0) {
       setIsEditPackage(true);
+      const packageDetails = data.packageDetails[0];
       setInitialValuesPackages({
-        id: data.payment[0].id,
+        id: packageDetails.id,
         userid: data.id,
-        packageid: data.package[0].id,
-        packagestartdate: data.payment[0].packagestartdate ? formatDate(data.payment[0].packagestartdate) : null,
-        actualstartdate: data.payment[0].actualstartdate ? formatDate(data.payment[0].actualstartdate) : null,
-        packageenddate: data.payment[0].packageenddate ? formatDate(data.payment[0].packageenddate) : null,
-        actualenddate: data.payment[0].actualenddate ? formatDate(data.payment[0].actualenddate) : null,
-        amount: data.payment[0].amount ?? 0,
-        discount: data.payment[0].discount ?? 0,
-        roundedpayment: data.payment[0].roundedpayment ?? 0,
-        payableamount: data.payment[0].payableamount ?? 0,
-        paymenttype: data.payment[0].paymenttype ?? '22220087-c3c2-4268-a25a-13baa6f3625e',
-        paymentstatus: data.payment[0].paymentstatus ?? 'Pending',
-        pendingamount: data.payment[0].pendingamount ?? 0,
-        transactionid: data.payment[0].transactionid ?? '',
-        notes: data.payment[0].notes ?? '',
+        packageid: packageDetails.packageid,
+        packagestartdate: packageDetails.packagestartdate ? formatDate(packageDetails.packagestartdate) : null,
+        actualstartdate: packageDetails.actualstartdate ? formatDate(packageDetails.actualstartdate) : null,
+        packageenddate: packageDetails.packageenddate ? formatDate(packageDetails.packageenddate) : null,
+        actualenddate: packageDetails.actualenddate ? formatDate(packageDetails.actualenddate) : null,
+        amount: 0,
+        discount: 0,
+        roundedpayment: 0,
+        payableamount: 0,
+        paymenttype: '22220087-c3c2-4268-a25a-13baa6f3625e',
+        paymentstatus: 'Pending',
+        pendingamount: 0,
+        transactionid: '',
+        notes: '',
         slots: (data.schedule && data.schedule.length > 0 ? data.schedule[0].timeslotid : '')
       });
     } else {
@@ -287,6 +359,45 @@ const Members = () => {
       });
     }
     setIsDialogOpenPackage(true);
+  }
+
+  const handlePayments = (id) => {
+    var data = members.find(item => item.id == id);
+    if(data.packageDetails && data.packageDetails.length > 0) {
+      const packageDetails = getPackageDetails(data.packageDetails[0].packageid);
+      if(data.packagepaymentDetails && data.packagepaymentDetails.length > 0) {
+        setInitialValuesPayments({
+          userpackagemappingid: data.packageDetails[0].id,
+          amount: data.packagepaymentDetails[0].amount,
+          discount: data.packagepaymentDetails[0].discount,
+          payableamount: data.packagepaymentDetails[0].payableamount,
+          roundedpayment: data.packagepaymentDetails[0].pendingamount,
+          paymenttype: '22220087-c3c2-4268-a25a-13baa6f3625e',
+          paymentstatus: 'Partial',
+          pendingamount: 0,
+          transactionid: '',
+          notes: data.packagepaymentDetails[0].notes,
+        });
+      } else {
+        setInitialValuesPayments({
+          userpackagemappingid: data.packageDetails[0].id,
+          amount: packageDetails.cost,
+          discount: 0,
+          payableamount: packageDetails.cost,
+          roundedpayment: packageDetails.cost,
+          paymenttype: '22220087-c3c2-4268-a25a-13baa6f3625e',
+          paymentstatus: 'Pending',
+          pendingamount: 0,
+          transactionid: '',
+          notes: '',
+        });
+      }      
+      setIsDialogOpenPayment(true);
+    } else {
+      toast.error("No valid packages available, Please add package before making payment", {
+        position: "top-right"
+      });
+    }    
   }
 
   const saveDocuments = (values, data) => {
@@ -347,6 +458,15 @@ const Members = () => {
     setRowsData(rowData);
   }
 
+  const getPackageName = (packageId) => {
+    const packageDetails = packageTypes.find(pkg => pkg.id === packageId);
+    return packageDetails ? packageDetails.name : "";
+  }
+
+  const getPackageDetails = (packageId) => {
+    return packageTypes.find(pkg => pkg.id === packageId);;
+  }
+
   return (
     <div className="container">
       <Box sx={{ width: '100%', overflowX: 'auto' }}>
@@ -404,7 +524,7 @@ const Members = () => {
         </Box>
         <Card sx={{marginBottom: "10px"}}>
           <CardContent>
-            <ListTable columns={columns} rows={rowsData} onEdit={handleEdit} onDelete={handleDelete} onPackage={handlePackages} tableName="Full Members List"/>
+            <ListTable columns={columns} rows={rowsData} onEdit={handleEdit} onDelete={handleDelete} onPackage={handlePackages} onPayment={handlePayments} tableName="Full Members List"/>
           </CardContent>
         </Card>
       </Box>
@@ -413,7 +533,10 @@ const Members = () => {
         handleFormSubmit={handleFormSubmit}/>
       <PackageDialog open={isDialogOpenPackage} handleClose={onDialogClosePackage} isEdit={isEditPackage}
         initialValues={initialValuesPackages}
-        handleFormSubmit={handleFormSubmitPackage}/>
+        handleFormSubmit={handleFormSubmitPackage} packageTypes={packageTypes}/>
+      <PaymentDialog open={isDialogOpenPayment} handleClose={onDialogClosePayment}
+        initialValues={initialValuesPayments}
+        handleFormSubmit={handleFormSubmitPayment}/>
       <LoadingIndicator isLoading={isLoading} />
     </div>
   );
@@ -619,6 +742,7 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
                       name="photoUpload"
                       onChange={(event) => setFieldValue('photoUpload', event.currentTarget.files[0])}
                       fullWidth
+                      disabled={initialValues.photoname !== ''}
                       inputProps={{
                         style: { border: '1px solid #ccc', padding: '6px 10px' }
                       }}
@@ -637,6 +761,7 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
                       name="aadharUpload"
                       onChange={(event) => setFieldValue('aadharUpload', event.currentTarget.files[0])}
                       fullWidth
+                      disabled={initialValues.idproofname !== ''}
                       inputProps={{
                         style: { border: '1px solid #ccc', padding: '6px 10px' }
                       }}
@@ -662,27 +787,11 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
 }
 
 
-const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmit}) => {
+const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmit, packageTypes}) => {
 
   const paymentTypeOnline = '22220087-c3c2-4268-a25a-13baa6f3625f';
-  const paymentTypeCash = '22220087-c3c2-4268-a25a-13baa6f3625e';
-  const [packageTypes, setPackageTypes] = useState([]);
+  const paymentTypeCash = '22220087-c3c2-4268-a25a-13baa6f3625e';  
   const [slots, setSlots] = useState([]);
-
-  const getPackages = () => {
-    apiClient.get("/api/Packages").then((data) => {
-      setPackageTypes(data);
-      if(data && data.length > 0 && initialValues && !data.package && !data.payment) {
-        initialValues.amount = data[0].cost;
-        initialValues.payableamount = data[0].cost;
-        initialValues.roundedpayment = data[0].cost;
-      }
-    }).catch((error) => {
-      toast.error("Error while get " + error, {
-        position: "top-right"
-      });
-    });
-  }
 
   const parseDate = (dateString) => {
     const parsedDate = dayjs(dateString, 'DD/MM/YYYY');
@@ -700,7 +809,6 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
   }
 
   useEffect(() => {
-    getPackages();
     getSlotDetails();
   }, [])
 
@@ -710,29 +818,14 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
     actualstartdate: Yup.string().required('Package actual start date is required').nullable(),
     packageenddate: Yup.string().required('Package end date is required').nullable(),
     actualenddate: Yup.string().required('Package actual start date is required').nullable(),
-    amount: Yup.number().required('Amount is required').min(1, 'Amount must be greater than 0'),
-    discount: Yup.number().min(0, 'Discount must be positive').max(100, 'Discount cannot exceed 100%'),
-    payableamount: Yup.number().required('Amount is required').min(1, 'Amount must be greater than 0'),
-    paymenttype: Yup.string().required('Payment type is required'),
-    paymentstatus: Yup.string().required('Payment status is required'),
-    transactionid: Yup.string().test(
-      'transactionIdRequired',
-      'Transaction ID is required',
-      function(value) {
-        const { paymenttype } = this.parent;
-        if (paymenttype === '') {
-          return value ? true : this.createError({ path: this.path, message: 'Transaction ID is required' });
-        }
-        return true;
-      }
-    ),
-    roundedpayment: Yup.number().min(0, 'Rounded amount must be positive'),
-    pendingamount: Yup.number()
-      .when('paymentstatus', {
-        is: 'Partial',
-        then: (schema) => schema.required('Balance amount is required').min(0, 'Balance must be positive'),
-        otherwise: (schema) => schema.notRequired(),
-      }),
+    amount: Yup.number(),
+    discount: Yup.number(),
+    payableamount: Yup.number(),
+    paymenttype: Yup.string(),
+    paymentstatus: Yup.string(),
+    transactionid: Yup.string(),
+    roundedpayment: Yup.number(),
+    pendingamount: Yup.number(),
     notes: Yup.string(),
     slots: Yup.string().required("slots is required")
   });
@@ -746,7 +839,6 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
               onSubmit={handleFormSubmit}
             >
               {({errors, touched, handleChange, values, isSubmitting, setFieldValue, setFieldTouched}) => {
-                console.log(errors);
                 return (
                   <Form>
                     <div className='row'>
@@ -767,6 +859,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                             (data && data.length > 0) ? setFieldValue("payableamount", data[0].cost) : setFieldValue("payableamount", 0);
                             (data && data.length > 0) ? setFieldValue("roundedpayment", data[0].cost) : setFieldValue("roundedpayment", 0);
                           }}
+                          disabled={isEdit}
                         >
                           {packageTypes.map((packageType) => (
                             <MenuItem key={packageType.id} value={packageType.id}>{packageType.name + " " + packageType.duration}</MenuItem>
@@ -794,6 +887,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                                   placeholder="DD/MM/YYYY"                            
                                 />
                               )}
+                              disabled={isEdit}
                             />
                           )}
                         </Field>
@@ -819,6 +913,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                                   placeholder="DD/MM/YYYY"
                                 />
                               )}
+                              disabled={isEdit}
                             />
                           )}
                         </Field>
@@ -845,7 +940,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                                   helperText={touched.packageenddate && errors.packageenddate}
                                   placeholder="DD/MM/YYYY"
                                 />
-                              )}
+                              )}                              
                             />
                           )}
                         </Field>
@@ -875,151 +970,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                           )}
                         </Field>
                       </div>
-                      <div className='form-group'>
-                        <Field
-                          name="amount"
-                          as={TextField}
-                          label="Amount"
-                          type="number"
-                          fullWidth
-                          value={values.amount}
-                          onChange={handleChange}
-                          error={touched.amount && Boolean(errors.amount)}
-                          helperText={touched.amount && errors.amount}
-                          InputProps={{
-                            startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-                            readOnly: true,
-                          }}
-                        />
-                      </div>                
-                    </div>
-                    <div className='row'>
-                      <div className='form-group'>
-                        <Field
-                          name="discount"
-                          as={TextField}
-                          label="Discount"
-                          type="number"
-                          fullWidth
-                          value={values.discount}
-                          onChange={(e) => {
-                            const discountValue = parseFloat(e.target.value) || 0;
-                            const discountedAmount = values.amount - (values.amount * (discountValue / 100));
-                            setFieldValue('discount', discountValue);
-                            setFieldValue('payableamount', discountedAmount);
-                            setFieldValue("roundedpayment", discountedAmount);
-                          }}
-                          error={touched.discount && Boolean(errors.discount)}
-                          helperText={touched.discount && errors.discount}
-                          InputProps={{
-                            endAdornment: <InputAdornment position="end">%</InputAdornment>,
-                          }}
-                        />
-                      </div>
-                      <div className='form-group'>
-                        <Field
-                          name="notes"
-                          as={TextField}
-                          label="Notes"
-                          fullWidth
-                          value={values.notes}
-                          onChange={handleChange}
-                          error={touched.notes && Boolean(errors.notes)}
-                          helperText={touched.notes && errors.notes}
-                        />
-                      </div>
-                      <div className='form-group'>
-                        <Field
-                          name="payableamount"
-                          as={TextField}
-                          label="Payable Amount"
-                          type="number"
-                          fullWidth
-                          value={values.payableamount}
-                          onChange={handleChange}
-                          error={touched.payableamount && Boolean(errors.payableamount)}
-                          helperText={touched.payableamount && errors.payableamount}
-                          InputProps={{
-                            startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-                            readOnly: true,
-                          }}
-                        />
-                      </div>                       
-                    </div>
-                    <div className='row'>
-                      <div className='form-group'>
-                        <Field
-                          name="paymenttype"
-                          as={TextField}
-                          label="Payment Type"
-                          select
-                          fullWidth
-                          value={values.paymenttype || ''}
-                          onChange={handleChange}
-                          error={touched.paymenttype && Boolean(errors.paymenttype)}
-                          helperText={touched.paymenttype && errors.paymenttype}
-                        >
-                          <MenuItem value="">
-                            <em>Select Payment</em>
-                          </MenuItem>
-                          <MenuItem value={paymentTypeCash}>Cash</MenuItem>
-                          <MenuItem value={paymentTypeOnline}>UPI</MenuItem>
-                        </Field>
-                      </div>
-                      <div className='form-group'>
-                        <Field
-                          name="paymentstatus"
-                          as={TextField}
-                          label="Payment Status"
-                          select
-                          fullWidth
-                          value={values.paymentstatus || ''}
-                          onChange={(e) => {
-                            setFieldValue('paymentstatus', e.target.value);
-                            if(e.target.value == "Partial") {
-                              setFieldValue("pendingamount", (parseFloat(values.payableamount) - parseFloat(values.roundedpayment)));
-                            }
-                          }}
-                          error={touched.paymentstatus && Boolean(errors.paymentstatus)}
-                          helperText={touched.paymentstatus && errors.paymentstatus}
-                        >
-                          <MenuItem value="">
-                            <em>Select Payment Status</em>
-                          </MenuItem>
-                          <MenuItem value="Paid">Paid</MenuItem>
-                          <MenuItem value="Partial">Partial</MenuItem>
-                          <MenuItem value="Pending">Pending</MenuItem>
-                        </Field>
-                      </div>
-                      <div className='form-group'>
-                        <Field
-                          name="roundedpayment"
-                          as={TextField}
-                          label="Rounded Amount"
-                          type="number"
-                          fullWidth
-                          value={values.roundedpayment}
-                          onChange={(e) => {
-                            const roundedValue = parseFloat(e.target.value) || 0;
-                            if(values.payableamount <  roundedValue) {
-                              setFieldValue('roundedpayment', values.payableamount);
-                              setFieldValue("pendingamount", 0);
-                            } else {
-                              setFieldValue('roundedpayment', roundedValue);
-                              setFieldValue("pendingamount", (parseFloat(values.payableamount) - roundedValue));                              
-                            }
-                            setFieldTouched('pendingamount', true);
-                          }}
-                          error={touched.roundedpayment && Boolean(errors.roundedpayment)}
-                          helperText={touched.roundedpayment && errors.roundedpayment}
-                          InputProps={{
-                            startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-                          }}
-                        />
-                      </div>                                     
-                    </div>
-                    <div className='row'>
-                      <div className='form-group'>
+                      <div className='form-group'>                        
                         <Field
                           name="slots"
                           as={TextField}
@@ -1030,45 +981,197 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                           onChange={handleChange}
                           error={touched.slots && Boolean(errors.slots)}
                           helperText={touched.slots && errors.slots}
+                          disabled={isEdit}
                         >
                           {slots.map((slot) => (
                             <MenuItem key={slot.id} value={slot.id}>{slot.name} - {slot.time}</MenuItem>
                           ))}
                         </Field>
-                      </div> 
-                    {values.paymenttype === paymentTypeOnline && (
-                        <div className="form-group">
-                          <Field
-                            name="transactionid"
-                            as={TextField}
-                            label="Transaction ID"
-                            fullWidth
-                            value={values.transactionid}
-                            onChange={handleChange}
-                            error={touched.transactionid && Boolean(errors.transactionid)}
-                            helperText={touched.transactionid && errors.transactionid}
-                          />
-                        </div>
-                      )}
-                      {values.paymentstatus === 'Partial' && (
-                        <div className='form-group'>
-                          <Field
-                            name="pendingamount"
-                            as={TextField}
-                            label="Balance Amount"
-                            type="number"
-                            fullWidth
-                            value={values.pendingamount}
-                            onChange={handleChange}
-                            error={touched.pendingamount && Boolean(errors.pendingamount)}
-                            helperText={touched.pendingamount && errors.pendingamount}
-                            InputLabelProps={{
-                              shrink: values.pendingamount !== '',
-                            }}
-                          />
-                        </div>
-                      )}
+                      </div>                
                     </div>
+                    {!isEdit && (
+                      <>
+                        <div className='row'>
+                      <Divider sx={{margin: "15px 0px", width: "100%", fontWeight: "600"}}>Payment</Divider>
+                        </div>
+                        <div className='row'>
+                          <div className='form-group'>
+                            <Field
+                              name="amount"
+                              as={TextField}
+                              label="Total Amount"
+                              type="number"
+                              fullWidth
+                              value={values.amount}
+                              onChange={handleChange}
+                              error={touched.amount && Boolean(errors.amount)}
+                              helperText={touched.amount && errors.amount}
+                              InputProps={{
+                                startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                                readOnly: true,
+                              }}
+                            />                        
+                          </div>
+                          <div className='form-group'>
+                          <Field
+                              name="discount"
+                              as={TextField}
+                              label="Discount"
+                              type="number"
+                              fullWidth
+                              value={values.discount}
+                              onChange={(e) => {
+                                const discountValue = parseFloat(e.target.value) || 0;
+                                const discountedAmount = values.amount - (values.amount * (discountValue / 100));
+                                setFieldValue('discount', discountValue);
+                                setFieldValue('payableamount', discountedAmount);
+                                setFieldValue("roundedpayment", discountedAmount);
+                              }}
+                              error={touched.discount && Boolean(errors.discount)}
+                              helperText={touched.discount && errors.discount}
+                              InputProps={{
+                                endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                              }}
+                            />                        
+                          </div>
+                          <div className='form-group'>
+                            <Field
+                              name="notes"
+                              as={TextField}
+                              label="Notes"
+                              fullWidth
+                              value={values.notes}
+                              onChange={handleChange}
+                              error={touched.notes && Boolean(errors.notes)}
+                              helperText={touched.notes && errors.notes}
+                            />                        
+                          </div>                       
+                        </div>
+                        <div className='row'>
+                          <div className='form-group'>
+                            <Field
+                              name="payableamount"
+                              as={TextField}
+                              label="Payable Amount"
+                              type="number"
+                              fullWidth
+                              value={values.payableamount}
+                              onChange={handleChange}
+                              error={touched.payableamount && Boolean(errors.payableamount)}
+                              helperText={touched.payableamount && errors.payableamount}
+                              InputProps={{
+                                startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                                readOnly: true,
+                              }}
+                            />                        
+                          </div>
+                          <div className='form-group'>
+                            <Field
+                              name="paymenttype"
+                              as={TextField}
+                              label="Payment Type"
+                              select
+                              fullWidth
+                              value={values.paymenttype || ''}
+                              onChange={handleChange}
+                              error={touched.paymenttype && Boolean(errors.paymenttype)}
+                              helperText={touched.paymenttype && errors.paymenttype}
+                            >
+                              <MenuItem value="">
+                                <em>Select Payment</em>
+                              </MenuItem>
+                              <MenuItem value={paymentTypeCash}>Cash</MenuItem>
+                              <MenuItem value={paymentTypeOnline}>UPI</MenuItem>
+                            </Field>                        
+                          </div>
+                          <div className='form-group'>
+                            <Field
+                              name="paymentstatus"
+                              as={TextField}
+                              label="Payment Status"
+                              select
+                              fullWidth
+                              value={values.paymentstatus || ''}
+                              onChange={(e) => {
+                                setFieldValue('paymentstatus', e.target.value);
+                                if(e.target.value == "Partial") {
+                                  setFieldValue("pendingamount", (parseFloat(values.payableamount) - parseFloat(values.roundedpayment)));
+                                }
+                              }}
+                              error={touched.paymentstatus && Boolean(errors.paymentstatus)}
+                              helperText={touched.paymentstatus && errors.paymentstatus}
+                            >
+                              <MenuItem value="">
+                                <em>Select Payment Status</em>
+                              </MenuItem>
+                              <MenuItem value="Paid">Paid</MenuItem>
+                              <MenuItem value="Partial">Partial</MenuItem>
+                              <MenuItem value="Pending">Pending</MenuItem>
+                            </Field>                        
+                          </div>                                     
+                        </div>
+                        <div className='row'>
+                          <div className='form-group'>
+                            <Field
+                              name="roundedpayment"
+                              as={TextField}
+                              label="Rounded Amount"
+                              type="number"
+                              fullWidth
+                              value={values.roundedpayment}
+                              onChange={(e) => {
+                                const roundedValue = parseFloat(e.target.value) || 0;
+                                if(values.payableamount <  roundedValue) {
+                                  setFieldValue('roundedpayment', values.payableamount);
+                                  setFieldValue("pendingamount", 0);
+                                } else {
+                                  setFieldValue('roundedpayment', roundedValue);
+                                  setFieldValue("pendingamount", (parseFloat(values.payableamount) - roundedValue));                              
+                                }
+                                setFieldTouched('pendingamount', true);
+                              }}
+                              error={touched.roundedpayment && Boolean(errors.roundedpayment)}
+                              helperText={touched.roundedpayment && errors.roundedpayment}
+                              InputProps={{
+                                startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                              }}
+                            />
+                          </div> 
+                        {values.paymenttype === paymentTypeOnline && (
+                            <div className="form-group">
+                              <Field
+                                name="transactionid"
+                                as={TextField}
+                                label="Transaction ID"
+                                fullWidth
+                                value={values.transactionid}
+                                onChange={handleChange}
+                                error={touched.transactionid && Boolean(errors.transactionid)}
+                                helperText={touched.transactionid && errors.transactionid}
+                              />
+                            </div>
+                          )}
+                          {values.paymentstatus === 'Partial' && (
+                            <div className='form-group'>
+                              <Field
+                                name="pendingamount"
+                                as={TextField}
+                                label="Balance Amount"
+                                type="number"
+                                fullWidth
+                                value={values.pendingamount}
+                                onChange={handleChange}
+                                error={touched.pendingamount && Boolean(errors.pendingamount)}
+                                helperText={touched.pendingamount && errors.pendingamount}
+                                InputLabelProps={{
+                                  shrink: values.pendingamount !== '',
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </>                      
+                    )}                    
                     <div className='row save-btn'>
                       <Button type="submit" variant="contained" color="primary" disabled={isSubmitting}>
                         Save Changes
@@ -1079,6 +1182,239 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
               }}
           </Formik>
         </LocalizationProvider>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => {
+  const paymentTypeOnline = '22220087-c3c2-4268-a25a-13baa6f3625f';
+  const paymentTypeCash = '22220087-c3c2-4268-a25a-13baa6f3625e'; 
+
+  const validationSchema = Yup.object().shape({
+    amount: Yup.number().required('Amount is required').min(1, 'Amount must be greater than 0'),
+    discount: Yup.number().min(0, 'Discount must be positive').max(100, 'Discount cannot exceed 100%'),
+    payableamount: Yup.number().required('Amount is required').min(1, 'Amount must be greater than 0'),
+    paymenttype: Yup.string().required('Payment type is required'),
+    paymentstatus: Yup.string().required('Payment status is required'),
+    transactionid: Yup.string().test(
+      'transactionIdRequired',
+      'Transaction ID is required',
+      function(value) {
+        const { paymenttype } = this.parent;
+        if (paymenttype === '') {
+          return value ? true : this.createError({ path: this.path, message: 'Transaction ID is required' });
+        }
+        return true;
+      }
+    ),
+    roundedpayment: Yup.number().min(0, 'Rounded amount must be positive'),
+    pendingamount: Yup.number()
+      .when('paymentstatus', {
+        is: 'Partial',
+        then: (schema) => schema.required('Balance amount is required').min(0, 'Balance must be positive'),
+        otherwise: (schema) => schema.notRequired(),
+      }),
+    notes: Yup.string(),
+  });
+
+  return (
+    <Dialog open={open} onClose={handleClose} PaperProps={{sx: {minWidth: "80%"}}}>
+      <DialogTitle>Add Payment</DialogTitle>
+      <DialogContent sx={{padding: "2rem !important"}}>
+        <Formik initialValues={initialValues} validationSchema={validationSchema}
+            onSubmit={handleFormSubmit}
+          >
+            {({errors, touched, handleChange, values, isSubmitting, setFieldValue, setFieldTouched}) => {
+              return (
+                <Form>
+                  <div className='row'>
+                    <div className='form-group'>
+                      <Field
+                        name="amount"
+                        as={TextField}
+                        label="Total Amount"
+                        type="number"
+                        fullWidth
+                        value={values.amount}
+                        onChange={handleChange}
+                        error={touched.amount && Boolean(errors.amount)}
+                        helperText={touched.amount && errors.amount}
+                        InputProps={{
+                          startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                          readOnly: true,
+                        }}
+                      />                        
+                    </div>
+                    <div className='form-group'>
+                    <Field
+                        name="discount"
+                        as={TextField}
+                        label="Discount"
+                        type="number"
+                        fullWidth
+                        value={values.discount}
+                        onChange={(e) => {
+                          const discountValue = parseFloat(e.target.value) || 0;
+                          const discountedAmount = values.amount - (values.amount * (discountValue / 100));
+                          setFieldValue('discount', discountValue);
+                          setFieldValue('payableamount', discountedAmount);
+                          setFieldValue("roundedpayment", discountedAmount);
+                        }}
+                        error={touched.discount && Boolean(errors.discount)}
+                        helperText={touched.discount && errors.discount}
+                        disabled={values.discount !== 0}
+                        InputProps={{
+                          endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                        }}
+                      />
+                    </div>
+                    <div className='form-group'>
+                      <Field
+                        name="notes"
+                        as={TextField}
+                        label="Notes"
+                        fullWidth
+                        value={values.notes}
+                        onChange={handleChange}
+                        error={touched.notes && Boolean(errors.notes)}
+                        helperText={touched.notes && errors.notes}
+                        disabled={values.discount !== 0}
+                      />                        
+                    </div>                       
+                  </div>
+                  <div className='row'>
+                    <div className='form-group'>
+                      <Field
+                        name="payableamount"
+                        as={TextField}
+                        label="Payable Amount"
+                        type="number"
+                        fullWidth
+                        value={values.payableamount}
+                        onChange={handleChange}
+                        error={touched.payableamount && Boolean(errors.payableamount)}
+                        helperText={touched.payableamount && errors.payableamount}
+                        InputProps={{
+                          startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                          readOnly: true,
+                        }}
+                      />                        
+                    </div>
+                    <div className='form-group'>
+                      <Field
+                        name="paymenttype"
+                        as={TextField}
+                        label="Payment Type"
+                        select
+                        fullWidth
+                        value={values.paymenttype || ''}
+                        onChange={handleChange}
+                        error={touched.paymenttype && Boolean(errors.paymenttype)}
+                        helperText={touched.paymenttype && errors.paymenttype}
+                      >
+                        <MenuItem value="">
+                          <em>Select Payment</em>
+                        </MenuItem>
+                        <MenuItem value={paymentTypeCash}>Cash</MenuItem>
+                        <MenuItem value={paymentTypeOnline}>UPI</MenuItem>
+                      </Field>                        
+                    </div>
+                    <div className='form-group'>
+                      <Field
+                        name="paymentstatus"
+                        as={TextField}
+                        label="Payment Status"
+                        select
+                        fullWidth
+                        value={values.paymentstatus || ''}
+                        onChange={(e) => {
+                          setFieldValue('paymentstatus', e.target.value);
+                          if(e.target.value == "Partial") {
+                            setFieldValue("pendingamount", (parseFloat(values.payableamount) - parseFloat(values.roundedpayment)));
+                          }
+                        }}
+                        error={touched.paymentstatus && Boolean(errors.paymentstatus)}
+                        helperText={touched.paymentstatus && errors.paymentstatus}
+                      >
+                        <MenuItem value="">
+                          <em>Select Payment Status</em>
+                        </MenuItem>
+                        <MenuItem value="Paid">Paid</MenuItem>
+                        <MenuItem value="Partial">Partial</MenuItem>
+                        <MenuItem value="Pending">Pending</MenuItem>
+                      </Field>                        
+                    </div>                                     
+                  </div>
+                  <div className='row'>
+                    <div className='form-group'>
+                      <Field
+                        name="roundedpayment"
+                        as={TextField}
+                        label="Rounded Amount"
+                        type="number"
+                        fullWidth
+                        value={values.roundedpayment}
+                        onChange={(e) => {
+                          const roundedValue = parseFloat(e.target.value) || 0;
+                          if(values.payableamount <  roundedValue) {
+                            setFieldValue('roundedpayment', values.payableamount);
+                            setFieldValue("pendingamount", 0);
+                          } else {
+                            setFieldValue('roundedpayment', roundedValue);
+                            setFieldValue("pendingamount", (parseFloat(values.payableamount) - roundedValue));                              
+                          }
+                          setFieldTouched('pendingamount', true);
+                        }}
+                        error={touched.roundedpayment && Boolean(errors.roundedpayment)}
+                        helperText={touched.roundedpayment && errors.roundedpayment}
+                        InputProps={{
+                          startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                        }}
+                      />
+                    </div> 
+                    {values.paymenttype === paymentTypeOnline && (
+                      <div className="form-group">
+                        <Field
+                          name="transactionid"
+                          as={TextField}
+                          label="Transaction ID"
+                          fullWidth
+                          value={values.transactionid}
+                          onChange={handleChange}
+                          error={touched.transactionid && Boolean(errors.transactionid)}
+                          helperText={touched.transactionid && errors.transactionid}
+                        />
+                      </div>
+                    )}
+                    {values.paymentstatus === 'Partial' && (
+                      <div className='form-group'>
+                        <Field
+                          name="pendingamount"
+                          as={TextField}
+                          label="Balance Amount"
+                          type="number"
+                          fullWidth
+                          value={values.pendingamount}
+                          onChange={handleChange}
+                          error={touched.pendingamount && Boolean(errors.pendingamount)}
+                          helperText={touched.pendingamount && errors.pendingamount}
+                          InputLabelProps={{
+                            shrink: values.pendingamount !== '',
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>                  
+                  <div className='row save-btn'>
+                    <Button type="submit" variant="contained" color="primary" disabled={isSubmitting}>
+                      Save Changes
+                    </Button>
+                  </div>
+                </Form>
+              );
+            }}
+        </Formik>
       </DialogContent>
     </Dialog>
   );

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Paper, Chip, IconButton, Collapse, Box, Dialog, DialogActions, DialogContent, DialogTitle, Button, TextField, Grid2 as Grid, Card, CardContent } from '@mui/material';
+import { Typography, Paper, Chip, IconButton, Collapse, Box, Dialog, DialogActions, DialogContent, DialogTitle, Button, TextField, Grid2 as Grid, Card, CardContent, Autocomplete } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -20,8 +20,18 @@ import timezone from 'dayjs/plugin/timezone';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+const convertToDateUTC = (dateString) => {
+  const [day, month, year] = dateString.split('/');
+  return new Date(year, month - 1, day);
+};
+
+const formatDate = (date) => {
+  return dayjs(date).format('DD/MM/YYYY');
+};
+
 const Scheduler = () => {
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [selectedSlotId, setSelectedSlotId] = useState(null);
   const [assignedMembers, setAssignedMembers] = useState({});
   const [availableSlots, setAvailableSlots] = useState({});
   const [slots, setSlots] = useState({});
@@ -129,7 +139,11 @@ const Scheduler = () => {
   },[selectedDate])
 
   useEffect(() => {
-    getTimeSlots();    
+    getTimeSlots();
+    setInitialValues({
+      startDate: dayjs().format('DD/MM/YYYY'),
+      endDate: dayjs().format('DD/MM/YYYY')
+    })   
   }, []);
 
   const initializeAvailableSlots = (slots) => {
@@ -153,22 +167,23 @@ const Scheduler = () => {
   }
 
   const handleAssignMember = (slot) => {
-    if (assignedMembers[slot]?.length < 10) {
-      const newMemberId = assignedMembers[slot]?.length + 1 || 1;
-      const newMember = { id: newMemberId, name: `Member ${newMemberId}` };
 
-      setAssignedMembers((prevAssignedMembers) => {
-        const updatedMembers = { ...prevAssignedMembers, [slot]: [...(prevAssignedMembers[slot] || []), newMember] };
-        return updatedMembers;
-      });
+    // if (assignedMembers[slot]?.length < 10) {
+    //   const newMemberId = assignedMembers[slot]?.length + 1 || 1;
+    //   const newMember = { id: newMemberId, name: `Member ${newMemberId}` };
 
-      setAvailableSlots((prevAvailableSlots) => {
-        const updatedAvailableSlots = { ...prevAvailableSlots, [slot]: prevAvailableSlots[slot] - 1 };
-        return updatedAvailableSlots;
-      });
-    } else {
-      alert('This time slot has reached the maximum number of members (10)');
-    }
+    //   setAssignedMembers((prevAssignedMembers) => {
+    //     const updatedMembers = { ...prevAssignedMembers, [slot]: [...(prevAssignedMembers[slot] || []), newMember] };
+    //     return updatedMembers;
+    //   });
+
+    //   setAvailableSlots((prevAvailableSlots) => {
+    //     const updatedAvailableSlots = { ...prevAvailableSlots, [slot]: prevAvailableSlots[slot] - 1 };
+    //     return updatedAvailableSlots;
+    //   });
+    // } else {
+    //   alert('This time slot has reached the maximum number of members (10)');
+    // }
   };
 
   const handleRemoveMember = (slot, userScheduleId) => {
@@ -210,7 +225,8 @@ const Scheduler = () => {
   };
 
   const handleOpenDialog = (slot) => {
-    setSelectedSlot(slot);
+    setSelectedSlot(slot.name);
+    setSelectedSlotId(slot.id)
     setOpenDialog(true);
   };
 
@@ -219,7 +235,26 @@ const Scheduler = () => {
   };
 
   const handleFormSubmit = (values) => {
-    console.log(values);
+    values.startDate = dayjs(values.startDate, "DD/MM/YYYY").format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+    values.endDate = dayjs(values.endDate, "DD/MM/YYYY").format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+    var data = {
+      userid: values.memberName,
+      timeslotid: selectedSlotId,
+      startDate: values.startDate,
+      endDate: values.endDate
+    }
+    apiClient.post("/api/UsersScheduleMapping/createDateRange", data).then((result) =>  {
+      getAssignedUsers(convertDate(selectedDate));
+      setOpenDialog(false);
+      toast.success("Schedule Added Successfully !", {
+        position: "top-right"
+      });
+    }).catch((error) => {
+      setIsLoading(false);
+      toast.error("Error while create payment" + error, {
+        position: "top-right"
+      });
+    });    
     setOpenDialog(false);
   };
 
@@ -282,7 +317,7 @@ const Scheduler = () => {
                         position: 'relative',
                         height: "200px"
                       }}
-                      onClick={() => setSelectedSlot(slot.id)}
+                      onClick={() => setSelectedSlot(slot.name)}
                     >
                       <IconButton
                         style={{
@@ -293,7 +328,7 @@ const Scheduler = () => {
                         }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleOpenDialog(slot.id);
+                          handleOpenDialog(slot);
                         }}
                         disabled={assignedMembers[slot.id]?.length >= 50}
                       >
@@ -307,9 +342,9 @@ const Scheduler = () => {
 
                       {assignedMembers[slot.id] && assignedMembers[slot.id].length > 0 && (
                         <div style={{ marginTop: '10px', textAlign: 'left', maxHeight: '150px', overflowY: 'auto' }}>
-                          {assignedMembers[slot.id].map((member) => (
+                          {assignedMembers[slot.id].map((member, index) => (
                             <Chip
-                              key={member.userid}
+                              key={member.userid+index}
                               label= {member.name}
                               onDelete={() => handleRemoveMember(slot.id, member.id)}
                               color="primary"
@@ -348,7 +383,7 @@ const Scheduler = () => {
                         position: 'relative',
                         height: "200px"
                       }}
-                      onClick={() => setSelectedSlot(slot.id)}
+                      onClick={() => setSelectedSlot(slot.name)}
                     >
                       <IconButton
                         style={{
@@ -359,7 +394,7 @@ const Scheduler = () => {
                         }}
                         onClick={(e) => {
                           e.stopPropagation(); // Prevent triggering onClick of Paper
-                          handleOpenDialog(slot.id);
+                          handleOpenDialog(slot);
                         }}
                         disabled={assignedMembers[slot.id]?.length >= 50}
                       >
@@ -373,9 +408,9 @@ const Scheduler = () => {
 
                       {assignedMembers[slot.id] && assignedMembers[slot.id].length > 0 && (
                         <div style={{ marginTop: '10px', textAlign: 'left', maxHeight: '150px', overflowY: 'auto' }}>
-                          {assignedMembers[slot.id].map((member) => (
+                          {assignedMembers[slot.id].map((member, index) => (
                             <Chip
-                              key={member.userid}
+                              key={member.userid+index}
                               label= {member.name}
                               onDelete={() => handleRemoveMember(slot.id, member.id)}
                               color="primary"
@@ -414,7 +449,7 @@ const Scheduler = () => {
                         position: 'relative',
                         height: "200px"
                       }}
-                      onClick={() => setSelectedSlot(slot.id)}
+                      onClick={() => setSelectedSlot(slot.name)}
                     >
                       <IconButton
                         style={{
@@ -425,7 +460,7 @@ const Scheduler = () => {
                         }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleOpenDialog(slot.id);
+                          handleOpenDialog(slot);
                         }}
                         disabled={assignedMembers[slot.id]?.length >= 50}
                       >
@@ -439,9 +474,9 @@ const Scheduler = () => {
 
                       {assignedMembers[slot.id] && assignedMembers[slot.id].length > 0 && (
                         <div style={{ marginTop: '10px', textAlign: 'left', maxHeight: '150px', overflowY: 'auto' }}>
-                          {assignedMembers[slot.id].map((member) => (
+                          {assignedMembers[slot.id].map((member, index) => (
                             <Chip
-                              key={member.userid}
+                              key={member.userid+index}
                               label={member.name}
                               onDelete={() => handleRemoveMember(slot.id, member.id)}
                               color="primary"
@@ -466,6 +501,32 @@ const Scheduler = () => {
 };
 
 const AssignMemberDiaglog = ({open, handleClose, initialValues, handleFormSubmit, name}) => {
+
+  const [users, setUsers] = useState([]);
+
+  const parseDate = (dateString) => {
+    const parsedDate = dayjs(dateString, 'DD/MM/YYYY');
+    return formatDate(parsedDate.format());
+  };
+
+  const getData = () => {
+    apiClient.get("/api/Users/GetAllWithDetailsActive").then((data) => {
+      const transformedData = data.map(item => ({
+        id: item.id,
+        name: `${item.firstname} ${item.lastname}`
+      }));
+      setUsers(transformedData);
+    }).catch((error) => {
+      toast.error("Error while get " + error, {
+        position: "top-right"
+      });
+    });
+  }
+  
+  useEffect(() => {
+    getData();
+  },[]);
+
   const validationSchema = Yup.object().shape({
       memberName: Yup.string().required('Name is required'),
       startDate: Yup.date().required('Start Date is required'),
@@ -487,13 +548,25 @@ const AssignMemberDiaglog = ({open, handleClose, initialValues, handleFormSubmit
                   <div className='form-group'>
                     <Field
                       name="memberName"
+                      fullWidth
                       render={({ field, form }) => (
-                        <TextField
+                        <Autocomplete
                           {...field}
-                          label="Member Name"
                           fullWidth
-                          error={form.touched.memberName && Boolean(form.errors.memberName)}
-                          helperText={form.touched.memberName && form.errors.memberName}
+                          options={users}
+                          getOptionLabel={(option) => option.name}
+                          onChange={(_, newValue) => {
+                            form.setFieldValue('memberName', newValue ? newValue.id : '');
+                          }}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label="Member Name"
+                              fullWidth
+                              error={form.touched.memberName && Boolean(form.errors.memberName)}
+                              helperText={form.touched.memberName && form.errors.memberName}
+                            />
+                          )}
                         />
                       )}
                     />
@@ -502,8 +575,8 @@ const AssignMemberDiaglog = ({open, handleClose, initialValues, handleFormSubmit
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                       <DatePicker
                         label="Start Date"
-                        value={values.startDate}
-                        onChange={(date) => setFieldValue('startDate', date)}
+                        value={values.startDate ? dayjs(values.startDate, "DD/MM/YYYY") : null}
+                        onChange={(date) => setFieldValue('startDate', parseDate(date))}
                         renderInput={(params) => <TextField {...params} />}
                       />
                     </LocalizationProvider>
@@ -512,8 +585,8 @@ const AssignMemberDiaglog = ({open, handleClose, initialValues, handleFormSubmit
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                       <DatePicker
                         label="End Date"
-                        value={values.endDate}
-                        onChange={(date) => setFieldValue('endDate', date)}
+                        value={values.endDate ? dayjs(values.endDate, "DD/MM/YYYY") : null}
+                        onChange={(date) => setFieldValue('endDate', parseDate(date))}
                         renderInput={(params) => <TextField {...params} />}
                       />
                     </LocalizationProvider>

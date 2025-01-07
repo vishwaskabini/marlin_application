@@ -43,7 +43,7 @@ const GuestScreen = () => {
     paymentType: '',
     transactionId: '',
     numberOfPersons: 1,
-    slot: ''
+    slots: '58b45e84-5b9a-462c-8203-78018a143fe9'
   };
 
   const validationSchema = Yup.object({
@@ -307,6 +307,7 @@ const GuestScreen = () => {
                         onChange={handleChange}
                         error={touched.slots && Boolean(errors.slots)}
                         helperText={touched.slots && errors.slots}
+                        disabled={true}
                       >
                         {slots.map((slot) => (
                           <MenuItem key={slot.id} value={slot.id}>{slot.name} - {slot.time}</MenuItem>
