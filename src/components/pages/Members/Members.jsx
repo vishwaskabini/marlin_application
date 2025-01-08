@@ -363,22 +363,29 @@ const Members = () => {
     setIsDialogOpenPackage(true);
   }
 
+  const sortedData = (data) => {
+    return data.sort((a, b) => {
+      return new Date(b.updateddate) - new Date(a.updateddate);
+    });
+  };
+
   const handlePayments = (id) => {
     var data = members.find(item => item.id == id);
     if(data.packageDetails && data.packageDetails.length > 0) {
       const packageDetails = getPackageDetails(data.packageDetails[0].packageid);
       if(data.packagepaymentDetails && data.packagepaymentDetails.length > 0) {
+        let paymentDetails = sortedData(data.packagepaymentDetails);
         setInitialValuesPayments({
-          userpackagemappingid: data.packageDetails[0].id,
-          amount: data.packagepaymentDetails[0].amount,
-          discount: data.packagepaymentDetails[0].discount,
-          payableamount: data.packagepaymentDetails[0].payableamount,
-          roundedpayment: data.packagepaymentDetails[0].pendingamount,
+          userpackagemappingid: paymentDetails[0].id,
+          amount: paymentDetails[0].amount,
+          discount: paymentDetails[0].discount,
+          payableamount: paymentDetails[0].payableamount,
+          roundedpayment: paymentDetails[0].pendingamount,
           paymenttype: '22220087-c3c2-4268-a25a-13baa6f3625e',
           paymentstatus: 'Partial',
           pendingamount: 0,
           transactionid: '',
-          notes: data.packagepaymentDetails[0].notes,
+          notes: paymentDetails[0].notes,
         });
       } else {
         setInitialValuesPayments({
