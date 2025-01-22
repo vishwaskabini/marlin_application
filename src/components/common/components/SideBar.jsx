@@ -3,8 +3,6 @@ import MuiDrawer from '@mui/material/Drawer';
 import { useState } from "react";
 import HomeIcon from '@mui/icons-material/Home';
 import InsightsIcon from '@mui/icons-material/Insights';
-import LeaderboardIcon from '@mui/icons-material/Leaderboard';
-import PaymentsIcon from '@mui/icons-material/Payments';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import GroupsIcon from '@mui/icons-material/Groups';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
@@ -15,6 +13,7 @@ import EngineeringIcon from '@mui/icons-material/Engineering';
 import SmsIcon from '@mui/icons-material/Sms';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import AnalyticsIcon from '@mui/icons-material/Analytics';
 import { Link } from "react-router-dom";
 
 const drawerWidth = 240;
@@ -139,17 +138,7 @@ const Sidebar = ({drawerState}) => {
 
     const [menuData, setMenuData] = useState([
         { Id: 1, label: 'Dashboard', icon: <HomeIcon />, route: '/' },
-        {
-            Id: 2,
-            label: 'Reports',
-            icon: <InsightsIcon />,
-            route: '/reports/members-guests',
-            open: false,
-            children: [
-                { Id: 21,label: 'Member & Guests', icon: <LeaderboardIcon />, route: "/reports/members-guests" },
-                { id: 22, label: 'Payments', icon: <PaymentsIcon />, route: "/reports/payments" },
-            ],
-        },
+        { Id: 2, label: 'Reports', icon: <InsightsIcon />, route: "/reports" },        
         { Id: 3, label: 'Members', icon: <GroupsIcon />, route: "/members" },
         { Id: 4, label: 'Scheduler', icon: <CalendarMonthIcon />, route: "/scheduler" },
         { Id: 5, label: 'Guest', icon: <PersonIcon />, route: "/guest" },
@@ -158,7 +147,8 @@ const Sidebar = ({drawerState}) => {
             children: [
                 { Id: 71, label: 'SMS', icon: <SmsIcon />, route: "/admin/smssettings" },
                 { Id: 72, label: 'Settings', icon: <SettingsIcon />, route: "/admin/settings" },
-                { Id: 73, label: 'Roles', icon: <ManageAccountsIcon />, route: "/admin/roles" }
+                { Id: 73, label: 'Roles', icon: <ManageAccountsIcon />, route: "/admin/roles" },
+                { Id: 73, label: 'Attendance', icon: <AnalyticsIcon />, route: "/admin/attendance" }
             ]
         }
     ]);

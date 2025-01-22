@@ -137,7 +137,7 @@ const ListTable = ({ columns, rows, onEdit, onDelete, tableName, onPackage, onPa
                   </TableSortLabel>
                 </TableCell>
               ))}
-              <TableCell align="center">Actions</TableCell>
+              {onEdit !== undefined ? <TableCell align="center">Actions</TableCell> : null}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -146,8 +146,8 @@ const ListTable = ({ columns, rows, onEdit, onDelete, tableName, onPackage, onPa
                 {columns.map((column) => (
                   <TableCell key={row.id+column.id}>{row[column.id]}</TableCell>
                 ))}
-                {(tableName.indexOf("Members") !== -1) ? 
-                <TableCell align='center'>
+                {onEdit !== undefined ? ( tableName.indexOf("Members") !== -1 ? 
+                (<TableCell align='center'>
                   <div>
                     <IconButton onClick={(event) => handleClick(event, row.id)}>
                       <MoreVertIcon />
@@ -171,14 +171,14 @@ const ListTable = ({ columns, rows, onEdit, onDelete, tableName, onPackage, onPa
                       <MenuItem onClick={() => handleDeleteOpen(row.id)}>Delete</MenuItem>
                     </Menu>
                   </div>
-                </TableCell> : <TableCell align="center">
+                </TableCell> ) : ( <TableCell align="center">
                   <IconButton onClick={() => handleEdit(row.id)} color="primary">
                     <Edit />
                   </IconButton>
                   <IconButton onClick={() => handleDeleteOpen(row.id)} sx={{color: "#db3939"}}>
                     <Delete />
                   </IconButton>
-                </TableCell>}
+                </TableCell>)) : null}
               </TableRow>
             ))}
           </TableBody>

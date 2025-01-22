@@ -14,7 +14,7 @@ const Dashboard = () => {
 
   const getData = () => {
     setIsLoading(true);
-    apiClient.get("/api/Users/GetAllWithDetails").then((data) => {
+    apiClient.get("/api/Users/GetAllWithDetailsActive").then((data) => {
       setIsLoading(false);
       getMemberCount(data);
       getGuestCount(data);      

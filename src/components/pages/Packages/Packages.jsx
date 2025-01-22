@@ -1,4 +1,4 @@
-import {Box, Button, Card, CardContent, TextField, Dialog, DialogContent, DialogTitle, Typography} from '@mui/material';
+import {Box, Button, Card, CardContent, TextField, Dialog, DialogContent, DialogTitle, Typography, MenuItem, Select, duration} from '@mui/material';
 import ListTable from '../../common/components/ListTable';
 import AddIcon from '@mui/icons-material/Add';
 import { useEffect, useState } from 'react';
@@ -19,7 +19,11 @@ const Packages = () => {
     setIsLoading(true);
     apiClient.get("/api/Packages").then((data) => {
       setIsLoading(false);
-      setPackages(data);
+      const updatedData = data.map(item => ({
+        ...item,
+        packageduration: `${item.durationtime} ${item.duration}`
+      }));
+      setPackages(updatedData);
     }).catch((error) => {
       setIsLoading(false);
       toast.error("Error while get " + error, {
@@ -41,7 +45,7 @@ const Packages = () => {
 
   const handleAddRoleDiaglog = () => {
     setIsEdit(false);
-    setInitialValues({});
+    setInitialValues({durationtime: 1, duration: "Weeks"});
     setIsDialogOpen(true);
   }
 
@@ -99,8 +103,8 @@ const Packages = () => {
   const columns = [
     { id: 'name', label: 'Name' },
     { id: 'description', label: 'Description' },
-    { id: 'cost', label: 'Cost' },
-    { id: 'duration', label: 'Duration' }
+    { id: 'cost', label: 'Package Amount' },
+    { id: 'packageduration', label: 'Package Duration' }
   ];
 
   return (
@@ -131,6 +135,7 @@ const PackagesDialog = ({open, handleClose, isEdit, initialValues, handleFormSub
     description: Yup.string().required('Description is required'),
     cost: Yup.number().required('Cost is required').min(0, 'Cost must be greater than 0'),
     duration: Yup.string().required('Duration is required'),
+    durationtime: Yup.number().positive('Duration Time must be positive').required('Duration Time is required'),
   });
 
   return (
@@ -183,16 +188,32 @@ const PackagesDialog = ({open, handleClose, isEdit, initialValues, handleFormSub
                 </div>
                 <div className='form-group'>
                   <Field
-                    name="duration"
+                    name="durationtime"
                     label="Duration"
                     as={TextField}
+                    type="number"
+                    fullWidth
+                    variant="outlined"
+                    error={touched.durationtime && Boolean(errors.durationtime)}
+                    helperText={touched.durationtime && errors.durationtime}
+                  />
+                </div>
+                <div className='form-group'>
+                  <Field
+                    name="duration"
+                    label="Duration"
+                    as={Select}
                     fullWidth
                     variant="outlined"
                     error={touched.duration && Boolean(errors.duration)}
                     helperText={touched.duration && errors.duration}
-                  />
+                  >
+                    <MenuItem value="Weeks">Weeks</MenuItem>
+                    <MenuItem value="Months">Months</MenuItem>
+                    <MenuItem value="Year">Year</MenuItem>
+                  </Field>
                 </div>
-              </div>
+              </div>            
               <div className='row save-btn'>
                 <Button type="submit" color="primary" variant="contained">
                   {isEdit ? 'Save Changes' : 'Save'}

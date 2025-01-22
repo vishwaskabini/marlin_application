@@ -5,7 +5,6 @@ import Roles from "../../pages/AdminConfiguration/Roles";
 import Settings from "../../pages/AdminConfiguration/Settings";
 import GuestScreen from '../../pages/Guest/GuestScreen';
 import ReportGenerator from '../../pages/Reports/ReportGenerator';
-import PaymentReportGenerator from '../../pages/Reports/PaymentReportGenerator';
 import Packages from '../../pages/Packages/Packages';
 import Scheduler from '../../pages/Scheduler/Scheduler';
 import UserProfileScreen from '../../pages/UserProfile/userProfile';
@@ -24,8 +23,7 @@ const RoutesComponent = () => {
             <Route path="/admin/roles" element={<PrivateRoute element={<Roles />} /> }/>
             <Route path="/members" element={<PrivateRoute element={<Members />} /> }/>
             <Route path="/guest" element={<PrivateRoute element={<GuestScreen />} /> }/>
-            <Route path="/reports/members-guests" element={<PrivateRoute element={<ReportGenerator />} /> }/>
-            <Route path="/reports/payments" element={<PrivateRoute element={<PaymentReportGenerator />} /> }/>
+            <Route path="/reports" element={<PrivateRoute element={<ReportGenerator />} /> }/>
             <Route path="/packages" element={<PrivateRoute element={<Packages/> } /> }/>
             <Route path="/scheduler" element={<PrivateRoute element={<Scheduler />} /> }/>
             <Route path="/user/profile" element={<PrivateRoute element={<UserProfileScreen />} /> }/>

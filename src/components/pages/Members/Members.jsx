@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ListTable from '../../common/components/ListTable';
 import AddIcon from '@mui/icons-material/Add';
-import { Box, Button, Card, CardContent, Chip, Dialog, DialogContent, DialogTitle, Divider, FormControl, FormHelperText, Input, InputAdornment, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
+import { Box, Button, Card, CardContent, Chip, Dialog, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, FormHelperText, Input, InputAdornment, InputLabel, MenuItem, Select, TextField, Typography, Checkbox } from '@mui/material';
 import * as Yup from 'yup';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import apiClient from '../../services/apiClientService';
@@ -453,6 +453,9 @@ const Members = () => {
       pincode: '',
       coachingmembership: '',
       primarycontactnumber: '',
+      secondarycontactnumber: '',
+      referredby: '',
+      isspecialchild: false,
       address1: '',
       aadharUpload: null,
       photoUpload: null,
@@ -566,17 +569,12 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
     pincode: Yup.string().required('Pincode is required').matches(/^[0-9]{6}$/, 'Invalid pincode'),
     coachingmembership: Yup.string(),
     primarycontactnumber: Yup.string().required('Contact is required').matches(/^[0-9]{10}$/, 'Invalid contact number'),
+    secondarycontactnumber: Yup.string(),
+    referredby: Yup.string(),
+    isspecialchild: Yup.boolean(),
     address1: Yup.string().required('Address is required'),
-    aadharUpload: Yup.mixed().when('idproofname', {
-      is: (idproofname) => !idproofname || idproofname.trim() === "",
-      then: () => Yup.mixed().required('Aadhar upload is required'),
-      otherwise: () => Yup.mixed().nullable()
-    }),
-    photoUpload: Yup.mixed().when('photoname', {
-      is: (photoname) => !photoname || photoname.trim() === "",
-      then: () => Yup.mixed().required('Photo upload is required'),
-      otherwise: () => Yup.mixed().nullable()
-    }),
+    aadharUpload: Yup.mixed().nullable(),
+    photoUpload: Yup.mixed().nullable(),
   });
 
   return (
@@ -586,7 +584,7 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
         <Formik initialValues={initialValues} validationSchema={validationSchema}
           onSubmit={handleFormSubmit}
         >
-          {({errors, touched, setFieldValue, isSubmitting}) => (
+          {({errors, touched, setFieldValue, isSubmitting, values }) => (
             console.log(errors),
             <Form>
               <div className='row'>
@@ -718,8 +716,35 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
                     InputProps={{
                       startAdornment: (<InputAdornment position="start">+91</InputAdornment>)
                     }}
-                  />                  
+                  />
                 </div>
+                <div className='form-group'>
+                  <Field
+                    name="secondarycontactnumber"
+                    label="Alternate Contact"
+                    fullWidth
+                    as={TextField}
+                    variant="outlined"
+                    error={touched.secondarycontactnumber && Boolean(errors.secondarycontactnumber)}
+                    helperText={touched.secondarycontactnumber && errors.secondarycontactnumber}
+                    InputProps={{
+                      startAdornment: (<InputAdornment position="start">+91</InputAdornment>)
+                    }}
+                  />
+                </div>
+                <div className='form-group'>
+                  <Field
+                    name="referredby"
+                    label="Referred By"
+                    fullWidth
+                    as={TextField}
+                    variant="outlined"
+                    error={touched.referredby && Boolean(errors.referredby)}
+                    helperText={touched.referredby && errors.referredby}
+                  />
+                </div>                                
+              </div>
+              <div className='row'>               
                 <div className='form-group'>
                   <Field
                     name="schoolorcompanyname"
@@ -741,7 +766,29 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
                     error={touched.coachingmembership && Boolean(errors.coachingmembership)}
                     helperText={touched.coachingmembership && errors.coachingmembership}
                   />
-                </div>                
+                </div>
+                <div className='form-group'>
+                  <FormControl fullWidth error={touched.isspecialchild && Boolean(errors.isspecialchild)} sx={{justifyContent: "center"}}>
+                    <Field name="isspecialchild">
+                      {({ field }) => (
+                        <FormControlLabel
+                          sx={{marginLeft: "0px"}}
+                          control={
+                            <Checkbox
+                              {...field}
+                              checked={values.isspecialchild}
+                              onChange={e => setFieldValue('isspecialchild', e.target.checked)}
+                            />
+                          }
+                          label="Is Special Child"
+                        />
+                      )}
+                    </Field>
+                    {touched.isspecialchild && errors.isspecialchild && (
+                      <FormHelperText>{errors.isspecialchild}</FormHelperText>
+                    )}
+                  </FormControl>
+                </div>
               </div>
               <div className='row'>
                 <div className='form-group'>
@@ -820,7 +867,23 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
 
   useEffect(() => {
     getSlotDetails();
-  }, [])
+  }, []);
+
+  const calculateEndDate = (startDate, duration, durationtime) => {
+    const start = dayjs(startDate, "DD/MM/YYYY");
+    let endDate;
+    if (duration === "Weeks") {
+      endDate = start.add(durationtime, 'week');
+    }
+    else if (duration === "Months") {
+      endDate = start.add(durationtime, 'month');
+    }
+    else if (duration === "Year") {
+      endDate = start.add(durationtime, 'year');
+    }
+  
+    return endDate.format('DD/MM/YYYY');
+  };
 
   const validationSchema = Yup.object().shape({
     packageid: Yup.string().required('Package type is required'),
@@ -865,14 +928,17 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                           onChange={(e) => {
                             var data = packageTypes.filter(x=>x.id == e.target.value);
                             (data && data.length > 0) ? setFieldValue("amount", data[0].cost) : setFieldValue("amount", 0);
+                            const enddate = calculateEndDate(values.packagestartdate, data[0].duration, data[0].durationtime);
                             setFieldValue("packageid", e.target.value);
+                            setFieldValue("packageenddate", enddate);
+                            setFieldValue("actualenddate", enddate);
                             (data && data.length > 0) ? setFieldValue("payableamount", data[0].cost) : setFieldValue("payableamount", 0);
                             (data && data.length > 0) ? setFieldValue("roundedpayment", data[0].cost) : setFieldValue("roundedpayment", 0);
                           }}
                           disabled={isEdit}
                         >
                           {packageTypes.map((packageType) => (
-                            <MenuItem key={packageType.id} value={packageType.id}>{packageType.name + " " + packageType.duration}</MenuItem>
+                            <MenuItem key={packageType.id} value={packageType.id}>{packageType.durationtime + " " + packageType.duration}</MenuItem>
                           ))}
                         </Field>
                       </div>
@@ -897,7 +963,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                                   placeholder="DD/MM/YYYY"                            
                                 />
                               )}
-                              disabled={isEdit}
+                              disabled="true"
                             />
                           )}
                         </Field>
@@ -950,7 +1016,8 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                                   helperText={touched.packageenddate && errors.packageenddate}
                                   placeholder="DD/MM/YYYY"
                                 />
-                              )}                              
+                              )}
+                              disabled="true"
                             />
                           )}
                         </Field>
@@ -1266,9 +1333,9 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
                       />                        
                     </div>
                     <div className='form-group'>
-                    <Field
+                      <Field
                         name="discount"
-                        as={TextField}
+                        as={Select}
                         label="Discount"
                         type="number"
                         fullWidth
@@ -1283,10 +1350,14 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
                         error={touched.discount && Boolean(errors.discount)}
                         helperText={touched.discount && errors.discount}
                         disabled={values.discount !== 0}
-                        InputProps={{
-                          endAdornment: <InputAdornment position="end">%</InputAdornment>,
-                        }}
-                      />
+                      >
+                        <MenuItem value={0}>No Discount</MenuItem>
+                        <MenuItem value={5}>5%</MenuItem>
+                        <MenuItem value={10}>10%</MenuItem>
+                        <MenuItem value={15}>15%</MenuItem>
+                        <MenuItem value={20}>20%</MenuItem>
+                        <MenuItem value={25}>25%</MenuItem>
+                      </Field>
                     </div>
                     <div className='form-group'>
                       <Field

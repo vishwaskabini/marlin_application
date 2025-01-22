@@ -12,7 +12,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const App = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const { isAuthenticated, isMember } = useAuth();
+  const { isAuthenticated, isMember, isSuperAdmin } = useAuth();
 
   const handleMenuClick = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -23,7 +23,11 @@ const App = () => {
       <CssBaseline />
       {isAuthenticated && ( <Header onMenuClick={handleMenuClick}/> )}
       <Box sx={{display: "flex"}}>
-      {isAuthenticated && !isMember && ( <Sidebar drawerState={isSidebarOpen}/> )}
+        {isAuthenticated && (
+          (isSuperAdmin || (!isMember && !isSuperAdmin)) && (
+            <Sidebar drawerState={isSidebarOpen} />
+          )
+        )}
         <Box component="main" sx={[{ flexGrow: 1, minHeight: "86vh" }, isAuthenticated ? {p: 3} : {}]}>
           <RoutesComponent/>
         </Box>        

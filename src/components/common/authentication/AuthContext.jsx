@@ -11,29 +11,43 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [isMember, setIsMember] = useState(true);
+  const [isMember, setIsMember] = useState(false);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
+    const storedToken = sessionStorage.getItem('token');
+    const isSuperAdminIn = sessionStorage.getItem('isSuperAdminIn');
+    const isMemberIn = sessionStorage.getItem('isMemberIn');
     if (storedToken) {
       setToken(storedToken);
       setIsAuthenticated(true);
     }
+    if(isSuperAdminIn === "true") {
+      setIsSuperAdmin(true);
+    }
+    if(isMemberIn === "true") {
+      setIsMember(true);
+    }
     setIsLoading(false);
-  }, []);
+    console.log(isMember);
+    console.log(isSuperAdmin);
+  }, [isAuthenticated, isMember, isSuperAdmin]);
 
   const login = (token, isSuperAdminIn, isMemberIn) => {
     setIsMember(isMemberIn);
     setIsSuperAdmin(isSuperAdminIn);
     setToken(token);
     setIsAuthenticated(true);
-    localStorage.setItem("token", token); 
+    sessionStorage.setItem("token", token); 
+    sessionStorage.setItem("isSuperAdminIn", isSuperAdminIn); 
+    sessionStorage.setItem("isMemberIn", isMemberIn); 
   };
 
   const logout = () => {
     setToken(null);
     setIsAuthenticated(false);
-    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem("isSuperAdminIn"); 
+    sessionStorage.removeItem("isMemberIn");
   };
 
   const setAuthentication = (status) => {

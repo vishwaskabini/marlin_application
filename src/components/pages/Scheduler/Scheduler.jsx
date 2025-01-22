@@ -34,12 +34,7 @@ const Scheduler = () => {
   const [selectedSlotId, setSelectedSlotId] = useState(null);
   const [assignedMembers, setAssignedMembers] = useState({});
   const [availableSlots, setAvailableSlots] = useState({});
-  const [slots, setSlots] = useState({});
-  const [openBatch, setOpenBatch] = useState({
-    morning: true,
-    guest: true,
-    evening: true,
-  });
+  const [slots, setSlots] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [initialValues, setInitialValues] = useState({});
@@ -48,7 +43,7 @@ const Scheduler = () => {
   const getTimeSlots = () => {
     setIsLoading(true);
     apiClient.get("/api/Timeslots").then((data) => {      
-      var batchdata = sortAndCategorize(data)      
+      var batchdata = data.sort(sortByStartTime)      
       setSlots(batchdata);
       initializeAvailableSlots(batchdata);
       setSelectedDate(dayjs());
@@ -98,40 +93,12 @@ const Scheduler = () => {
     return totalMinutes;
   };
 
-  const sortAndCategorize = (timeSlots) => {
-    const morning = [];
-    const guest = [];
-    const evening = [];
-
-    timeSlots.forEach((slot) => {
-        const [start, end] = slot.name.split("-");
-        const startMinutes = convertToMinutes(start);
-                
-        if (slot.batch === "Morning" && startMinutes >= convertToMinutes("06:00") && startMinutes < convertToMinutes("12:00")) {
-            morning.push(slot);
-        } else if (slot.batch === "Public") {
-            guest.push(slot);
-        } else if (slot.batch === "Evening" && startMinutes >= convertToMinutes("14:00") && startMinutes < convertToMinutes("20:00")) {
-            evening.push(slot);
-        }
-    });
-    
-    const sortByStartTime = (a, b) => {
-        const [startA] = a.name.split("-");
-        const [startB] = b.name.split("-");
-        const startMinutesA = convertToMinutes(startA);
-        const startMinutesB = convertToMinutes(startB);
-        return startMinutesA - startMinutesB;
-    };
-
-    return {
-        morning: morning.sort(sortByStartTime),
-        guest: guest.slice(0, 1).map(item => ({
-          ...item,
-          name: "11:00-14:00"
-        })),
-        evening: evening.sort(sortByStartTime),
-    };
+  const sortByStartTime = (a, b) => {
+    const [startA] = a.name.split("-");
+    const [startB] = b.name.split("-");
+    const startMinutesA = convertToMinutes(startA);
+    const startMinutesB = convertToMinutes(startB);
+    return startMinutesA - startMinutesB;
   };
 
   useEffect(() => {
@@ -148,7 +115,7 @@ const Scheduler = () => {
 
   const initializeAvailableSlots = (slots) => {
     const initialAvailableSlots = {};
-    [...slots.morning, ...slots.guest, ...slots.evening].forEach(slot => {
+    [...slots].forEach(slot => {
       initialAvailableSlots[slot.id] = 50;
     });
     setAvailableSlots(initialAvailableSlots);
@@ -191,13 +158,6 @@ const Scheduler = () => {
         position: "top-right"
       });
     });    
-  };
-
-  const handleToggleBatch = (batch) => {
-    setOpenBatch((prev) => ({
-      ...prev,
-      [batch]: !prev[batch],
-    }));
   };
 
   const handleDateChange = (newDate) => {
@@ -273,203 +233,60 @@ const Scheduler = () => {
 
         <Card sx={{marginBottom: "10px"}}>
           <CardContent>
-            {/* Morning Batch Header */}
-            <Box display="flex" justifyContent="space-between" alignItems="center" width={"100%"} bgcolor={'#dae4ed'} px={2} sx={{ cursor: "pointer", borderRadius: "5px" }} onClick={() => handleToggleBatch('morning')} mb={2}>
-              <Typography variant="h6">
-                Morning Batch (6:00 AM - 11:00 AM)
-              </Typography>
-              <IconButton onClick={() => handleToggleBatch('morning')}>
-                {openBatch.morning ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              </IconButton>
-            </Box>
-            <Collapse in={openBatch.morning}>
-              <Box display="flex" flexWrap="wrap" gap={2} p={2}>
-                {slots?.morning?.map((slot, index) => (
-                  <Box key={index} width="32.5%" mb={2}>
-                    <Paper
-                      elevation={3}
+            <Box display="flex" flexWrap="wrap" gap={2} p={2}>
+              {slots?.map((slot, index) => (
+                <Box key={index} width="32.5%" mb={2}>
+                  <Paper
+                    elevation={3}
+                    style={{
+                      padding: '10px',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: '#f5f5f5',
+                      color: '#000',
+                      position: 'relative',
+                      height: "200px"
+                    }}
+                    onClick={() => setSelectedSlot(slot.name)}
+                  >
+                    <IconButton
                       style={{
-                        padding: '10px',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        backgroundColor: '#f5f5f5',
-                        color: '#000',
-                        position: 'relative',
-                        height: "200px"
+                        position: 'absolute',
+                        top: '10px',
+                        right: '10px',
+                        color: '#1976d2',
                       }}
-                      onClick={() => setSelectedSlot(slot.name)}
-                    >
-                      <IconButton
-                        style={{
-                          position: 'absolute',
-                          top: '10px',
-                          right: '10px',
-                          color: '#1976d2',
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenDialog(slot);
-                        }}
-                        disabled={assignedMembers[slot.id]?.length >= 50}
-                      >
-                        <AddIcon />
-                      </IconButton>
-
-                      <Typography variant="body1">{slot.name}</Typography>
-                      <Typography variant="body2" color="textSecondary" style={{ marginTop: '5px' }}>
-                        Available Slots: {availableSlots[slot.id]}
-                      </Typography>
-
-                      {assignedMembers[slot.id] && assignedMembers[slot.id].length > 0 && (
-                        <div style={{ marginTop: '10px', textAlign: 'left', maxHeight: '150px', overflowY: 'auto' }}>
-                          {assignedMembers[slot.id].map((member, index) => (
-                            <Chip
-                              key={member.userid+index}
-                              label= {member.name}
-                              onDelete={() => handleRemoveMember(slot.id, member.id)}
-                              color="primary"
-                              style={{ margin: '5px' }}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </Paper>
-                  </Box>
-                ))}
-              </Box>
-            </Collapse>
-
-            {/* Guest Batch Header */}
-            <Box display="flex" justifyContent="space-between" alignItems="center" width={"100%"} bgcolor={'#f5f5f5'} px={2} sx={{ cursor: "pointer", borderRadius: "5px" }} onClick={() => handleToggleBatch('guest')} mb={2}>
-              <Typography variant="h6">
-                Guest Batch (11:00 AM - 2:00 PM)
-              </Typography>
-              <IconButton onClick={() => handleToggleBatch('guest')}>
-                {openBatch.guest ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              </IconButton>
-            </Box>
-            <Collapse in={openBatch.guest}>
-              <Box display="flex" flexWrap="wrap" gap={2} p={2}>
-                {slots?.guest?.map((slot, index) => (
-                  <Box key={index} width="32.5%" mb={2}>
-                    <Paper
-                      elevation={3}
-                      style={{
-                        padding: '10px',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        backgroundColor: '#f5f5f5',
-                        color: '#000',
-                        position: 'relative',
-                        height: "200px"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenDialog(slot);
                       }}
-                      onClick={() => setSelectedSlot(slot.name)}
+                      disabled={assignedMembers[slot.id]?.length >= 50}
                     >
-                      <IconButton
-                        style={{
-                          position: 'absolute',
-                          top: '10px',
-                          right: '10px',
-                          color: '#1976d2',
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation(); // Prevent triggering onClick of Paper
-                          handleOpenDialog(slot);
-                        }}
-                        disabled={assignedMembers[slot.id]?.length >= 50}
-                      >
-                        <AddIcon />
-                      </IconButton>
+                      <AddIcon />
+                    </IconButton>
 
-                      <Typography variant="body1">{slot.name}</Typography>
-                      <Typography variant="body2" color="textSecondary" style={{ marginTop: '5px' }}>
-                        Available Slots: {availableSlots[slot.id]}
-                      </Typography>
+                    <Typography variant="body1">{slot.name}</Typography>
+                    <Typography variant="body2" color="textSecondary" style={{ marginTop: '5px' }}>
+                      Available Slots: {availableSlots[slot.id]}
+                    </Typography>
 
-                      {assignedMembers[slot.id] && assignedMembers[slot.id].length > 0 && (
-                        <div style={{ marginTop: '10px', textAlign: 'left', maxHeight: '150px', overflowY: 'auto' }}>
-                          {assignedMembers[slot.id].map((member, index) => (
-                            <Chip
-                              key={member.userid+index}
-                              label= {member.name}
-                              onDelete={() => handleRemoveMember(slot.id, member.id)}
-                              color="primary"
-                              style={{ margin: '5px' }}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </Paper>
-                  </Box>
-                ))}
-              </Box>
-            </Collapse>
-
-            {/* Evening Batch Header */}
-            <Box display="flex" justifyContent="space-between" alignItems="center" width={"100%"} bgcolor={'#e6f2ff'} px={2} sx={{ cursor: "pointer", borderRadius: "5px" }} onClick={() => handleToggleBatch('evening')} mb={2}>
-              <Typography variant="h6">
-                Evening Batch (2:00 PM - 8:00 PM)
-              </Typography>
-              <IconButton onClick={() => handleToggleBatch('evening')}>
-                {openBatch.evening ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              </IconButton>
-            </Box>
-            <Collapse in={openBatch.evening}>
-              <Box display="flex" flexWrap="wrap" gap={2} p={2} width={"100%"} justifyContent={'space-between'}>
-                {slots?.evening?.map((slot, index) => (
-                  <Box key={index} width="32.5%" mb={2}>
-                    <Paper
-                      elevation={3}
-                      style={{
-                        padding: '10px',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        backgroundColor: '#f5f5f5',
-                        color: '#000',
-                        position: 'relative',
-                        height: "200px"
-                      }}
-                      onClick={() => setSelectedSlot(slot.name)}
-                    >
-                      <IconButton
-                        style={{
-                          position: 'absolute',
-                          top: '10px',
-                          right: '10px',
-                          color: '#1976d2',
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenDialog(slot);
-                        }}
-                        disabled={assignedMembers[slot.id]?.length >= 50}
-                      >
-                        <AddIcon />
-                      </IconButton>
-
-                      <Typography variant="body1">{slot.name}</Typography>
-                      <Typography variant="body2" color="textSecondary" style={{ marginTop: '5px' }}>
-                        Available Slots: {availableSlots[slot.id]}
-                      </Typography>
-
-                      {assignedMembers[slot.id] && assignedMembers[slot.id].length > 0 && (
-                        <div style={{ marginTop: '10px', textAlign: 'left', maxHeight: '150px', overflowY: 'auto' }}>
-                          {assignedMembers[slot.id].map((member, index) => (
-                            <Chip
-                              key={member.userid+index}
-                              label={member.name}
-                              onDelete={() => handleRemoveMember(slot.id, member.id)}
-                              color="primary"
-                              style={{ margin: '5px' }}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </Paper>
-                  </Box>
-                ))}
-              </Box>
-            </Collapse>
+                    {assignedMembers[slot.id] && assignedMembers[slot.id].length > 0 && (
+                      <div style={{ marginTop: '10px', textAlign: 'left', maxHeight: '150px', overflowY: 'auto' }}>
+                        {assignedMembers[slot.id].map((member, index) => (
+                          <Chip
+                            key={member.userid+index}
+                            label= {member.name}
+                            onDelete={() => handleRemoveMember(slot.id, member.id)}
+                            color="primary"
+                            style={{ margin: '5px' }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </Paper>
+                </Box>
+              ))}
+            </Box>            
           </CardContent>
         </Card>
         <AssignMemberDiaglog open={openDialog} handleClose={handleCloseDialog}

@@ -93,8 +93,6 @@ const Header = ({onMenuClick}) => {
                         },
                     }}
                     >
-                    <MenuItem onClick={handleProfileUpdate}>Profile Update</MenuItem>
-                    <Divider />
                     <MenuItem onClick={handleLogout}>Logout</MenuItem>
                 </Menu>
             </Toolbar>

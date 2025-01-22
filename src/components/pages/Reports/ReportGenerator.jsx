@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { Button, duration } from '@mui/material';
+import ListTable from '../../common/components/ListTable';
+import { Box, Card, CardContent, FormControl, FormHelperText, InputAdornment, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx'; // Import the XLSX library for Excel export
-import './ReportGenerator.css';
+import * as XLSX from 'xlsx';
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
 const ReportGenerator = () => {
-  const [fromDate, setFromDate] = useState(null);
-  const [toDate, setToDate] = useState(null);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
   const [selectedTimePeriod, setSelectedTimePeriod] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [displayDialog, setDisplayDialog] = useState(false);
@@ -30,6 +34,10 @@ const ReportGenerator = () => {
     { label: 'Amount Low to High', value: 'amount_low_to_low' },
     { label: 'Registration Date Low to High', value: 'reg_date_low_to_high' }
   ];
+
+  const [duration, setDuration] = React.useState('');
+
+  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,6 +64,29 @@ const ReportGenerator = () => {
     setDisplayDialog(true);
   };
 
+  const columnsPaymentSummary = [
+    { id: 'totalBusiness', label: 'Total business' },
+    { id: 'totalAmountCollected', label: 'Total amount collected' },
+    { id: 'totalAmountPending', label: 'Total amount pending' }
+  ];
+
+  const columnsMembersSummary = [
+    { id: 'totalNewRegisteredMembers', label: 'Total newly registered members' },
+    { id: 'totalActiveMembers', label: 'Total Active Members' },
+    { id: 'expiredMembers', label: 'Expired Members' }
+  ];
+
+  const columnsDetailedReport = [
+    { id: 'memberName', label: 'Member Name' },
+    { id: 'contact', label: 'Contact' },
+    { id: 'packageName', label: 'Package Name' },
+    { id: 'total', label: 'Total' },
+    { id: 'paid', label: 'Paid' },
+    { id: 'pending', label: 'Pending' },
+    { id: 'paymentStatus', label: 'Payment Status' },
+    { id: 'memberStatus', label: 'Member status' }
+  ];
+const [rowsData, setRowsData] = useState([]);
   const exportPdf = () => {
     const doc = new jsPDF();
     doc.text('Report', 14, 16);
@@ -116,6 +147,10 @@ const ReportGenerator = () => {
     XLSX.writeFile(workbook, 'report.xlsx');
   };
 
+  const handleDateChange = () => {
+
+  }
+
   if (loading) {
     return <div className="loading">Loading...</div>;
   }
@@ -125,160 +160,97 @@ const ReportGenerator = () => {
   }
 
   return (
-    <></>
-    // <div className="report-generator-unique">
-    //   <h2 className="report-header-unique">Reports - Members & Guests</h2>
-
-    //   {/* Top Section */}
-    //   <div className="p-panel p-my-2">
-    //     <div className="p-grid p-align-center p-justify-between">
-    //       <div className="p-col-2">
-    //         <Dropdown
-    //           value={selectedTimePeriod}
-    //           options={timePeriodOptions}
-    //           onChange={(e) => setSelectedTimePeriod(e.value)}
-    //           placeholder="Select Time Period"
-    //         />
-    //       </div>
-    //       <div className="p-col-3">
-    //         {selectedTimePeriod && (
-    //           <Calendar
-    //             id="fromDate"
-    //             value={fromDate}
-    //             onChange={(e) => setFromDate(e.value)}
-    //             showIcon
-    //             placeholder="From Date"
-    //           />
-    //         )}
-    //       </div>
-    //       <div className="p-col-3">
-    //         {selectedTimePeriod && (
-    //           <Calendar
-    //             id="toDate"
-    //             value={toDate}
-    //             onChange={(e) => setToDate(e.value)}
-    //             showIcon
-    //             placeholder="To Date"
-    //           />
-    //         )}
-    //       </div>
-    //       <div className="p-col-2">
-    //         <Dropdown
-    //           value={selectedOrder}
-    //           options={orderOptions}
-    //           onChange={(e) => setSelectedOrder(e.value)}
-    //           placeholder="Order By"
-    //         />
-    //       </div>
-    //     </div>
-    //     <div className="p-my-2">
-    //       <Button label="Generate Report" icon="pi pi-file" onClick={generateReport} style={{ marginLeft: '71%' }} />
-    //     </div>
-    //   </div>
-
-    //   {/* Dialog for Report */}
-    //   <Dialog header="Generated Report" visible={displayDialog} onHide={() => setDisplayDialog(false)} style={{ width: '70vw' }}>
-    //     <div className="p-grid">
-    //       {/* Active Members Card */}
-    //       <div className="p-col-12 p-md-4">
-    //         <div style={{ padding: '10px', margin: '10px 0', backgroundColor: 'white', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', borderRadius: '5px' }}>
-    //           <h4>Active Members</h4>
-    //           <table className="p-table">
-    //             <thead>
-    //               <tr>
-    //                 <th>Name</th>
-    //                 <th>Contact</th>
-    //                 <th>Package</th>
-    //                 <th>Amount Paid</th>
-    //                 <th>Amount Remaining</th>
-    //                 <th>Duration</th>
-    //               </tr>
-    //             </thead>
-    //             <tbody>
-    //               {activeMembers.map((member, index) => (
-    //                 <tr key={index}>
-    //                   <td>{member.name}</td>
-    //                   <td>{member.contact}</td>
-    //                   <td>{member.package}</td>
-    //                   <td>{member.amountPaid}</td>
-    //                   <td>{member.amountRemaining}</td>
-    //                   <td>{member.duration}</td>
-    //                 </tr>
-    //               ))}
-    //             </tbody>
-    //           </table>
-    //         </div>
-    //       </div>
-
-    //       {/* Expired Members Card */}
-    //       <div className="p-col-12 p-md-4">
-    //         <div style={{ padding: '10px', margin: '10px 0', backgroundColor: 'white', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', borderRadius: '5px' }}>
-    //           <h4>Expired Members</h4>
-    //           <table className="p-table">
-    //             <thead>
-    //               <tr>
-    //                 <th>Name</th>
-    //                 <th>Contact</th>
-    //                 <th>Package</th>
-    //                 <th>Amount Paid</th>
-    //                 <th>Amount Remaining</th>
-    //                 <th>Duration</th>
-    //               </tr>
-    //             </thead>
-    //             <tbody>
-    //               {expiredMembers.map((member, index) => (
-    //                 <tr key={index}>
-    //                   <td>{member.name}</td>
-    //                   <td>{member.contact}</td>
-    //                   <td>{member.package}</td>
-    //                   <td>{member.amountPaid}</td>
-    //                   <td>{member.amountRemaining}</td>
-    //                   <td>{member.duration}</td>
-    //                 </tr>
-    //               ))}
-    //             </tbody>
-    //           </table>
-    //         </div>
-    //       </div>
-
-    //       {/* Guests Card */}
-    //       <div className="p-col-12 p-md-4">
-    //         <div style={{ padding: '10px', margin: '10px 0', backgroundColor: 'white', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', borderRadius: '5px' }}>
-    //           <h4>Guests</h4>
-    //           <table className="p-table">
-    //             <thead>
-    //               <tr>
-    //                 <th>Name</th>
-    //                 <th>Contact</th>
-    //                 <th>Package</th>
-    //                 <th>Amount Paid</th>
-    //                 <th>Amount Remaining</th>
-    //                 <th>Duration</th>
-    //               </tr>
-    //             </thead>
-    //             <tbody>
-    //               {guestDetails.map((guest, index) => (
-    //                 <tr key={index}>
-    //                   <td>{guest.name}</td>
-    //                   <td>{guest.contact}</td>
-    //                   <td>{guest.package}</td>
-    //                   <td>{guest.amountPaid}</td>
-    //                   <td>{guest.amountRemaining}</td>
-    //                   <td>{guest.duration}</td>
-    //                 </tr>
-    //               ))}
-    //             </tbody>
-    //           </table>
-    //         </div>
-    //       </div>
-    //     </div>
-
-    //     <div className="p-dialog-footer">
-    //       <Button label="Export to PDF" icon="pi pi-file-pdf" onClick={exportPdf} className="p-button-secondary" />
-    //       <Button label="Export to Excel" icon="pi pi-file-excel" onClick={exportExcel} className="p-button-secondary" />
-    //     </div>
-    //   </Dialog>
-    // </div>
+   <div className="container">
+    <Box sx={{ width: '100%', overflowX: 'auto' }}>
+        <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+          <Typography variant='h5' className='header-text'>Reports            
+          </Typography>          
+        </Box>
+        <Card sx={{marginBottom: "10px"}}>
+          <CardContent>
+            <div className='row'>
+              <div className="form-group">
+              <FormControl fullWidth>
+                  <InputLabel id="demo-simple-select-label">Duration</InputLabel>
+                  <Select
+                    labelId="demo-simple-select-label"
+                    id="demo-simple-select"
+                    value={duration}
+                    label="Duration"                      
+                  >
+                    <MenuItem value={1}>Today</MenuItem>
+                    <MenuItem value={2}>Current Week</MenuItem>
+                    <MenuItem value={3}>Current Month</MenuItem>
+                    <MenuItem value={4}>Current Year</MenuItem>
+                    <MenuItem value={5}>Last Year</MenuItem>
+                    <MenuItem value={6}>All</MenuItem>
+                    <MenuItem value={7}>Custom</MenuItem>
+                  </Select>
+                </FormControl>
+              </div>
+              <div className='form-group'>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker
+                    label="Start Date"
+                    value={startDate}
+                    onChange={handleDateChange}
+                    sx={{width: "100%"}}
+                    renderInput={(params) => <TextField {...params}/>}
+                  />
+                </LocalizationProvider>
+              </div>     
+              <div className='form-group'>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DatePicker
+                    label="End Date"
+                    value={endDate}
+                    onChange={handleDateChange}
+                    sx={{width: "100%"}}
+                    renderInput={(params) => <TextField {...params} />}
+                  />
+                </LocalizationProvider>
+              </div>   
+              <div className="form-group">
+                  <Button variant="contained">Generate Report</Button>
+              </div>             
+            </div>           
+            <div className='row'>
+              <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+                <Typography variant='h5' className='header-text'>Payments Summary           
+                </Typography>
+              </Box>
+            </div>
+            <div className='row'>
+              <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+                <ListTable columns={columnsPaymentSummary} rows={rowsData} tableName="Payment Summary"/>
+              </Box>
+            </div>                
+            <div className='row'>
+              <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+                <Typography variant='h5' className='header-text'>Members Summary           
+                </Typography>
+              </Box>
+            </div>
+            <div className='row'>
+              <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+              <ListTable columns={columnsMembersSummary} rows={rowsData} tableName="Members Summary"/>
+              </Box>
+            </div>
+            <div className='row'>
+              <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+                <Typography variant='h5' className='header-text'>Detailed Report - Payment           
+                </Typography>
+              </Box>
+            </div>
+            <div className='row'>
+              <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+              <ListTable columns={columnsDetailedReport} rows={rowsData} tableName="Detailed Report"/>
+              </Box>
+            </div>
+          </CardContent>
+        </Card>
+      </Box>  
+     </div>
   );
 };
 
