@@ -13,6 +13,7 @@ import Login from "../authentication/login/Login";
 import PrivateRoute from "../authentication/PrivateRoute";
 import Members from "../../pages/Members/Members";
 import MemberDashboard from "../../pages/Dashboard/MemberDashboard";
+import ChangePassword from "./ChangePassword";
 
 const RoutesComponent = () => {
     return(
@@ -26,10 +27,9 @@ const RoutesComponent = () => {
             <Route path="/reports" element={<PrivateRoute element={<ReportGenerator />} /> }/>
             <Route path="/packages" element={<PrivateRoute element={<Packages/> } /> }/>
             <Route path="/scheduler" element={<PrivateRoute element={<Scheduler />} /> }/>
-            <Route path="/user/profile" element={<PrivateRoute element={<UserProfileScreen />} /> }/>
-            <Route path="/user/dashboard" element={<PrivateRoute element={<UserProfiledashbord />} /> }/>
             <Route path="/member/dashboard" element={<PrivateRoute element={<MemberDashboard />} /> }/>
             <Route path="/login" element={<Login/>}/>
+            <Route path="/changepassword" element={<ChangePassword/>}/>
         </Routes>
     );
 }

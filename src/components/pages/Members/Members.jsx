@@ -202,7 +202,9 @@ const Members = () => {
       });
     } else {
       apiClient.post("/api/Users/create", values).then((data) => {
-        saveDocuments(values, data);
+        if(values.photoUpload || values.aadharUpload) {          
+          saveDocuments(values, data);
+        }
       }).catch((error) => {
         setIsLoading(false);
         toast.error("Error while Create " + error, {

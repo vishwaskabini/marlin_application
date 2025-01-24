@@ -32,12 +32,13 @@ export const AuthProvider = ({ children }) => {
     console.log(isSuperAdmin);
   }, [isAuthenticated, isMember, isSuperAdmin]);
 
-  const login = (token, isSuperAdminIn, isMemberIn) => {
+  const login = (token, isSuperAdminIn, isMemberIn, emailId) => {
     setIsMember(isMemberIn);
     setIsSuperAdmin(isSuperAdminIn);
     setToken(token);
     setIsAuthenticated(true);
-    sessionStorage.setItem("token", token); 
+    sessionStorage.setItem("token", token);
+    sessionStorage.setItem("email", emailId);
     sessionStorage.setItem("isSuperAdminIn", isSuperAdminIn); 
     sessionStorage.setItem("isMemberIn", isMemberIn); 
   };

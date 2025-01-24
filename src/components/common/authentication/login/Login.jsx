@@ -57,14 +57,19 @@ const Login = () => {
     if (email && password) {
       setIsLoading(true);
       apiClient.post("/api/Users/login", {email: email, password: password}).then((data) =>  {
-        let isSuperAdmin = handleRole(data.roleid);
-        let isMember = handleUserType(data.usertype);
-        setIsLoading(false);
-        login(token, isSuperAdmin, isMember);
-        if(isMember) {
-          navigate("/member/dashboard");
+        if(data.temporarypassword !== null) {
+          sessionStorage.setItem("email", email);
+          navigate("/changepassword");
         } else {
-          navigate("/");
+          let isSuperAdmin = handleRole(data.roleid);
+          let isMember = handleUserType(data.usertype);
+          setIsLoading(false);
+          login(token, isSuperAdmin, isMember, email);
+          if(isMember) {
+            navigate("/member/dashboard");
+          } else {
+            navigate("/");
+          }
         }        
       }).catch((error) => {
         setIsLoading(false);

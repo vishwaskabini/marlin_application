@@ -52,8 +52,8 @@ const Header = ({onMenuClick}) => {
         handleMenuClose();
     };
     
-    const handleProfileUpdate = () => {
-        alert('Navigating to profile update...');
+    const handlePasswordChange = () => {
+        navigate("/changepassword");
         handleMenuClose();
     };
 
@@ -93,7 +93,8 @@ const Header = ({onMenuClick}) => {
                         },
                     }}
                     >
-                    <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                      <MenuItem onClick={handlePasswordChange}>Change Password</MenuItem>
+                      <MenuItem onClick={handleLogout}>Logout</MenuItem>
                 </Menu>
             </Toolbar>
       </AppBar>
