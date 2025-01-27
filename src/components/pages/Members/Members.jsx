@@ -204,6 +204,12 @@ const Members = () => {
       apiClient.post("/api/Users/create", values).then((data) => {
         if(values.photoUpload || values.aadharUpload) {          
           saveDocuments(values, data);
+        } else {
+          getData();
+          setIsDialogOpen(false);
+          toast.success("Member Created Successfully !", {
+            position: "top-right"
+          });
         }
       }).catch((error) => {
         setIsLoading(false);
