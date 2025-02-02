@@ -7,6 +7,7 @@ import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import apiClient from '../../services/apiClientService';
 
 const ReportGenerator = () => {
   const [startDate, setStartDate] = useState(null);
@@ -14,6 +15,9 @@ const ReportGenerator = () => {
   const [selectedTimePeriod, setSelectedTimePeriod] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [displayDialog, setDisplayDialog] = useState(false);
+  const [paymentReport, setPaymentReport] = useState([]);
+  const [memberReport, setMemberReport] = useState([]);
+  const [memberDetailReport, setMemberDetailReport] = useState([]);
 
   const [activeMembers, setActiveMembers] = useState([]);
   const [expiredMembers, setExpiredMembers] = useState([]);
@@ -37,7 +41,28 @@ const ReportGenerator = () => {
 
   const [duration, setDuration] = React.useState('');
 
-  
+  const getReportData = async () => {
+    try {
+      let requestBody = {
+        "fromdate": "2024-01-30T16:16:42.177Z",
+        "toDate": "2025-01-30T16:16:42.177Z"
+      }
+      const [res1, res2, res3] = await Promise.all([
+        apiClient.post("/api/Summary/GetPaymentReportsByDateRange", requestBody),
+        apiClient.post("/api/Summary/GetMemberReportsByDateRange", requestBody),
+        apiClient.post("/api/Summary/GetMemberDetailedReportsByDateRange", requestBody)
+      ]);
+
+      setPaymentReport(res1.data);
+      setMemberReport(res2.data);
+      setMemberDetailReport(res3.data);
+
+      setLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -57,7 +82,8 @@ const ReportGenerator = () => {
       }
     };
 
-    fetchData();
+    //fetchData();
+    getReportData();
   }, []);
 
   const generateReport = () => {
@@ -65,24 +91,24 @@ const ReportGenerator = () => {
   };
 
   const columnsPaymentSummary = [
-    { id: 'totalBusiness', label: 'Total business' },
-    { id: 'totalAmountCollected', label: 'Total amount collected' },
-    { id: 'totalAmountPending', label: 'Total amount pending' }
+    { id: 'paidAmount', label: 'Total Amount Collected' },
+    { id: 'pendingAmount', label: 'Total Amount Pending' },
+    { id: 'totalPayableAmount', label: 'Total Business' }
   ];
 
   const columnsMembersSummary = [
-    { id: 'totalNewRegisteredMembers', label: 'Total newly registered members' },
-    { id: 'totalActiveMembers', label: 'Total Active Members' },
-    { id: 'expiredMembers', label: 'Expired Members' }
+    { id: 'newlyRegistered', label: 'Total newly registered members' },
+    { id: 'active', label: 'Total Active Members' },
+    { id: 'expired', label: 'Expired Members' }
   ];
 
   const columnsDetailedReport = [
     { id: 'memberName', label: 'Member Name' },
     { id: 'contact', label: 'Contact' },
     { id: 'packageName', label: 'Package Name' },
-    { id: 'total', label: 'Total' },
-    { id: 'paid', label: 'Paid' },
-    { id: 'pending', label: 'Pending' },
+    { id: 'totalPayableAmount', label: 'Total' },
+    { id: 'paidAmount', label: 'Paid' },
+    { id: 'pendingAmount', label: 'Pending' },
     { id: 'paymentStatus', label: 'Payment Status' },
     { id: 'memberStatus', label: 'Member status' }
   ];
@@ -222,7 +248,7 @@ const [rowsData, setRowsData] = useState([]);
             </div>
             <div className='row'>
               <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
-                <ListTable columns={columnsPaymentSummary} rows={rowsData} tableName="Payment Summary"/>
+                <ListTable columns={columnsPaymentSummary} rows={paymentReport} tableName="Payment Summary"/>
               </Box>
             </div>                
             <div className='row'>
@@ -233,7 +259,7 @@ const [rowsData, setRowsData] = useState([]);
             </div>
             <div className='row'>
               <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
-              <ListTable columns={columnsMembersSummary} rows={rowsData} tableName="Members Summary"/>
+              <ListTable columns={columnsMembersSummary} rows={memberReport} tableName="Members Summary"/>
               </Box>
             </div>
             <div className='row'>
@@ -244,7 +270,7 @@ const [rowsData, setRowsData] = useState([]);
             </div>
             <div className='row'>
               <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
-              <ListTable columns={columnsDetailedReport} rows={rowsData} tableName="Detailed Report"/>
+              <ListTable columns={columnsDetailedReport} rows={memberDetailReport} tableName="Detailed Report"/>
               </Box>
             </div>
           </CardContent>

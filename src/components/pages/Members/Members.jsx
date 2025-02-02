@@ -64,7 +64,10 @@ const Members = () => {
       aadharUpload: data.idproof,
       photoUpload: data.photo,
       idproofname: data.idproofname,
-      photoname: data.photoname
+      photoname: data.photoname,
+      secondarycontactnumber: data.secondarycontactnumber,
+      isspecialchild: data.isspecialchild,
+      referredby: data.referredby
     });
     setIsDialogOpen(true);
   };
@@ -141,7 +144,9 @@ const Members = () => {
   }
 
   const getPackages = () => {
+    setIsLoading(true);
     apiClient.get("/api/Packages").then((data) => {
+      setIsLoading(false);
       setPackageTypes(data);
       if(data && data.length > 0 && initialValuesPackages && !data.package && !data.payment) {
         initialValuesPackages.amount = data[0].cost;
@@ -149,6 +154,7 @@ const Members = () => {
         initialValuesPackages.roundedpayment = data[0].cost;
       }
     }).catch((error) => {
+      setIsLoading(false);
       toast.error("Error while get " + error, {
         position: "top-right"
       });
@@ -156,8 +162,13 @@ const Members = () => {
   }
 
   useEffect(() => {
-    getPackages();
-    getData();     
+    if (packageTypes.length > 0) {
+      getData();
+    }
+  }, [packageTypes]);
+
+  useEffect(() => {
+    getPackages();    
   }, []);
 
   const columns = [
@@ -765,15 +776,19 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
                   />
                 </div>
                 <div className='form-group'>
-                  <Field
-                    name="coachingmembership"
-                    label="Coaching Membership"
-                    fullWidth
-                    as={TextField}
-                    variant="outlined"
-                    error={touched.coachingmembership && Boolean(errors.coachingmembership)}
-                    helperText={touched.coachingmembership && errors.coachingmembership}
-                  />
+                <Field
+                  name="coachingmembership"
+                  label="Member Type"
+                  fullWidth
+                  as={TextField}
+                  variant="outlined"
+                  select
+                  error={touched.coachingmembership && Boolean(errors.coachingmembership)}
+                  helperText={touched.coachingmembership && errors.coachingmembership}
+                >
+                  <MenuItem value="Coaching">Coaching</MenuItem>
+                  <MenuItem value="Membership">Membership</MenuItem>
+                </Field>
                 </div>
                 <div className='form-group'>
                   <FormControl fullWidth error={touched.isspecialchild && Boolean(errors.isspecialchild)} sx={{justifyContent: "center"}}>
@@ -1098,9 +1113,10 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                             />                        
                           </div>
                           <div className='form-group'>
-                          <Field
+                            <Field
                               name="discount"
                               as={TextField}
+                              select
                               label="Discount"
                               type="number"
                               fullWidth
@@ -1114,10 +1130,15 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                               }}
                               error={touched.discount && Boolean(errors.discount)}
                               helperText={touched.discount && errors.discount}
-                              InputProps={{
-                                endAdornment: <InputAdornment position="end">%</InputAdornment>,
-                              }}
-                            />                        
+                              // disabled={values.discount !== 0}
+                            >
+                              <MenuItem value={0}>No Discount</MenuItem>
+                              <MenuItem value={5}>5%</MenuItem>
+                              <MenuItem value={10}>10%</MenuItem>
+                              <MenuItem value={15}>15%</MenuItem>
+                              <MenuItem value={20}>20%</MenuItem>
+                              <MenuItem value={25}>25%</MenuItem>
+                            </Field>                      
                           </div>
                           <div className='form-group'>
                             <Field
@@ -1250,6 +1271,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                                 helperText={touched.pendingamount && errors.pendingamount}
                                 InputLabelProps={{
                                   shrink: values.pendingamount !== '',
+                                  readOnly: true,
                                 }}
                               />
                             </div>
@@ -1343,7 +1365,8 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
                     <div className='form-group'>
                       <Field
                         name="discount"
-                        as={Select}
+                        as={TextField}
+                        select
                         label="Discount"
                         type="number"
                         fullWidth
@@ -1386,7 +1409,7 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
                       <Field
                         name="payableamount"
                         as={TextField}
-                        label="Payable Amount"
+                        label="Rounded Amount"
                         type="number"
                         fullWidth
                         value={values.payableamount}
@@ -1449,12 +1472,12 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
                       <Field
                         name="roundedpayment"
                         as={TextField}
-                        label="Rounded Amount"
+                        label="Payable Amount"
                         type="number"
                         fullWidth
                         value={values.roundedpayment}
                         onChange={(e) => {
-                          const roundedValue = parseFloat(e.target.value) || 0;
+                          const roundedValue = Number(parseFloat(e.target.value) || 0);
                           if(values.payableamount <  roundedValue) {
                             setFieldValue('roundedpayment', values.payableamount);
                             setFieldValue("pendingamount", 0);
@@ -1465,7 +1488,7 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
                             } else {
                               setFieldValue("pendingamount", (parseFloat(values.payableamount) - roundedValue));
                             }                            
-                          }
+                          }                          
                           setFieldTouched('pendingamount', true);
                         }}
                         error={touched.roundedpayment && Boolean(errors.roundedpayment)}
@@ -1503,6 +1526,7 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
                           helperText={touched.pendingamount && errors.pendingamount}
                           InputLabelProps={{
                             shrink: values.pendingamount !== '',
+                            readOnly: true,
                           }}
                         />
                       </div>

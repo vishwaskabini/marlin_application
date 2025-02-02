@@ -5,6 +5,9 @@ import LoadingIndicator from '../../common/components/LoadingIndicator';
 import apiClient from '../../services/apiClientService';
 import { toast } from 'react-toastify';
 import dayjs from 'dayjs';
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+
+dayjs.extend(isSameOrAfter);
 
 const Dashboard = () => {
   const [cardDataMembers, setMembersCardData] = useState([]);
@@ -28,8 +31,8 @@ const Dashboard = () => {
 
   const getTotal = (data) => {
     const finalTotal = data.reduce((total, item) => {
-      if (item.payment && item.payment.length > 0) {
-        const memberTotalPayment = item.payment.reduce((sum, payment) => {
+      if (item.packagepaymentDetails && item.packagepaymentDetails.length > 0) {
+        const memberTotalPayment = item.packagepaymentDetails.reduce((sum, payment) => {
           return sum + payment.roundedpayment;
         }, 0);              
         return total + memberTotalPayment;
@@ -44,13 +47,13 @@ const Dashboard = () => {
     const today = dayjs().startOf('day');
 
     const activeMembers = members.filter((item) => {
-      if(item.payment && item.payment.length > 0) {
-        return dayjs(item.payment[0].actualenddate).isAfter(today, 'day');
+      if(item.packageDetails && item.packageDetails.length > 0) {
+        return dayjs(item.packageDetails[0].actualenddate).isSameOrAfter(today, 'day');
       }
     });
     const expiredMembers = members.filter((item) => {
-      if(item.payment && item.payment.length > 0) {
-        return dayjs(item.payment[0].actualenddate).isBefore(today, 'day');
+      if(item.packageDetails && item.packageDetails.length > 0) {
+        return dayjs(item.packageDetails[0].actualenddate).isBefore(today, 'day');
       }
     });    
 
@@ -67,8 +70,8 @@ const Dashboard = () => {
     const monthsPayment = getTotal(registeredInLastMonth);
 
     const totalPendingAmount = members.reduce((total, item) => {
-      if (item.payment && item.payment.length > 0) {
-        const memberTotalPayment = item.payment.reduce((sum, payment) => {
+      if (item.packageDetails && item.packageDetails.length > 0) {
+        const memberTotalPayment = item.packageDetails.reduce((sum, payment) => {
           if(payment.paymentstatus === "Partial") {
             return sum + (payment.pendingamount && payment.pendingamount != null ? payment.pendingamount : 0);
           }          
@@ -79,8 +82,8 @@ const Dashboard = () => {
     }, 0);
 
     const totalPendingMember = members.filter((item) => {
-      if (item.payment && item.payment.length > 0) {
-        return item.payment.some(payment => payment.paymentstatus === "Partial");
+      if (item.packageDetails && item.packageDetails.length > 0) {
+        return item.packageDetails.some(payment => payment.paymentstatus === "Partial");
       }
       return false;
     });
