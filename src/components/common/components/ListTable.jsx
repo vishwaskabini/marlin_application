@@ -30,7 +30,7 @@ function stableSort(array, comparator) {
   return stabilizedThis.map((el) => el[0]);
 }
 
-const ListTable = ({ columns, rows, onEdit, onDelete, tableName, onPackage, onPayment }) => {
+const ListTable = ({ columns, rows, onEdit, onDelete, tableName, onPackage, onPayment, showSearch = true }) => {
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState(columns[0].id);
   const [page, setPage] = useState(0);
@@ -112,8 +112,8 @@ const ListTable = ({ columns, rows, onEdit, onDelete, tableName, onPackage, onPa
   const displayedRows = sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   return (
-    <Box sx={{ width: '100%', overflowX: 'auto', marginBottom: '20px' }}>
-      <TextField
+    <Box sx={{ width: '100%', overflowX: 'auto' }}>
+      {showSearch && <TextField
         size="small"
         label="Search"
         variant="outlined"
@@ -121,7 +121,7 @@ const ListTable = ({ columns, rows, onEdit, onDelete, tableName, onPackage, onPa
         onChange={handleSearchChange}
         sx={{ marginLeft: "auto", marginBottom: 2}}
         slotProps={{input: {endAdornment: <InputAdornment position='end'><SearchIcon/></InputAdornment>}}}
-      />          
+      />} 
       <TableContainer component={Paper}>
         <Table sx={{ minWidth: 650 }} aria-label="sortable table">
           <TableHead>

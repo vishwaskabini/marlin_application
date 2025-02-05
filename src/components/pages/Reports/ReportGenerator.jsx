@@ -1,93 +1,56 @@
 import React, { useState, useEffect } from 'react';
-import { Button, duration } from '@mui/material';
+import { Button } from '@mui/material';
 import ListTable from '../../common/components/ListTable';
-import { Box, Card, CardContent, FormControl, FormHelperText, InputAdornment, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
+import { Box, Card, CardContent, FormControl, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import apiClient from '../../services/apiClientService';
+import LoadingIndicator from '../../common/components/LoadingIndicator';
+import { toast } from 'react-toastify';
+import dayjs from 'dayjs';
 
 const ReportGenerator = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  const [selectedTimePeriod, setSelectedTimePeriod] = useState(null);
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [displayDialog, setDisplayDialog] = useState(false);
   const [paymentReport, setPaymentReport] = useState([]);
   const [memberReport, setMemberReport] = useState([]);
   const [memberDetailReport, setMemberDetailReport] = useState([]);
-
-  const [activeMembers, setActiveMembers] = useState([]);
-  const [expiredMembers, setExpiredMembers] = useState([]);
-  const [guestDetails, setGuestDetails] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [duration, setDuration] = React.useState('1');
 
-  const timePeriodOptions = [
-    { label: 'All', value: 'all' },
-    { label: 'Month', value: 'monthly' },
-    { label: 'Last 3 Months', value: 'current_quarter_month' },
-    { label: 'Last 6 Months', value: 'last_half_year' },
-    { label: 'Last 1 Year', value: 'last_1_year' }
-  ];
-
-  const orderOptions = [
-    { label: 'Amount High to Low', value: 'amount_high_to_low' },
-    { label: 'Amount Low to High', value: 'amount_low_to_low' },
-    { label: 'Registration Date Low to High', value: 'reg_date_low_to_high' }
-  ];
-
-  const [duration, setDuration] = React.useState('');
-
-  const getReportData = async () => {
+  const getReportData = async (requestBody) => {
+    setLoading(true);
     try {
-      let requestBody = {
-        "fromdate": "2024-01-30T16:16:42.177Z",
-        "toDate": "2025-01-30T16:16:42.177Z"
-      }
       const [res1, res2, res3] = await Promise.all([
         apiClient.post("/api/Summary/GetPaymentReportsByDateRange", requestBody),
         apiClient.post("/api/Summary/GetMemberReportsByDateRange", requestBody),
         apiClient.post("/api/Summary/GetMemberDetailedReportsByDateRange", requestBody)
       ]);
 
-      setPaymentReport(res1.data);
-      setMemberReport(res2.data);
-      setMemberDetailReport(res3.data);
+      setPaymentReport([res1]);
+      setMemberReport([res2]);
+      setMemberDetailReport(res3);
 
       setLoading(false);
     } catch (err) {
-      setError(err.message);
+      toast.error("Error while getting report data" + err, {
+        position: "top-right"
+      });
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('/reportsMembers.json'); // Update path here
-        if (!response.ok) {
-          throw new Error('Failed to fetch data');
-        }
-        const data = await response.json();
-        setActiveMembers(data.activeMembers);
-        setExpiredMembers(data.expiredMembers);
-        setGuestDetails(data.guestDetails);
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    //fetchData();
-    getReportData();
+    let dateRangeRequest = getDateRange("1");
+    getReportData(dateRangeRequest);
   }, []);
 
   const generateReport = () => {
-    setDisplayDialog(true);
+    let dateRangeRequest = getDateRange(duration);
+    getReportData(dateRangeRequest);
   };
 
   const columnsPaymentSummary = [
@@ -114,169 +77,195 @@ const ReportGenerator = () => {
   ];
 const [rowsData, setRowsData] = useState([]);
   const exportPdf = () => {
-    const doc = new jsPDF();
-    doc.text('Report', 14, 16);
+    // const doc = new jsPDF();
+    // doc.text('Report', 14, 16);
 
-    autoTable(doc, {
-      head: [['Name', 'Contact', 'Package', 'Amount Paid', 'Amount Remaining', 'Duration']],
-      body: activeMembers.map(member => [member.name, member.contact, member.package, member.amountPaid, member.amountRemaining, member.duration]),
-      startY: 30,
-    });
+    // autoTable(doc, {
+    //   head: [['Name', 'Contact', 'Package', 'Amount Paid', 'Amount Remaining', 'Duration']],
+    //   body: activeMembers.map(member => [member.name, member.contact, member.package, member.amountPaid, member.amountRemaining, member.duration]),
+    //   startY: 30,
+    // });
 
-    autoTable(doc, {
-      head: [['Name', 'Contact', 'Package', 'Amount Paid', 'Amount Remaining', 'Duration']],
-      body: expiredMembers.map(member => [member.name, member.contact, member.package, member.amountPaid, member.amountRemaining, member.duration]),
-      startY: doc.autoTable.previous.finalY + 10,
-    });
+    // autoTable(doc, {
+    //   head: [['Name', 'Contact', 'Package', 'Amount Paid', 'Amount Remaining', 'Duration']],
+    //   body: expiredMembers.map(member => [member.name, member.contact, member.package, member.amountPaid, member.amountRemaining, member.duration]),
+    //   startY: doc.autoTable.previous.finalY + 10,
+    // });
 
-    autoTable(doc, {
-      head: [['Name', 'Contact', 'Package', 'Amount Paid', 'Amount Remaining', 'Duration']],
-      body: guestDetails.map(guest => [guest.name, guest.contact, guest.package, guest.amountPaid, guest.amountRemaining, guest.duration]),
-      startY: doc.autoTable.previous.finalY + 10,
-    });
+    // autoTable(doc, {
+    //   head: [['Name', 'Contact', 'Package', 'Amount Paid', 'Amount Remaining', 'Duration']],
+    //   body: guestDetails.map(guest => [guest.name, guest.contact, guest.package, guest.amountPaid, guest.amountRemaining, guest.duration]),
+    //   startY: doc.autoTable.previous.finalY + 10,
+    // });
 
-    doc.save('report.pdf');
+    //doc.save('report.pdf');
   };
 
   const exportExcel = () => {
-    const membersData = [
-      ...activeMembers.map(member => ({
-        Name: member.name,
-        Contact: member.contact,
-        Package: member.package,
-        AmountPaid: member.amountPaid,
-        AmountRemaining: member.amountRemaining,
-        Duration: member.duration,
-      })),
-      ...expiredMembers.map(member => ({
-        Name: member.name,
-        Contact: member.contact,
-        Package: member.package,
-        AmountPaid: member.amountPaid,
-        AmountRemaining: member.amountRemaining,
-        Duration: member.duration,
-      })),
-      ...guestDetails.map(guest => ({
-        Name: guest.name,
-        Contact: guest.contact,
-        Package: guest.package,
-        AmountPaid: guest.amountPaid,
-        AmountRemaining: guest.amountRemaining,
-        Duration: guest.duration,
-      })),
-    ];
-
-    const worksheet = XLSX.utils.json_to_sheet(membersData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Members and Guests');
+
+    const worksheet = XLSX.utils.json_to_sheet(paymentReport);    
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'PaymentSummary');
+
+    const worksheet1 = XLSX.utils.json_to_sheet(memberReport);    
+    XLSX.utils.book_append_sheet(workbook, worksheet1, 'MembersSummary');
+
+    const worksheet2 = XLSX.utils.json_to_sheet(memberDetailReport);    
+    XLSX.utils.book_append_sheet(workbook, worksheet2, 'MembersDetails');
 
     XLSX.writeFile(workbook, 'report.xlsx');
   };
 
-  const handleDateChange = () => {
-
+  const handleDateChange = (event) => {
+    setDuration(event.target.value);    
   }
 
-  if (loading) {
-    return <div className="loading">Loading...</div>;
-  }
+  const getDateRange = (value) => {
+    const today = dayjs().startOf("day"); // Start of today
+    let fromDate, toDate;
+  
+    switch (value) {
+      case 1: // Today
+        fromDate = today;
+        toDate = today.endOf("day");
+        break;
+        
+      case 2: // Current Week
+        fromDate = today.startOf("week"); 
+        toDate = today.endOf("week");
+        break;
+  
+      case 3: // Current Month
+        fromDate = today.startOf("month"); 
+        toDate = today.endOf("month");
+        break;
+  
+      case 4: // Current Year
+        fromDate = today.startOf("year"); 
+        toDate = today.endOf("year");
+        break;
+  
+      case 5: // Last Year
+        fromDate = today.subtract(1, "year").startOf("year");
+        toDate = today.subtract(1, "year").endOf("year");
+        break;
 
-  if (error) {
-    return <div className="error">Error: {error}</div>;
-  }
+      case 6: // Custom
+        fromDate = startDate;
+        toDate = endDate;
+        break;
+  
+      default:
+        fromDate = today;
+        toDate = today;
+    }
+  
+    return {
+      fromDate: fromDate.toISOString(),
+      toDate: toDate.toISOString(),
+    };
+  };
 
   return (
    <div className="container">
     <Box sx={{ width: '100%', overflowX: 'auto' }}>
-        <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
-          <Typography variant='h5' className='header-text'>Reports            
-          </Typography>          
-        </Box>
-        <Card sx={{marginBottom: "10px"}}>
-          <CardContent>
-            <div className='row'>
-              <div className="form-group">
-              <FormControl fullWidth>
-                  <InputLabel id="demo-simple-select-label">Duration</InputLabel>
-                  <Select
-                    labelId="demo-simple-select-label"
-                    id="demo-simple-select"
-                    value={duration}
-                    label="Duration"                      
-                  >
-                    <MenuItem value={1}>Today</MenuItem>
-                    <MenuItem value={2}>Current Week</MenuItem>
-                    <MenuItem value={3}>Current Month</MenuItem>
-                    <MenuItem value={4}>Current Year</MenuItem>
-                    <MenuItem value={5}>Last Year</MenuItem>
-                    <MenuItem value={6}>All</MenuItem>
-                    <MenuItem value={7}>Custom</MenuItem>
-                  </Select>
-                </FormControl>
-              </div>
-              <div className='form-group'>
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DatePicker
-                    label="Start Date"
-                    value={startDate}
-                    onChange={handleDateChange}
-                    sx={{width: "100%"}}
-                    renderInput={(params) => <TextField {...params}/>}
-                  />
-                </LocalizationProvider>
-              </div>     
-              <div className='form-group'>
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DatePicker
-                    label="End Date"
-                    value={endDate}
-                    onChange={handleDateChange}
-                    sx={{width: "100%"}}
-                    renderInput={(params) => <TextField {...params} />}
-                  />
-                </LocalizationProvider>
-              </div>   
-              <div className="form-group">
-                  <Button variant="contained">Generate Report</Button>
-              </div>             
-            </div>           
-            <div className='row'>
-              <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
-                <Typography variant='h5' className='header-text'>Payments Summary           
-                </Typography>
-              </Box>
+      <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+        <Typography variant='h5' className='header-text'>Reports            
+        </Typography>          
+      </Box>
+      <Card sx={{marginBottom: "10px"}}>
+        <CardContent>
+          <div className='row'>
+            <div className="form-group">
+            <FormControl fullWidth>
+                <InputLabel id="demo-simple-select-label">Duration</InputLabel>
+                <Select
+                  labelId="demo-simple-select-label"
+                  id="demo-simple-select"
+                  value={duration}
+                  label="Duration"
+                  onChange={handleDateChange}
+                >
+                  <MenuItem value={1}>Today</MenuItem>
+                  <MenuItem value={2}>Current Week</MenuItem>
+                  <MenuItem value={3}>Current Month</MenuItem>
+                  <MenuItem value={4}>Current Year</MenuItem>
+                  <MenuItem value={5}>Last Year</MenuItem>
+                  <MenuItem value={6}>Custom</MenuItem>
+                </Select>
+              </FormControl>
             </div>
-            <div className='row'>
-              <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
-                <ListTable columns={columnsPaymentSummary} rows={paymentReport} tableName="Payment Summary"/>
-              </Box>
-            </div>                
-            <div className='row'>
-              <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
-                <Typography variant='h5' className='header-text'>Members Summary           
-                </Typography>
-              </Box>
+            {duration == "6" && 
+              <>
+                <div className='form-group'>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker
+                      label="Start Date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e)}
+                      sx={{width: "100%"}}
+                      renderInput={(params) => <TextField {...params}/>}
+                    />
+                  </LocalizationProvider>
+                </div>     
+                <div className='form-group'>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker
+                      label="End Date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e)}
+                      sx={{width: "100%"}}
+                      renderInput={(params) => <TextField {...params} />}
+                    />
+                  </LocalizationProvider>
+                </div>
+              </>
+            }
+            <div className="form-group">
+                <Button variant="contained" onClick={generateReport}>Generate Report</Button>
             </div>
-            <div className='row'>
-              <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
-              <ListTable columns={columnsMembersSummary} rows={memberReport} tableName="Members Summary"/>
-              </Box>
+            <div className="form-group" style={{justifyContent: 'end'}}>
+                <Button variant="contained" onClick={exportExcel}>Export to Excel</Button>
             </div>
-            <div className='row'>
-              <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
-                <Typography variant='h5' className='header-text'>Detailed Report - Payment           
-                </Typography>
-              </Box>
-            </div>
-            <div className='row'>
-              <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
-              <ListTable columns={columnsDetailedReport} rows={memberDetailReport} tableName="Detailed Report"/>
-              </Box>
-            </div>
-          </CardContent>
-        </Card>
-      </Box>  
-     </div>
+          </div>           
+          <div className='row'>
+            <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+              <Typography variant='h5' className='header-text'>Payments Summary           
+              </Typography>
+            </Box>
+          </div>
+          <div className='row'>
+            <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+              <ListTable columns={columnsPaymentSummary} rows={paymentReport} tableName="Payment Summary" showSearch={false}/>
+            </Box>
+          </div>                
+          <div className='row'>
+            <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+              <Typography variant='h5' className='header-text'>Members Summary           
+              </Typography>
+            </Box>
+          </div>
+          <div className='row'>
+            <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+            <ListTable columns={columnsMembersSummary} rows={memberReport} tableName="Members Summary" showSearch={false}/>
+            </Box>
+          </div>
+          <div className='row'>
+            <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+              <Typography variant='h5' className='header-text'>Detailed Report - Payment           
+              </Typography>
+            </Box>
+          </div>
+          <div className='row'>
+            <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+            <ListTable columns={columnsDetailedReport} rows={memberDetailReport} tableName="Detailed Report"/>
+            </Box>
+          </div>
+        </CardContent>
+      </Card>
+    </Box>
+    <LoadingIndicator isLoading={loading}/>
+   </div>
   );
 };
 

@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Paper, Chip, IconButton, Collapse, Box, Dialog, DialogActions, DialogContent, DialogTitle, Button, TextField, Grid2 as Grid, Card, CardContent, Autocomplete } from '@mui/material';
+import { Typography, Paper, Chip, IconButton, Box, Dialog, DialogActions, DialogContent, DialogTitle, Button, TextField, Grid2 as Grid, Card, CardContent, Autocomplete, DialogContentText } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import {AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -36,9 +34,11 @@ const Scheduler = () => {
   const [availableSlots, setAvailableSlots] = useState({});
   const [slots, setSlots] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
+  const [open, setOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [initialValues, setInitialValues] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(null);
 
   const getTimeSlots = () => {
     setIsLoading(true);
@@ -134,31 +134,39 @@ const Scheduler = () => {
   }
 
   const handleRemoveMember = (slot, userScheduleId) => {
-    setIsLoading(true);
-    apiClient.delete("/api/UsersScheduleMapping/"+userScheduleId).then(() =>{
-      setAssignedMembers((prevAssignedMembers) => {
-        const updatedMembers = {
-          ...prevAssignedMembers,
-          [slot]: prevAssignedMembers[slot]?.filter((member) => member.id !== userScheduleId),
-        };
-        return updatedMembers;
-      });
-  
-      setAvailableSlots((prevAvailableSlots) => {
-        const updatedAvailableSlots = { ...prevAvailableSlots, [slot]: prevAvailableSlots[slot] + 1 };
-        return updatedAvailableSlots;
-      });
-      setIsLoading(false);
-      toast.success("Removed User for Slot Successfully !", {
-        position: "top-right"
-      });
-    }).catch((error) =>{
-      setIsLoading(false);
-      toast.error("Error while delete " + error, {
-        position: "top-right"
-      });
-    });    
+    setSelectedRow({slot: slot, userScheduleId: userScheduleId});
+    setOpen(true);     
   };
+
+  const handleConfirmDelete = () => {
+    if(selectedRow) {
+      setOpen(false);
+      setIsLoading(true);
+      apiClient.delete("/api/UsersScheduleMapping/"+selectedRow.userScheduleId).then(() =>{
+        setAssignedMembers((prevAssignedMembers) => {
+          const updatedMembers = {
+            ...prevAssignedMembers,
+            [selectedRow.slot]: prevAssignedMembers[selectedRow.slot]?.filter((member) => member.id !== selectedRow.userScheduleId),
+          };
+          return updatedMembers;
+        });
+    
+        setAvailableSlots((prevAvailableSlots) => {
+          const updatedAvailableSlots = { ...prevAvailableSlots, [selectedRow.slot]: prevAvailableSlots[selectedRow.slot] + 1 };
+          return updatedAvailableSlots;
+        });
+        setIsLoading(false);
+        toast.success("Removed User for Slot Successfully !", {
+          position: "top-right"
+        });
+      }).catch((error) =>{
+        setIsLoading(false);
+        toast.error("Error while delete " + error, {
+          position: "top-right"
+        });
+      });
+    }
+  }
 
   const handleDateChange = (newDate) => {
     setSelectedDate(dayjs(newDate));
@@ -173,6 +181,10 @@ const Scheduler = () => {
   const handleCloseDialog = () => {
     setOpenDialog(false);
   };
+
+  const handleCloseConfirm = () => {
+    setOpen(false);
+  }
 
   const handleFormSubmit = (values) => {
     values.startDate = dayjs(values.startDate, "DD/MM/YYYY").format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
@@ -293,6 +305,18 @@ const Scheduler = () => {
         initialValues={initialValues} handleFormSubmit={handleFormSubmit} name={selectedSlot}/>
         <LoadingIndicator isLoading={isLoading}/>
       </Box>
+      <Dialog open={open} onClose={handleCloseConfirm}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent sx={{padding: "2rem !important"}}>
+          <DialogContentText>
+            Are you sure you want to delete this item? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{padding: "1rem"}}>
+          <Button onClick={handleCloseConfirm} sx={{backgroundColor: "#dfe3e6", color: "#000"}} variant="contained">Cancel</Button>
+          <Button onClick={handleConfirmDelete} color="primary" variant="contained">Delete</Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

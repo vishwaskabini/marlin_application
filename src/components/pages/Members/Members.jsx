@@ -395,7 +395,7 @@ const Members = () => {
       if(data.packagepaymentDetails && data.packagepaymentDetails.length > 0) {
         let paymentDetails = sortedData(data.packagepaymentDetails);
         setInitialValuesPayments({
-          userpackagemappingid: paymentDetails[0].id,
+          userpackagemappingid: paymentDetails[0].userpackagemappingid,
           amount: paymentDetails[0].amount,
           discount: paymentDetails[0].discount,
           payableamount: paymentDetails[0].payableamount,
@@ -408,7 +408,7 @@ const Members = () => {
         });
       } else {
         setInitialValuesPayments({
-          userpackagemappingid: data.packageDetails[0].id,
+          userpackagemappingid: data.packageDetails[0].userpackagemappingid,
           amount: packageDetails.cost,
           discount: 0,
           payableamount: packageDetails.cost,
@@ -1226,7 +1226,13 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                               fullWidth
                               value={values.roundedpayment}
                               onChange={(e) => {
-                                const roundedValue = parseFloat(e.target.value) || 0;
+                                const inputValue = e.target.value;
+                                if (inputValue === "") {
+                                  setFieldValue("roundedpayment", "");
+                                  setFieldValue("pendingamount", parseFloat(values.payableamount));
+                                  return;
+                                }
+                                const roundedValue = parseFloat(inputValue) || 0;
                                 if(values.payableamount <  roundedValue) {
                                   setFieldValue('roundedpayment', values.payableamount);
                                   setFieldValue("pendingamount", 0);
@@ -1269,9 +1275,11 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                                 onChange={handleChange}
                                 error={touched.pendingamount && Boolean(errors.pendingamount)}
                                 helperText={touched.pendingamount && errors.pendingamount}
-                                InputLabelProps={{
-                                  shrink: values.pendingamount !== '',
+                                InputProps={{
                                   readOnly: true,
+                                }}
+                                InputLabelProps={{
+                                  shrink: values.pendingamount !== '',                                  
                                 }}
                               />
                             </div>
@@ -1477,7 +1485,13 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
                         fullWidth
                         value={values.roundedpayment}
                         onChange={(e) => {
-                          const roundedValue = Number(parseFloat(e.target.value) || 0);
+                          const inputValue = e.target.value;
+                          if (inputValue === "") {
+                            setFieldValue("roundedpayment", "");
+                            setFieldValue("pendingamount", previousPayment);
+                            return;
+                          }
+                          const roundedValue = Number(parseFloat(inputValue) || 0);
                           if(values.payableamount <  roundedValue) {
                             setFieldValue('roundedpayment', values.payableamount);
                             setFieldValue("pendingamount", 0);
@@ -1524,9 +1538,11 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
                           onChange={handleChange}
                           error={touched.pendingamount && Boolean(errors.pendingamount)}
                           helperText={touched.pendingamount && errors.pendingamount}
-                          InputLabelProps={{
-                            shrink: values.pendingamount !== '',
-                            readOnly: true,
+                          InputProps={{
+                            readOnly: true
+                          }}
+                          InputLabelProps={{                            
+                            shrink: values.pendingamount !== '',                            
                           }}
                         />
                       </div>
