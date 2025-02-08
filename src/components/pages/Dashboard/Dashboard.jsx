@@ -19,8 +19,7 @@ const Dashboard = () => {
     setIsLoading(true);
     apiClient.get("/api/Users/GetAllWithDetailsActive").then((data) => {
       setIsLoading(false);
-      getMemberCount(data);
-      getGuestCount(data);      
+      getMemberCount(data);               
     }).catch((error) => {      
       setIsLoading(false);
       toast.error("Error while get " + error, {
@@ -28,6 +27,19 @@ const Dashboard = () => {
       });
     });
   };
+
+  const getGuestData = () => {
+    setIsLoading(true);
+    apiClient.post("/api/Summary/GetGuestDetailedReportsAll", {}).then((data) => {
+      setIsLoading(false);
+      getGuestCount(data);
+    }).catch((error) => {      
+      setIsLoading(false);
+      toast.error("Error while get " + error, {
+        position: "top-right"
+      });
+    }); 
+  }
 
   const getTotal = (data) => {
     const finalTotal = data.reduce((total, item) => {
@@ -70,8 +82,8 @@ const Dashboard = () => {
     const monthsPayment = getTotal(registeredInLastMonth);
 
     const totalPendingAmount = members.reduce((total, item) => {
-      if (item.packageDetails && item.packageDetails.length > 0) {
-        const memberTotalPayment = item.packageDetails.reduce((sum, payment) => {
+      if (item.packagepaymentDetails && item.packagepaymentDetails.length > 0) {
+        const memberTotalPayment = item.packagepaymentDetails.reduce((sum, payment) => {
           if(payment.paymentstatus === "Partial") {
             return sum + (payment.pendingamount && payment.pendingamount != null ? payment.pendingamount : 0);
           }          
@@ -82,8 +94,8 @@ const Dashboard = () => {
     }, 0);
 
     const totalPendingMember = members.filter((item) => {
-      if (item.packageDetails && item.packageDetails.length > 0) {
-        return item.packageDetails.some(payment => payment.paymentstatus === "Partial");
+      if (item.packagepaymentDetails && item.packagepaymentDetails.length > 0) {
+        return item.packagepaymentDetails.some(payment => payment.paymentstatus === "Partial");
       }
       return false;
     });
@@ -101,8 +113,7 @@ const Dashboard = () => {
     setMembersCardData(memberData);
   }
 
-  const getGuestCount = (data) => {
-    let guests = data.filter(d=>d.usertype === "a4e1f874-9c36-41aa-8af4-f94615c6c365");
+  const getGuestCount = (guests) => {
     const today = dayjs().startOf('day');
 
     const registeredToday = guests.filter((item) => dayjs(item.registereddate).isSame(today, 'day'));
@@ -114,9 +125,9 @@ const Dashboard = () => {
     const oneMonthAgo = today.subtract(1, 'month');
     const registeredInLastMonth = guests.filter((item) => dayjs(item.registereddate).isAfter(oneMonthAgo, 'day'));
 
-    const todaysPayment = getTotal(registeredToday);
-    const weeksPayment = getTotal(registeredInLastWeek);
-    const monthsPayment = getTotal(registeredInLastMonth);
+    const todaysPayment = registeredToday.reduce((sum, item) => sum + item.totalamount, 0);
+    const weeksPayment = registeredInLastWeek.reduce((sum, item) => sum + item.totalamount, 0);
+    const monthsPayment = registeredInLastMonth.reduce((sum, item) => sum + item.totalamount, 0);
 
     let guestData = [];
     guestData.push({ "title": "Total Guests", "count": guests.length });
@@ -150,6 +161,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     getData();
+    getGuestData();
   }, []);
 
   return (

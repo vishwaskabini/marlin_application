@@ -168,7 +168,7 @@ const ListTable = ({ columns, rows, onEdit, onDelete, tableName, onPackage, onPa
                       <MenuItem onClick={() => handlePackage(row.id)}>Add/Edit Package</MenuItem>
                       <MenuItem onClick={() => handlePayment(row.id)} disabled={row.paymentstatusAction}>Payment</MenuItem>
                       <MenuItem onClick={() => handleEdit(row.id)}>Edit</MenuItem>
-                      <MenuItem onClick={() => handleDeleteOpen(row.id)}>Delete</MenuItem>
+                      {/* <MenuItem onClick={() => handleDeleteOpen(row.id)}>Delete</MenuItem> */}
                     </Menu>
                   </div>
                 </TableCell> ) : ( <TableCell align="center">

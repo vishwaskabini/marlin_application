@@ -243,7 +243,8 @@ const Members = () => {
       packageenddate: values.packageenddate,
       actualstartdate: values.actualstartdate,
       actualenddate: values.actualenddate,
-      id: values.id
+      id: values.id,
+      timeslotid: values.timeslotid
     }
     setIsLoading(true);
     if (isEditPackage) {
@@ -266,7 +267,7 @@ const Members = () => {
           values.userpackagemappingid = data;
           addPayment(values, false);
         }
-        updateSlot(values);
+        updateSlot(values, data);
       }).catch((error) => {
         setIsLoading(false);
         toast.error("Error while create payment" + error, {
@@ -280,12 +281,13 @@ const Members = () => {
     addPayment(values, true);
   }
 
-  const updateSlot = (values) => {
+  const updateSlot = (values, id) => {
     var data = {
       userid: values.userid,
-      timeslotid: values.slots,
+      timeslotid: values.timeslotid,
       startDate: values.actualstartdate,
-      endDate: values.actualenddate
+      endDate: values.actualenddate,
+      userpackagemappingid: id
     }
     apiClient.post("/api/UsersScheduleMapping/createDateRange", data).then((result) =>  {
       getData();
@@ -923,7 +925,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
     roundedpayment: Yup.number(),
     pendingamount: Yup.number(),
     notes: Yup.string(),
-    slots: Yup.string().required("slots is required")
+    timeslotid: Yup.string().required("slots is required")
   });
 
   return (
@@ -1072,15 +1074,15 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                       </div>
                       <div className='form-group'>                        
                         <Field
-                          name="slots"
+                          name="timeslotid"
                           as={TextField}
                           label="Time Slots"
                           select
                           fullWidth
-                          value={values.slots}
+                          value={values.timeslotid}
                           onChange={handleChange}
-                          error={touched.slots && Boolean(errors.slots)}
-                          helperText={touched.slots && errors.slots}
+                          error={touched.timeslotid && Boolean(errors.timeslotid)}
+                          helperText={touched.timeslotid && errors.timeslotid}
                           disabled={isEdit}
                         >
                           {slots.map((slot) => (
