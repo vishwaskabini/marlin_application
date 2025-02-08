@@ -258,7 +258,7 @@ const [rowsData, setRowsData] = useState([]);
           </div>
           <div className='row'>
             <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
-            <ListTable columns={columnsDetailedReport} rows={memberDetailReport} tableName="Detailed Report"/>
+            <ListTable columns={columnsDetailedReport} rows={memberDetailReport} tableName="Detailed Report" showSearch={false}/>
             </Box>
           </div>
         </CardContent>

@@ -97,11 +97,11 @@ const Members = () => {
           id: item.id,
           name: item.firstname + " " + item.lastname,
           contact: item.primarycontactnumber,
-          paymentstatus: item.packagepaymentDetails && item.packagepaymentDetails.length > 0 ? item.packagepaymentDetails[0].paymentstatus : "Pending",
+          paymentstatus: item.packagepaymentDetails && item.packagepaymentDetails.length > 0 ? item.packagepaymentDetails[item.packagepaymentDetails.length -1].paymentstatus : "Pending",
           payment: item.packagepaymentDetails && item.packagepaymentDetails.length > 0 ? item.packagepaymentDetails[0].amount : "",
           package: item.packageDetails && item.packageDetails.length > 0 ? getPackageName(item.packageDetails[0].packageid) : "",
           packageenddate: item.packageDetails && item.packageDetails.length > 0 ? formatDate(item.packageDetails[0].actualenddate) : "",
-          paymentstatusAction: item.packagepaymentDetails && item.packagepaymentDetails.length > 0 && item.packagepaymentDetails[0].paymentstatus === "Paid" ? true : false
+          paymentstatusAction: item.packagepaymentDetails && item.packagepaymentDetails.length > 0 && item.packagepaymentDetails[item.packagepaymentDetails.length - 1].paymentstatus === "Paid" ? true : false
         }
       });
       setMembersExpiringToday(membersData.filter((user) => {
@@ -303,7 +303,7 @@ const Members = () => {
     });
   }
 
-  const addPayment = (values, shouldShowMsg) => {
+  const addPayment = (values, shouldShowMsg) => {    
     const payment = {
       userpackagemappingid: values.userpackagemappingid,
       paymenttype: values.paymenttype,
@@ -313,7 +313,7 @@ const Members = () => {
       notes: values.notes,
       extendby: 0,
       roundedpayment: values.roundedpayment,
-      paymentstatus: values.paymentstatus,
+      paymentstatus: values.pendingamount === 0 ? "Paid" : "Partial",
       pendingamount: values.pendingamount,
       payableamount: values.payableamount,
       discount: values.discount,
@@ -353,7 +353,7 @@ const Members = () => {
         roundedpayment: 0,
         payableamount: 0,
         paymenttype: '22220087-c3c2-4268-a25a-13baa6f3625e',
-        paymentstatus: 'Pending',
+        paymentstatus: 'Paid',
         pendingamount: 0,
         transactionid: '',
         notes: '',
@@ -374,7 +374,7 @@ const Members = () => {
         payableamount: 0,
         roundedpayment: 0,
         paymenttype: '22220087-c3c2-4268-a25a-13baa6f3625e',
-        paymentstatus: 'Pending',
+        paymentstatus: 'Paid',
         pendingamount: 0,
         transactionid: '',
         notes: '',
@@ -403,7 +403,7 @@ const Members = () => {
           payableamount: paymentDetails[0].payableamount,
           roundedpayment: paymentDetails[0].pendingamount,
           paymenttype: '22220087-c3c2-4268-a25a-13baa6f3625e',
-          paymentstatus: 'Partial',
+          paymentstatus: paymentDetails[0].paymentstatus,
           pendingamount: 0,
           transactionid: '',
           notes: paymentDetails[0].notes,
@@ -416,7 +416,7 @@ const Members = () => {
           payableamount: packageDetails.cost,
           roundedpayment: packageDetails.cost,
           paymenttype: '22220087-c3c2-4268-a25a-13baa6f3625e',
-          paymentstatus: 'Pending',
+          paymentstatus: 'Paid',
           pendingamount: 0,
           transactionid: '',
           notes: '',
@@ -1208,13 +1208,13 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                               }}
                               error={touched.paymentstatus && Boolean(errors.paymentstatus)}
                               helperText={touched.paymentstatus && errors.paymentstatus}
+                              disabled="true"
                             >
                               <MenuItem value="">
                                 <em>Select Payment Status</em>
                               </MenuItem>
                               <MenuItem value="Paid">Paid</MenuItem>
                               <MenuItem value="Partial">Partial</MenuItem>
-                              <MenuItem value="Pending">Pending</MenuItem>
                             </Field>                        
                           </div>                                     
                         </div>
@@ -1232,15 +1232,18 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                                 if (inputValue === "") {
                                   setFieldValue("roundedpayment", "");
                                   setFieldValue("pendingamount", parseFloat(values.payableamount));
+                                  setFieldValue("paymentstatus", "Partial");
                                   return;
                                 }
                                 const roundedValue = parseFloat(inputValue) || 0;
-                                if(values.payableamount <  roundedValue) {
+                                if(parseFloat(values.payableamount) <=  roundedValue) {
                                   setFieldValue('roundedpayment', values.payableamount);
                                   setFieldValue("pendingamount", 0);
+                                  setFieldValue("paymentstatus", "Paid");
                                 } else {
                                   setFieldValue('roundedpayment', roundedValue);
-                                  setFieldValue("pendingamount", (parseFloat(values.payableamount) - roundedValue));                              
+                                  setFieldValue("pendingamount", (parseFloat(values.payableamount) - roundedValue));
+                                  setFieldValue("paymentstatus", "Partial");
                                 }
                                 setFieldTouched('pendingamount', true);
                               }}
@@ -1265,27 +1268,25 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                               />
                             </div>
                           )}
-                          {values.paymentstatus === 'Partial' && (
-                            <div className='form-group'>
-                              <Field
-                                name="pendingamount"
-                                as={TextField}
-                                label="Balance Amount"
-                                type="number"
-                                fullWidth
-                                value={values.pendingamount}
-                                onChange={handleChange}
-                                error={touched.pendingamount && Boolean(errors.pendingamount)}
-                                helperText={touched.pendingamount && errors.pendingamount}
-                                InputProps={{
-                                  readOnly: true,
-                                }}
-                                InputLabelProps={{
-                                  shrink: values.pendingamount !== '',                                  
-                                }}
-                              />
-                            </div>
-                          )}
+                          <div className='form-group'>
+                            <Field
+                              name="pendingamount"
+                              as={TextField}
+                              label="Balance Amount"
+                              type="number"
+                              fullWidth
+                              value={values.pendingamount}
+                              onChange={handleChange}
+                              error={touched.pendingamount && Boolean(errors.pendingamount)}
+                              helperText={touched.pendingamount && errors.pendingamount}
+                              InputProps={{
+                                readOnly: true,
+                              }}
+                              InputLabelProps={{
+                                shrink: values.pendingamount !== '',                                  
+                              }}
+                            />
+                          </div>
                         </div>
                       </>                      
                     )}                    
@@ -1467,13 +1468,13 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
                         }}
                         error={touched.paymentstatus && Boolean(errors.paymentstatus)}
                         helperText={touched.paymentstatus && errors.paymentstatus}
+                        disabled="true"
                       >
                         <MenuItem value="">
                           <em>Select Payment Status</em>
                         </MenuItem>
                         <MenuItem value="Paid">Paid</MenuItem>
                         <MenuItem value="Partial">Partial</MenuItem>
-                        <MenuItem value="Pending">Pending</MenuItem>
                       </Field>                        
                     </div>                                     
                   </div>
@@ -1491,20 +1492,24 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
                           if (inputValue === "") {
                             setFieldValue("roundedpayment", "");
                             setFieldValue("pendingamount", previousPayment);
+                            setFieldValue("paymentstatus", "Partial");
                             return;
                           }
                           const roundedValue = Number(parseFloat(inputValue) || 0);
-                          if(values.payableamount <  roundedValue) {
+                          if(parseFloat(values.payableamount) <=  roundedValue) {
                             setFieldValue('roundedpayment', values.payableamount);
                             setFieldValue("pendingamount", 0);
+                            setFieldValue("paymentstatus", "Paid");
                           } else {
-                            setFieldValue('roundedpayment', roundedValue);
+                            setFieldValue('roundedpayment', roundedValue);                            
                             if(previousPayment !== 0) {
                               setFieldValue("pendingamount", (parseFloat(previousPayment) - roundedValue));
+                              ((parseFloat(previousPayment) - roundedValue) === 0) ? setFieldValue("paymentstatus", "Paid") : setFieldValue("paymentstatus", "Partial");
                             } else {
                               setFieldValue("pendingamount", (parseFloat(values.payableamount) - roundedValue));
-                            }                            
-                          }                          
+                              ((parseFloat(values.payableamount) - roundedValue) === 0) ? setFieldValue("paymentstatus", "Paid") : setFieldValue("paymentstatus", "Partial");
+                            }
+                          }
                           setFieldTouched('pendingamount', true);
                         }}
                         error={touched.roundedpayment && Boolean(errors.roundedpayment)}
@@ -1528,27 +1533,25 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
                         />
                       </div>
                     )}
-                    {values.paymentstatus === 'Partial' && (
-                      <div className='form-group'>
-                        <Field
-                          name="pendingamount"
-                          as={TextField}
-                          label="Balance Amount"
-                          type="number"
-                          fullWidth
-                          value={values.pendingamount}
-                          onChange={handleChange}
-                          error={touched.pendingamount && Boolean(errors.pendingamount)}
-                          helperText={touched.pendingamount && errors.pendingamount}
-                          InputProps={{
-                            readOnly: true
-                          }}
-                          InputLabelProps={{                            
-                            shrink: values.pendingamount !== '',                            
-                          }}
-                        />
-                      </div>
-                    )}
+                    <div className='form-group'>
+                      <Field
+                        name="pendingamount"
+                        as={TextField}
+                        label="Balance Amount"
+                        type="number"
+                        fullWidth
+                        value={values.pendingamount}
+                        onChange={handleChange}
+                        error={touched.pendingamount && Boolean(errors.pendingamount)}
+                        helperText={touched.pendingamount && errors.pendingamount}
+                        InputProps={{
+                          readOnly: true
+                        }}
+                        InputLabelProps={{                            
+                          shrink: values.pendingamount !== '',                            
+                        }}
+                      />
+                    </div>
                   </div>                  
                   <div className='row save-btn'>
                     <Button type="submit" variant="contained" color="primary" disabled={isSubmitting}>
