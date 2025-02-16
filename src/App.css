@@ -87,10 +87,14 @@ h2 {
   width: 100%;
 }
 
+.members-summary-text {
+  font-size: 1vw;
+}
+
 .members-summary-div {
   display: flex;
   align-items: center;
-  padding: 1rem 4rem;
+  height: 100%;
   background-color: lightblue;
 }
 

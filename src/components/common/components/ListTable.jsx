@@ -30,7 +30,7 @@ function stableSort(array, comparator) {
   return stabilizedThis.map((el) => el[0]);
 }
 
-const ListTable = ({ columns, rows, onEdit, onDelete, tableName, onPackage, onPayment, showSearch = true }) => {
+const ListTable = ({ columns, rows, onEdit, onDelete, tableName, onPackage, onPayment, showSearch = true, onViewDetails, onUpcomingPackage }) => {
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState(columns[0].id);
   const [page, setPage] = useState(0);
@@ -64,6 +64,16 @@ const ListTable = ({ columns, rows, onEdit, onDelete, tableName, onPackage, onPa
     handleClose();
     onEdit(id);
   };
+
+  const handleDetails = (id) => {
+    handleClose();
+    onViewDetails(id);
+  }
+
+  const handleUpcomingPackages = (id) => {
+    handleClose();
+    onUpcomingPackage(id);
+  }
 
   const handlePackage = (id) => {
     handleClose();
@@ -168,7 +178,8 @@ const ListTable = ({ columns, rows, onEdit, onDelete, tableName, onPackage, onPa
                       <MenuItem onClick={() => handlePackage(row.id)}>Add/Edit Package</MenuItem>
                       <MenuItem onClick={() => handlePayment(row.id)} disabled={row.paymentstatusAction}>Payment</MenuItem>
                       <MenuItem onClick={() => handleEdit(row.id)}>Edit</MenuItem>
-                      {/* <MenuItem onClick={() => handleDeleteOpen(row.id)}>Delete</MenuItem> */}
+                      <MenuItem onClick={() => handleDetails(row.id)}>View Details</MenuItem>
+                      <MenuItem onClick={() => handleUpcomingPackages(row.id)}>Upcoming Packages</MenuItem>
                     </Menu>
                   </div>
                 </TableCell> ) : ( <TableCell align="center">

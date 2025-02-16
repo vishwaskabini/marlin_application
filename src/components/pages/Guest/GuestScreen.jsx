@@ -22,7 +22,7 @@ const GuestScreen = () => {
     setIsLoading(true);
     apiClient.get("/api/Guests").then((data) => {
       setIsLoading(false);
-      setGuestData(data);
+      setGuestData(data.sort((a, b) => new Date(b.registereddate) - new Date(a.registereddate)));
     }).catch((error) => {
       setIsLoading(false);
       toast.error("Error while get " + error, {
@@ -76,6 +76,7 @@ const GuestScreen = () => {
     { id: 'contactnumber', label: 'Contact' },
     { id: 'gender', label: 'Gender' },
     { id: 'totalamount', label: 'Total Amount' },
+    { id: 'registereddate', label: 'Register Datetime' },
   ];
 
   return (

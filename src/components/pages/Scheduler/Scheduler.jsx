@@ -39,6 +39,7 @@ const Scheduler = () => {
   const [initialValues, setInitialValues] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
+  const totalSlots = 50;
 
   const getTimeSlots = () => {
     setIsLoading(true);
@@ -72,11 +73,10 @@ const Scheduler = () => {
             id: id,
             name: userName
           });
-          updateAvailableSlots(timeslotid);
           return acc;
         }, {});
+        updateAvailableSlots(transformedData);
         setAssignedMembers(transformedData);
-
         setIsLoading(false);
       }).catch((error) => {
         setIsLoading(false);
@@ -121,17 +121,13 @@ const Scheduler = () => {
     setAvailableSlots(initialAvailableSlots);
   }
 
-  const updateAvailableSlots = (timeslotid) => {
-    setAvailableSlots((prevAvailableSlots) => {
-      const updatedAvailableSlots = { ...prevAvailableSlots };
-      if (updatedAvailableSlots[timeslotid] !== undefined) {
-        updatedAvailableSlots[timeslotid] -= 1;
-      } else {
-        updatedAvailableSlots[timeslotid] = 50;
-      }
-      return updatedAvailableSlots;
-    });
-  }
+  const updateAvailableSlots = (transformedData) => {
+    const updatedSlots = Object.keys(transformedData).reduce((acc, timeslotid) => {
+      acc[timeslotid] = Math.max(totalSlots - transformedData[timeslotid].length, 0);
+      return acc;
+    }, {});
+    setAvailableSlots(updatedSlots);
+  };
 
   const handleRemoveMember = (slot, userScheduleId) => {
     setSelectedRow({slot: slot, userScheduleId: userScheduleId});
@@ -350,8 +346,8 @@ const AssignMemberDiaglog = ({open, handleClose, initialValues, handleFormSubmit
 
   const validationSchema = Yup.object().shape({
       memberName: Yup.string().required('Name is required'),
-      startDate: Yup.date().required('Start Date is required'),
-      endDate: Yup.date().required('End Date is required')
+      startDate: Yup.string().required('Start Date is required'),
+      endDate: Yup.string().required('End Date is required')
     });
   
     return (
@@ -363,63 +359,64 @@ const AssignMemberDiaglog = ({open, handleClose, initialValues, handleFormSubmit
             validationSchema={validationSchema}
             onSubmit={handleFormSubmit}
           >
-            {({ setFieldValue, values }) => (
-              <Form>
-                <div className='row'>
-                  <div className='form-group'>
-                    <Field
-                      name="memberName"
-                      fullWidth
-                      render={({ field, form }) => (
-                        <Autocomplete
-                          {...field}
-                          fullWidth
-                          options={users}
-                          getOptionLabel={(option) => option.name}
-                          onChange={(_, newValue) => {
-                            form.setFieldValue('memberName', newValue ? newValue.id : '');
-                          }}
-                          renderInput={(params) => (
-                            <TextField
-                              {...params}
-                              label="Member Name"
-                              fullWidth
-                              error={form.touched.memberName && Boolean(form.errors.memberName)}
-                              helperText={form.touched.memberName && form.errors.memberName}
-                            />
-                          )}
+            {({ setFieldValue, values, errors }) => {
+              return (
+                <Form>
+                  <div className='row'>
+                    <div className='form-group'>
+                      <Field
+                        name="memberName"
+                        fullWidth
+                        render={({ field, form }) => (
+                          <Autocomplete
+                            {...field}
+                            fullWidth
+                            options={users}
+                            getOptionLabel={(option) => option.name}
+                            onChange={(_, newValue) => {
+                              form.setFieldValue('memberName', newValue ? newValue.id : '');
+                            }}
+                            renderInput={(params) => (
+                              <TextField
+                                {...params}
+                                label="Member Name"
+                                fullWidth
+                                error={form.touched.memberName && Boolean(form.errors.memberName)}
+                                helperText={form.touched.memberName && form.errors.memberName}
+                              />
+                            )}
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className='form-group'>
+                      <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        <DatePicker
+                          label="Start Date"
+                          value={values.startDate ? dayjs(values.startDate, "DD/MM/YYYY") : null}
+                          onChange={(date) => setFieldValue('startDate', parseDate(date))}
+                          renderInput={(params) => <TextField {...params} />}
                         />
-                      )}
-                    />
+                      </LocalizationProvider>
+                    </div>
+                    <div className='form-group'>
+                      <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        <DatePicker
+                          label="End Date"
+                          value={values.endDate ? dayjs(values.endDate, "DD/MM/YYYY") : null}
+                          onChange={(date) => setFieldValue('endDate', parseDate(date))}
+                          renderInput={(params) => <TextField {...params} />}
+                        />
+                      </LocalizationProvider>
+                    </div>
                   </div>
-                  <div className='form-group'>
-                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                      <DatePicker
-                        label="Start Date"
-                        value={values.startDate ? dayjs(values.startDate, "DD/MM/YYYY") : null}
-                        onChange={(date) => setFieldValue('startDate', parseDate(date))}
-                        renderInput={(params) => <TextField {...params} />}
-                      />
-                    </LocalizationProvider>
+                  <div className='row save-btn'>
+                    <Button type="submit" color="primary" variant="contained">
+                      Save Changes
+                    </Button>
                   </div>
-                  <div className='form-group'>
-                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                      <DatePicker
-                        label="End Date"
-                        value={values.endDate ? dayjs(values.endDate, "DD/MM/YYYY") : null}
-                        onChange={(date) => setFieldValue('endDate', parseDate(date))}
-                        renderInput={(params) => <TextField {...params} />}
-                      />
-                    </LocalizationProvider>
-                  </div>
-                </div>
-                <div className='row save-btn'>
-                  <Button type="submit" color="primary" variant="contained">
-                    Save Changes
-                  </Button>
-                </div>
-              </Form>
-            )}
+                </Form>
+            )}}
           </Formik>
         </DialogContent>
       </Dialog>

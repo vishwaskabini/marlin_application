@@ -7,13 +7,12 @@ import GuestScreen from '../../pages/Guest/GuestScreen';
 import ReportGenerator from '../../pages/Reports/ReportGenerator';
 import Packages from '../../pages/Packages/Packages';
 import Scheduler from '../../pages/Scheduler/Scheduler';
-import UserProfileScreen from '../../pages/UserProfile/userProfile';
-import UserProfiledashbord from '../../pages/UserProfile/userProfiledashbord';
 import Login from "../authentication/login/Login";
 import PrivateRoute from "../authentication/PrivateRoute";
 import Members from "../../pages/Members/Members";
 import MemberDashboard from "../../pages/Dashboard/MemberDashboard";
 import ChangePassword from "./ChangePassword";
+import Attendance from "../../pages/AdminConfiguration/Attendance";
 
 const RoutesComponent = () => {
     return(
@@ -22,6 +21,7 @@ const RoutesComponent = () => {
             <Route path="/admin/smssettings" element={<PrivateRoute element={<SmsSettings />} />}/>
             <Route path="/admin/settings" element={<PrivateRoute element={<Settings />} /> }/>
             <Route path="/admin/roles" element={<PrivateRoute element={<Roles />} /> }/>
+            <Route path="/admin/attendance" element={<PrivateRoute element={<Attendance />} /> }/>
             <Route path="/members" element={<PrivateRoute element={<Members />} /> }/>
             <Route path="/guest" element={<PrivateRoute element={<GuestScreen />} /> }/>
             <Route path="/reports" element={<PrivateRoute element={<ReportGenerator />} /> }/>

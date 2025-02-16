@@ -75,30 +75,30 @@ const ReportGenerator = () => {
     { id: 'paymentStatus', label: 'Payment Status' },
     { id: 'memberStatus', label: 'Member status' }
   ];
-const [rowsData, setRowsData] = useState([]);
+  const [rowsData, setRowsData] = useState([]);
   const exportPdf = () => {
-    // const doc = new jsPDF();
-    // doc.text('Report', 14, 16);
+    const doc = new jsPDF();
+    doc.text('Report', 14, 16);
 
-    // autoTable(doc, {
-    //   head: [['Name', 'Contact', 'Package', 'Amount Paid', 'Amount Remaining', 'Duration']],
-    //   body: activeMembers.map(member => [member.name, member.contact, member.package, member.amountPaid, member.amountRemaining, member.duration]),
-    //   startY: 30,
-    // });
+    autoTable(doc, {
+      head: [['Total Amount Collected', 'Total Amount Pending', 'Total Business']],
+      body: paymentReport.map(payment => [payment.paidAmount, payment.pendingAmount, payment.totalPayableAmount]),
+      startY: 30,
+    });
 
-    // autoTable(doc, {
-    //   head: [['Name', 'Contact', 'Package', 'Amount Paid', 'Amount Remaining', 'Duration']],
-    //   body: expiredMembers.map(member => [member.name, member.contact, member.package, member.amountPaid, member.amountRemaining, member.duration]),
-    //   startY: doc.autoTable.previous.finalY + 10,
-    // });
+    autoTable(doc, {
+      head: [['Total newly registered members', 'Total Active Members', 'Expired Members']],
+      body: memberReport.map(member => [member.newlyRegistered, member.active, member.expired]),
+      startY: doc.autoTable.previous.finalY + 10,
+    });
 
-    // autoTable(doc, {
-    //   head: [['Name', 'Contact', 'Package', 'Amount Paid', 'Amount Remaining', 'Duration']],
-    //   body: guestDetails.map(guest => [guest.name, guest.contact, guest.package, guest.amountPaid, guest.amountRemaining, guest.duration]),
-    //   startY: doc.autoTable.previous.finalY + 10,
-    // });
+    autoTable(doc, {
+      head: [['Member Name', 'Contact', 'Package Name', 'Total', 'Paid', 'Pending', 'Payment Status', 'Member status']],
+      body: memberDetailReport.map(member => [member.memberName, member.contact, member.packageName, member.totalPayableAmount, member.paidAmount, member.pendingAmount, member.paymentStatus, member.memberStatus]),
+      startY: doc.autoTable.previous.finalY + 10,
+    });
 
-    //doc.save('report.pdf');
+    doc.save('report.pdf');
   };
 
   const exportExcel = () => {
@@ -226,6 +226,9 @@ const [rowsData, setRowsData] = useState([]);
             </div>
             <div className="form-group" style={{justifyContent: 'end'}}>
                 <Button variant="contained" onClick={exportExcel}>Export to Excel</Button>
+            </div>
+            <div className="form-group" style={{justifyContent: 'end'}}>
+                <Button variant="contained" onClick={exportPdf}>Export to PDF</Button>
             </div>
           </div>           
           <div className='row'>

@@ -26,7 +26,7 @@ const convertToDate = (dateString) => {
 const Members = () => {
   const [membersExpiringToday, setMembersExpiringToday] = useState([]);
   const [membersExpiringIn5Days, setMembersExpiringIn5Days] = useState([]);
-  const [membersExpired, setMembersExpired] = useState([]);
+  const [membersRegisteredToday, setMembersRegisteredToday] = useState([]);
   const [activeMembers, setActiveMembers] = useState([]);
   const [allMembers, setAllMembers] = useState([]);
   const [rowsData, setRowsData] = useState([]);
@@ -38,8 +38,10 @@ const Members = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDialogOpenPackage, setIsDialogOpenPackage] = useState(false);
   const [isDialogOpenPayment, setIsDialogOpenPayment] = useState(false);
+  const [isDialogOpenViewDetails, setIsDialogOpenViewDetails] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
-  const [isEditPackage, setIsEditPackage] = useState(false);  
+  const [isEditPackage, setIsEditPackage] = useState(false);
+  const [selectedMember, setSelectedMember] = useState();
   const userTypeId = 'a4e1f874-9c36-41aa-8af4-f94615c6c363';
   const [packageTypes, setPackageTypes] = useState([]); 
 
@@ -67,7 +69,9 @@ const Members = () => {
       photoname: data.photoname,
       secondarycontactnumber: data.secondarycontactnumber,
       isspecialchild: data.isspecialchild,
-      referredby: data.referredby
+      referredby: data.referredby,
+      hardwareuserid: data.hardwareuserid,
+      rfidnumber: data.rfidnumber
     });
     setIsDialogOpen(true);
   };
@@ -101,7 +105,8 @@ const Members = () => {
           payment: item.packagepaymentDetails && item.packagepaymentDetails.length > 0 ? item.packagepaymentDetails[0].amount : "",
           package: item.packageDetails && item.packageDetails.length > 0 ? getPackageName(item.packageDetails[0].packageid) : "",
           packageenddate: item.packageDetails && item.packageDetails.length > 0 ? formatDate(item.packageDetails[0].actualenddate) : "",
-          paymentstatusAction: item.packagepaymentDetails && item.packagepaymentDetails.length > 0 && item.packagepaymentDetails[item.packagepaymentDetails.length - 1].paymentstatus === "Paid" ? true : false
+          paymentstatusAction: item.packagepaymentDetails && item.packagepaymentDetails.length > 0 && item.packagepaymentDetails[item.packagepaymentDetails.length - 1].paymentstatus === "Paid" ? true : false,
+          registereddate: item.registereddate
         }
       });
       setMembersExpiringToday(membersData.filter((user) => {
@@ -122,10 +127,12 @@ const Members = () => {
 
         return endDate >= today && endDate <= fiveDaysFromNow;
       }));
-      setMembersExpired(membersData.filter((item) => {
-        const packageenddate = convertToDate(item.packageenddate);
-        const currentDate = new Date();
-        return packageenddate <= currentDate;
+      setMembersRegisteredToday(membersData.filter((item) => {
+        if(item.registereddate) {
+          const registereddate = new Date(item.registereddate);
+          const currentDate = new Date();
+          return registereddate === currentDate;
+        }        
       }));
       setActiveMembers(membersData.filter((item) => {
         const packageenddate = convertToDate(item.packageenddate);
@@ -190,6 +197,10 @@ const Members = () => {
 
   const onDialogClosePayment = () => {
     setIsDialogOpenPayment(false);
+  }
+
+  const onDialogCloseViewDetails = () => {
+    setIsDialogOpenViewDetails(false);
   }
 
   const handleFormSubmit = (values) => {
@@ -430,6 +441,14 @@ const Members = () => {
     }    
   }
 
+  const handleUpcomingPackages = (id) => {
+  }
+
+  const handleViewDetails = (id) => {
+    setSelectedMember(id);
+    setIsDialogOpenViewDetails(true);
+  }
+
   const saveDocuments = (values, data) => {
     const config = {
       headers: {
@@ -481,7 +500,9 @@ const Members = () => {
       aadharUpload: null,
       photoUpload: null,
       idproofname: '',
-      photoname: ''
+      photoname: '',
+      hardwareuserid: '',
+      rfidnumber: ''
     });
     setIsDialogOpen(true);
   }
@@ -513,7 +534,7 @@ const Members = () => {
             <CardContent className='members-summary-div'>
               <img src='/img/team.png' className='summary-image'/>
               <Box className='members-summary'>
-                <Typography variant="h6" color="textSecondary">All</Typography>
+                <Typography variant="h6" color="textSecondary" className='members-summary-text'>All</Typography>
                 <Typography variant="h5">{allMembers.length}</Typography>
               </Box>              
             </CardContent>
@@ -522,17 +543,17 @@ const Members = () => {
             <CardContent className='members-summary-div'>
               <img src='/img/active.png' className='summary-image'/>
               <Box className='members-summary'>
-                <Typography variant="h6" color="textSecondary">Active</Typography>
+                <Typography variant="h6" color="textSecondary" className='members-summary-text'>Active</Typography>
                 <Typography variant="h5">{activeMembers.length}</Typography>
               </Box>              
             </CardContent>
           </Card>
-          <Card sx={{ width: "19%", cursor: "pointer" }} onClick={() => handleSummary(membersExpired)}>
+          <Card sx={{ width: "19%", cursor: "pointer" }} onClick={() => handleSummary(membersRegisteredToday)}>
             <CardContent className='members-summary-div'>
-              <img src='/img/expired.png' className='summary-image'/>
+              <img src='/img/registered.png' className='summary-image'/>
               <Box className='members-summary'>
-                <Typography variant="h6" color="textSecondary">Expired</Typography>
-                <Typography variant="h5">{membersExpired.length}</Typography>
+                <Typography variant="h6" color="textSecondary" className='members-summary-text'>Registered Today</Typography>
+                <Typography variant="h5">{membersRegisteredToday.length}</Typography>
               </Box>
             </CardContent>
           </Card>
@@ -540,7 +561,7 @@ const Members = () => {
             <CardContent className='members-summary-div member-summary-fullwidth'>
               <img src='/img/subscribe.png' className='summary-image'/>
               <Box className='members-summary'>
-                <Typography variant="h6" color="textSecondary">Expiring Today</Typography>
+                <Typography variant="h6" color="textSecondary" className='members-summary-text'>Expiring Today</Typography>
                 <Typography variant="h5">{membersExpiringToday.length}</Typography>
               </Box>
             </CardContent>
@@ -549,7 +570,7 @@ const Members = () => {
             <CardContent className='members-summary-div member-summary-fullwidth'>
               <img src='/img/subscription-model.png' className='summary-image'/>
               <Box className='members-summary'>
-                <Typography variant="h6" color="textSecondary">Expiring in 5 Days</Typography>
+                <Typography variant="h6" color="textSecondary" className='members-summary-text'>Expiring in 5 Days</Typography>
                 <Typography variant="h5">{membersExpiringIn5Days.length}</Typography>
               </Box>
             </CardContent>
@@ -557,7 +578,7 @@ const Members = () => {
         </Box>
         <Card sx={{marginBottom: "10px"}}>
           <CardContent>
-            <ListTable columns={columns} rows={rowsData} onEdit={handleEdit} onDelete={handleDelete} onPackage={handlePackages} onPayment={handlePayments} tableName="Full Members List"/>
+            <ListTable columns={columns} rows={rowsData} onEdit={handleEdit} onDelete={handleDelete} onPackage={handlePackages} onPayment={handlePayments} onViewDetails={handleViewDetails} onUpcomingPackage={handleUpcomingPackages} tableName="Full Members List"/>
           </CardContent>
         </Card>
       </Box>
@@ -570,6 +591,7 @@ const Members = () => {
       <PaymentDialog open={isDialogOpenPayment} handleClose={onDialogClosePayment}
         initialValues={initialValuesPayments}
         handleFormSubmit={handleFormSubmitPayment}/>
+      <ViewDetailsDialog open={isDialogOpenViewDetails} handleClose={onDialogCloseViewDetails} selectedMemberId={selectedMember}/>
       <LoadingIndicator isLoading={isLoading} />
     </div>
   );
@@ -596,6 +618,8 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
     address1: Yup.string().required('Address is required'),
     aadharUpload: Yup.mixed().nullable(),
     photoUpload: Yup.mixed().nullable(),
+    rfidnumber: Yup.string().required(),
+    hardwareuserid: Yup.string().required()
   });
 
   return (
@@ -778,19 +802,19 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
                   />
                 </div>
                 <div className='form-group'>
-                <Field
-                  name="coachingmembership"
-                  label="Member Type"
-                  fullWidth
-                  as={TextField}
-                  variant="outlined"
-                  select
-                  error={touched.coachingmembership && Boolean(errors.coachingmembership)}
-                  helperText={touched.coachingmembership && errors.coachingmembership}
-                >
-                  <MenuItem value="Coaching">Coaching</MenuItem>
-                  <MenuItem value="Membership">Membership</MenuItem>
-                </Field>
+                  <Field
+                    name="coachingmembership"
+                    label="Member Type"
+                    fullWidth
+                    as={TextField}
+                    variant="outlined"
+                    select
+                    error={touched.coachingmembership && Boolean(errors.coachingmembership)}
+                    helperText={touched.coachingmembership && errors.coachingmembership}
+                  >
+                    <MenuItem value="Coaching">Coaching</MenuItem>
+                    <MenuItem value="Membership">Membership</MenuItem>
+                  </Field>
                 </div>
                 <div className='form-group'>
                   <FormControl fullWidth error={touched.isspecialchild && Boolean(errors.isspecialchild)} sx={{justifyContent: "center"}}>
@@ -813,6 +837,30 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
                       <FormHelperText>{errors.isspecialchild}</FormHelperText>
                     )}
                   </FormControl>
+                </div>
+              </div>
+              <div className='row'>               
+                <div className='form-group'>
+                  <Field
+                    name="rfidnumber"
+                    label="RFID Number"
+                    fullWidth
+                    as={TextField}
+                    variant="outlined"
+                    error={touched.rfidnumber && Boolean(errors.rfidnumber)}
+                    helperText={touched.rfidnumber && errors.rfidnumber}
+                  />
+                </div>
+                <div className='form-group'>
+                  <Field
+                    name="hardwareuserid"
+                    label="Harware User Id"
+                    fullWidth
+                    as={TextField}
+                    variant="outlined"
+                    error={touched.hardwareuserid && Boolean(errors.hardwareuserid)}
+                    helperText={touched.hardwareuserid && errors.hardwareuserid}
+                  />
                 </div>
               </div>
               <div className='row'>
@@ -1562,6 +1610,100 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
               );
             }}
         </Formik>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+const ViewDetailsDialog = ({open, handleClose, selectedMemberId}) => {
+  const [packageDetails, setPackageDetails] = useState([]);
+  const [paymentDetails, setPaymentDetails] = useState([]);
+  const [attendanceDetails, setAttendanceDetails] = useState([]);
+
+  const packageColumns = [
+    { id: 'packageid', label: 'Package' },
+    { id: 'actualstartdate', label: 'Actual Start Date' },
+    { id: 'actualenddate', label: 'Actual End Date' }
+  ];
+  const paymentColumns = [
+      { id: 'updateddate', label: 'Payment Date' },
+      { id: 'roundedpayment', label: 'Amount Paid' },
+      { id: 'pendingamount', label: 'Balance Amount' },
+      { id: 'paymentstatus', label: 'Payment Status' }
+  ];
+  const attendanceColumns = [
+      { id: 'scheduledDate', label: 'Schedule Date' },
+      { id: 'scheduledTime', label: 'Schedule Time' },
+      { id: 'hardwareCheckinDate', label: 'Hardware Checkin Date' },
+      { id: 'hardwareCheckinTime', label: 'Hardware Checkin Time' }
+      
+  ];
+
+  const getMemberAttendanceDetails = () => {
+    apiClient.get("/api/HardwareAttendance/GetHardwareAttendance?userId="+selectedMemberId).then((data) => {
+      setAttendanceDetails(data);
+    }).catch((error) => {
+      toast.error("Error while get " + error, {
+        position: "top-right"
+      });
+    });
+  }
+
+  const getMemberDetails = () => {
+    apiClient.get("/api/Users/GetAllWithDetailsByUserId?userId="+selectedMemberId).then((data) => {
+      setPackageDetails(data[0].packageDetails);
+      setPaymentDetails(data[0].packagepaymentDetails);
+    }).catch((error) => {
+      toast.error("Error while get " + error, {
+        position: "top-right"
+      });
+    });
+  }
+
+  useEffect(() => {
+    if(selectedMemberId) {
+      getMemberDetails();
+      getMemberAttendanceDetails();
+    }    
+  }, [selectedMemberId])
+
+  return (
+    <Dialog open={open} onClose={handleClose} PaperProps={{sx: {minWidth: "80%"}}}>
+      <DialogTitle>View Details</DialogTitle>
+      <DialogContent sx={{padding: "2rem !important"}}>
+        <div className='row'>
+          <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+            <Typography variant='h5' className='header-text'>Package Details
+            </Typography>
+          </Box>
+        </div>
+        <div className='row'>
+          <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+            <ListTable columns={packageColumns} rows={packageDetails} tableName="Package Details" showSearch={false}/>
+          </Box>
+        </div>
+        <div className='row'>
+          <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+            <Typography variant='h5' className='header-text'>Payment Details
+            </Typography>
+          </Box>
+        </div>
+        <div className='row'>
+          <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+            <ListTable columns={paymentColumns} rows={paymentDetails} tableName="Payment Details" showSearch={false}/>
+          </Box>
+        </div>
+        <div className='row'>
+          <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+            <Typography variant='h5' className='header-text'>Attendance Details
+            </Typography>
+          </Box>
+        </div>
+        <div className='row'>
+          <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+            <ListTable columns={attendanceColumns} rows={attendanceDetails} tableName="Attendance Details" showSearch={false}/>
+          </Box>
+        </div>
       </DialogContent>
     </Dialog>
   );
