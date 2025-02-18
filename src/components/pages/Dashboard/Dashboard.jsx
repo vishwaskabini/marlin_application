@@ -86,9 +86,10 @@ const Dashboard = () => {
         const memberTotalPayment = item.packagepaymentDetails.reduce((sum, payment) => {
           if(payment.paymentstatus === "Partial") {
             return sum + (payment.pendingamount && payment.pendingamount != null ? payment.pendingamount : 0);
-          }          
+          }
+          return sum;      
         }, 0);              
-        return total + (memberTotalPayment ? memberTotalPayment : 0);
+        return total + memberTotalPayment;
       }
       return total;
     }, 0);

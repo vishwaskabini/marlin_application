@@ -129,10 +129,15 @@ const Members = () => {
       }));
       setMembersRegisteredToday(membersData.filter((item) => {
         if(item.registereddate) {
-          const registereddate = new Date(item.registereddate);
+          const registeredDate = new Date(item.registereddate);
           const currentDate = new Date();
-          return registereddate === currentDate;
-        }        
+          return (
+            registeredDate.getFullYear() === currentDate.getFullYear() &&
+            registeredDate.getMonth() === currentDate.getMonth() &&
+            registeredDate.getDate() === currentDate.getDate()
+          );
+        }
+        return false;        
       }));
       setActiveMembers(membersData.filter((item) => {
         const packageenddate = convertToDate(item.packageenddate);
@@ -368,7 +373,7 @@ const Members = () => {
         pendingamount: 0,
         transactionid: '',
         notes: '',
-        slots: (data.schedule && data.schedule.length > 0 ? data.schedule[0].timeslotid : '')
+        timeslotid: packageDetails.timeslotid
       });
     } else {
       setIsEditPackage(false);
@@ -389,7 +394,7 @@ const Members = () => {
         pendingamount: 0,
         transactionid: '',
         notes: '',
-        slots: ''
+        timeslotid: ''
       });
     }
     setIsDialogOpenPackage(true);
@@ -591,7 +596,8 @@ const Members = () => {
       <PaymentDialog open={isDialogOpenPayment} handleClose={onDialogClosePayment}
         initialValues={initialValuesPayments}
         handleFormSubmit={handleFormSubmitPayment}/>
-      <ViewDetailsDialog open={isDialogOpenViewDetails} handleClose={onDialogCloseViewDetails} selectedMemberId={selectedMember}/>
+      <ViewDetailsDialog open={isDialogOpenViewDetails} handleClose={onDialogCloseViewDetails} selectedMemberId={selectedMember}
+        getPackageName={getPackageName}/>
       <LoadingIndicator isLoading={isLoading} />
     </div>
   );
@@ -1615,13 +1621,13 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
   );
 }
 
-const ViewDetailsDialog = ({open, handleClose, selectedMemberId}) => {
+const ViewDetailsDialog = ({open, handleClose, selectedMemberId, getPackageName}) => {
   const [packageDetails, setPackageDetails] = useState([]);
   const [paymentDetails, setPaymentDetails] = useState([]);
   const [attendanceDetails, setAttendanceDetails] = useState([]);
 
   const packageColumns = [
-    { id: 'packageid', label: 'Package' },
+    { id: 'package', label: 'Package' },
     { id: 'actualstartdate', label: 'Actual Start Date' },
     { id: 'actualenddate', label: 'Actual End Date' }
   ];
@@ -1651,7 +1657,10 @@ const ViewDetailsDialog = ({open, handleClose, selectedMemberId}) => {
 
   const getMemberDetails = () => {
     apiClient.get("/api/Users/GetAllWithDetailsByUserId?userId="+selectedMemberId).then((data) => {
-      setPackageDetails(data[0].packageDetails);
+      if(data[0].packageDetails && data[0].packageDetails[0]) {
+        data[0].packageDetails[0].package = getPackageName(data[0].packageDetails[0].packageid)
+        setPackageDetails(data[0].packageDetails);
+      }      
       setPaymentDetails(data[0].packagepaymentDetails);
     }).catch((error) => {
       toast.error("Error while get " + error, {

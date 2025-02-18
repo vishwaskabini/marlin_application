@@ -20,7 +20,7 @@ const GuestScreen = () => {
 
   const getGuestData = () => {
     setIsLoading(true);
-    apiClient.get("/api/Guests").then((data) => {
+    apiClient.get("/api/Guests/GetDataByToday").then((data) => {
       setIsLoading(false);
       setGuestData(data.sort((a, b) => new Date(b.registereddate) - new Date(a.registereddate)));
     }).catch((error) => {

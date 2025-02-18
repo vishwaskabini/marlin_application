@@ -46,7 +46,6 @@ const Scheduler = () => {
     apiClient.get("/api/Timeslots").then((data) => {      
       var batchdata = data.sort(sortByStartTime)      
       setSlots(batchdata);
-      initializeAvailableSlots(batchdata);
       setSelectedDate(dayjs());
     }).catch((error) => {
       setIsLoading(false);
@@ -113,19 +112,16 @@ const Scheduler = () => {
     })   
   }, []);
 
-  const initializeAvailableSlots = (slots) => {
-    const initialAvailableSlots = {};
-    [...slots].forEach(slot => {
-      initialAvailableSlots[slot.id] = 50;
-    });
-    setAvailableSlots(initialAvailableSlots);
-  }
-
   const updateAvailableSlots = (transformedData) => {
-    const updatedSlots = Object.keys(transformedData).reduce((acc, timeslotid) => {
-      acc[timeslotid] = Math.max(totalSlots - transformedData[timeslotid].length, 0);
-      return acc;
-    }, {});
+    const updatedSlots = {};
+    slots.forEach(slot => {
+      updatedSlots[slot.id] = 50;
+    });
+  
+    Object.keys(transformedData).forEach(timeslotid => {
+      updatedSlots[timeslotid] = Math.max(totalSlots - transformedData[timeslotid].length, 0);
+    });
+
     setAvailableSlots(updatedSlots);
   };
 

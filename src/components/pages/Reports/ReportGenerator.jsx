@@ -224,12 +224,14 @@ const ReportGenerator = () => {
             <div className="form-group">
                 <Button variant="contained" onClick={generateReport}>Generate Report</Button>
             </div>
-            <div className="form-group" style={{justifyContent: 'end'}}>
-                <Button variant="contained" onClick={exportExcel}>Export to Excel</Button>
-            </div>
-            <div className="form-group" style={{justifyContent: 'end'}}>
-                <Button variant="contained" onClick={exportPdf}>Export to PDF</Button>
-            </div>
+            <Box sx={{display: "flex", minWidth: "400px", justifyContent: "flex-end"}}>
+              <div className="form-group">
+                  <Button variant="contained" onClick={exportExcel}>Export to Excel</Button>
+              </div>
+              <div className="form-group">
+                  <Button variant="contained" onClick={exportPdf}>Export to PDF</Button>
+              </div>
+            </Box>
           </div>           
           <div className='row'>
             <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
