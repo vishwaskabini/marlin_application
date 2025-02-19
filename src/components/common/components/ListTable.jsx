@@ -179,7 +179,7 @@ const ListTable = ({ columns, rows, onEdit, onDelete, tableName, onPackage, onPa
                       <MenuItem onClick={() => handlePayment(row.id)} disabled={row.paymentstatusAction}>Payment</MenuItem>
                       <MenuItem onClick={() => handleEdit(row.id)}>Edit</MenuItem>
                       <MenuItem onClick={() => handleDetails(row.id)}>View Details</MenuItem>
-                      <MenuItem onClick={() => handleUpcomingPackages(row.id)}>Upcoming Packages</MenuItem>
+                      <MenuItem onClick={() => handleUpcomingPackages(row.id)}>Renew Package</MenuItem>
                     </Menu>
                   </div>
                 </TableCell> ) : ( <TableCell align="center">

@@ -11,6 +11,11 @@ import apiClient from '../../services/apiClientService';
 import LoadingIndicator from '../../common/components/LoadingIndicator';
 import { toast } from 'react-toastify';
 import dayjs from 'dayjs';
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const ReportGenerator = () => {
   const [startDate, setStartDate] = useState(null);
@@ -161,8 +166,8 @@ const ReportGenerator = () => {
     }
   
     return {
-      fromDate: fromDate.toISOString(),
-      toDate: toDate.toISOString(),
+      fromDate: dayjs(fromDate).tz("Asia/Kolkata").format("YYYY-MM-DD"),
+      toDate: dayjs(toDate).tz("Asia/Kolkata").format("YYYY-MM-DD"),
     };
   };
 

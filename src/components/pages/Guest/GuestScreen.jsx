@@ -8,6 +8,7 @@ import { toast } from 'react-toastify';
 import LoadingIndicator from '../../common/components/LoadingIndicator';
 import AddIcon from '@mui/icons-material/Add';
 import ListTable from '../../common/components/ListTable';
+import dayjs from 'dayjs';
 
 const GuestScreen = () => {  
   const propertyid = 'a4e1f874-9c36-41aa-8af4-f94615c6c362';
@@ -22,7 +23,11 @@ const GuestScreen = () => {
     setIsLoading(true);
     apiClient.get("/api/Guests/GetDataByToday").then((data) => {
       setIsLoading(false);
-      setGuestData(data.sort((a, b) => new Date(b.registereddate) - new Date(a.registereddate)));
+      const formattedData = data.map((item) => ({
+        ...item,
+        registereddate: dayjs(item.registereddate).format("DD/MM/YYYY")
+      }));
+      setGuestData(formattedData);
     }).catch((error) => {
       setIsLoading(false);
       toast.error("Error while get " + error, {

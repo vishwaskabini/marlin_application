@@ -106,3 +106,10 @@ h2 {
   width: 4rem;
   height: 4rem;
 }
+
+.div-package-btns {
+  width: 33%;
+  margin-left: auto;
+  display: flex;
+  margin-right: auto;
+}

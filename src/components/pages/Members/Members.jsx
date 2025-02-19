@@ -41,6 +41,7 @@ const Members = () => {
   const [isDialogOpenViewDetails, setIsDialogOpenViewDetails] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [isEditPackage, setIsEditPackage] = useState(false);
+  const [isActivePackage, setIsActivePackage] = useState(false);
   const [selectedMember, setSelectedMember] = useState();
   const userTypeId = 'a4e1f874-9c36-41aa-8af4-f94615c6c363';
   const [packageTypes, setPackageTypes] = useState([]); 
@@ -260,7 +261,8 @@ const Members = () => {
       actualstartdate: values.actualstartdate,
       actualenddate: values.actualenddate,
       id: values.id,
-      timeslotid: values.timeslotid
+      timeslotid: values.timeslotid,
+      userpackagestatusid: values.userpackagestatusid
     }
     setIsLoading(true);
     if (isEditPackage) {
@@ -353,9 +355,19 @@ const Members = () => {
 
   const handlePackages = (id) => {
     var data = members.find(item => item.id == id);
-    if(data.packageDetails && data.packageDetails.length > 0) {
-      setIsEditPackage(true);
-      const packageDetails = data.packageDetails[0];
+    addEditPackage(data, true);
+  }
+
+  const addEditPackage = (data, isActive) => {    
+    setIsActivePackage(isActive);
+    const isEditMode = isActive ? (data.packageDetails && data.packageDetails.length > 0) : (data.packageDetails && data.packageDetails.length > 1);
+    setIsEditPackage(isEditMode);
+
+    const packageDetails = isEditMode 
+      ? (!isActive && data.packageDetails.length == 2 ? data.packageDetails[1] : data.packageDetails[0]) 
+      : null;
+
+    if(isEditMode) {      
       setInitialValuesPackages({
         id: packageDetails.id,
         userid: data.id,
@@ -373,16 +385,16 @@ const Members = () => {
         pendingamount: 0,
         transactionid: '',
         notes: '',
-        timeslotid: packageDetails.timeslotid
+        timeslotid: packageDetails.timeslotid,
+        userpackagestatusid: isActive  ? "06cd1d96-f85d-49cd-9d09-bfa7d6825d2b" : '3159aa8b-6bdd-4b34-9fc4-4a618e363fb2'
       });
     } else {
-      setIsEditPackage(false);
       setInitialValuesPackages({
         id: '',
         userid: data.id,
         packageid: '',
-        packagestartdate: dayjs().format('DD/MM/YYYY'),
-        actualstartdate: dayjs().format('DD/MM/YYYY'),
+        packagestartdate: isActive ? dayjs().format('DD/MM/YYYY') : dayjs(data.packageDetails[0].actualenddate).add(1, 'day').format('DD/MM/YYYY'),
+        actualstartdate: isActive ? dayjs().format('DD/MM/YYYY') : dayjs(data.packageDetails[0].actualenddate).add(1, 'day').format('DD/MM/YYYY'),
         packageenddate: '',
         actualenddate: '',
         amount: 0,
@@ -394,10 +406,11 @@ const Members = () => {
         pendingamount: 0,
         transactionid: '',
         notes: '',
-        timeslotid: ''
+        timeslotid: '',
+        userpackagestatusid: isActive  ? "06cd1d96-f85d-49cd-9d09-bfa7d6825d2b" : '3159aa8b-6bdd-4b34-9fc4-4a618e363fb2'
       });
     }
-    setIsDialogOpenPackage(true);
+    setIsDialogOpenPackage(true);       
   }
 
   const sortedData = (data) => {
@@ -443,10 +456,18 @@ const Members = () => {
       toast.error("No valid packages available, Please add package before making payment", {
         position: "top-right"
       });
-    }    
+    }
   }
 
   const handleUpcomingPackages = (id) => {
+    var data = members.find(item => item.id == id);
+    if(data.packageDetails && data.packageDetails.length > 0){
+      addEditPackage(data, false);
+    } else {
+      toast.error("No valid packages available, Please add package before making renewal", {
+        position: "top-right"
+      });
+    }    
   }
 
   const handleViewDetails = (id) => {
@@ -592,7 +613,7 @@ const Members = () => {
         handleFormSubmit={handleFormSubmit}/>
       <PackageDialog open={isDialogOpenPackage} handleClose={onDialogClosePackage} isEdit={isEditPackage}
         initialValues={initialValuesPackages}
-        handleFormSubmit={handleFormSubmitPackage} packageTypes={packageTypes}/>
+        handleFormSubmit={handleFormSubmitPackage} packageTypes={packageTypes} isActivePackage={isActivePackage}/>      
       <PaymentDialog open={isDialogOpenPayment} handleClose={onDialogClosePayment}
         initialValues={initialValuesPayments}
         handleFormSubmit={handleFormSubmitPayment}/>
@@ -624,8 +645,8 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
     address1: Yup.string().required('Address is required'),
     aadharUpload: Yup.mixed().nullable(),
     photoUpload: Yup.mixed().nullable(),
-    rfidnumber: Yup.string().required(),
-    hardwareuserid: Yup.string().required()
+    rfidnumber: Yup.string(),
+    hardwareuserid: Yup.string()
   });
 
   return (
@@ -922,8 +943,7 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
   );
 }
 
-
-const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmit, packageTypes}) => {
+const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmit, packageTypes, isActivePackage}) => {
 
   const paymentTypeOnline = '22220087-c3c2-4268-a25a-13baa6f3625f';
   const paymentTypeCash = '22220087-c3c2-4268-a25a-13baa6f3625e';  
@@ -979,7 +999,8 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
     roundedpayment: Yup.number(),
     pendingamount: Yup.number(),
     notes: Yup.string(),
-    timeslotid: Yup.string().required("slots is required")
+    timeslotid: Yup.string().required("slots is required"),
+    userpackagestatusid: Yup.string()
   });
 
   return (
@@ -990,7 +1011,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
           <Formik initialValues={initialValues} validationSchema={validationSchema}
               onSubmit={handleFormSubmit}
             >
-              {({errors, touched, handleChange, values, isSubmitting, setFieldValue, setFieldTouched}) => {
+              {({errors, touched, handleChange, values, isSubmitting, setFieldValue, setFieldTouched, handleSubmit }) => {
                 return (
                   <Form>
                     <div className='row'>
@@ -1042,7 +1063,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                                   placeholder="DD/MM/YYYY"                            
                                 />
                               )}
-                              disabled="true"
+                              disabled={!isActivePackage}
                             />
                           )}
                         </Field>
@@ -1096,7 +1117,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                                   placeholder="DD/MM/YYYY"
                                 />
                               )}
-                              disabled="true"
+                              disabled={!isActivePackage}
                             />
                           )}
                         </Field>
@@ -1344,10 +1365,39 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                         </div>
                       </>                      
                     )}                    
-                    <div className='row save-btn'>
+                    <div className='row save-btn div-package-btns'>
                       <Button type="submit" variant="contained" color="primary" disabled={isSubmitting}>
                         Save Changes
                       </Button>
+                      {isActivePackage && isEdit && (
+                        <>
+                          <Button variant="contained" color="success" 
+                            onClick={() => {
+                              setFieldValue("userpackagestatusid", "e332f582-46df-4ab9-b8bb-da0cb4c654c0");
+                              handleSubmit();
+                            }}>
+                            Complete
+                          </Button>
+                          <Button variant="contained" color="error" 
+                            onClick={() => {
+                              setFieldValue("userpackagestatusid", "e5292250-2be0-4774-ace0-db4428640ec2");
+                              handleSubmit();
+                            }}>
+                            Abort
+                          </Button>                      
+                        </>
+                      )}
+                      {!isActivePackage && isEdit && (
+                        <>
+                          <Button variant="contained" color="inherit" 
+                            onClick={() => {
+                              setFieldValue("userpackagestatusid", "0b966226-9369-40bb-ae1e-995c4001d178");
+                              handleSubmit();
+                            }}>
+                            Cancel
+                          </Button>                     
+                        </>
+                      )}
                     </div>
                   </Form>
                 );
@@ -1627,7 +1677,7 @@ const ViewDetailsDialog = ({open, handleClose, selectedMemberId, getPackageName}
   const [attendanceDetails, setAttendanceDetails] = useState([]);
 
   const packageColumns = [
-    { id: 'package', label: 'Package' },
+    { id: 'packageName', label: 'Package' },
     { id: 'actualstartdate', label: 'Actual Start Date' },
     { id: 'actualenddate', label: 'Actual End Date' }
   ];
@@ -1657,11 +1707,20 @@ const ViewDetailsDialog = ({open, handleClose, selectedMemberId, getPackageName}
 
   const getMemberDetails = () => {
     apiClient.get("/api/Users/GetAllWithDetailsByUserId?userId="+selectedMemberId).then((data) => {
-      if(data[0].packageDetails && data[0].packageDetails[0]) {
-        data[0].packageDetails[0].package = getPackageName(data[0].packageDetails[0].packageid)
-        setPackageDetails(data[0].packageDetails);
-      }      
-      setPaymentDetails(data[0].packagepaymentDetails);
+      if(data[0].packageDetails && data[0].packagepaymentDetails) {
+        const formattedDataPackage = data[0].packageDetails.map((item) => ({
+          ...item,
+          packageName: getPackageName(item.packageid),
+          actualstartdate: dayjs(item.updateddate).format("DD/MM/YYYY"),
+          actualenddate: dayjs(item.updateddate).format("DD/MM/YYYY")
+        }));        
+        setPackageDetails(formattedDataPackage);      
+        const formattedData = data[0].packagepaymentDetails.map((item) => ({
+          ...item,
+          updateddate: dayjs(item.updateddate).format("DD/MM/YYYY")
+        }));
+        setPaymentDetails(formattedData);
+      }
     }).catch((error) => {
       toast.error("Error while get " + error, {
         position: "top-right"

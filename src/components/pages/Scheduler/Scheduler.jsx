@@ -34,11 +34,13 @@ const Scheduler = () => {
   const [availableSlots, setAvailableSlots] = useState({});
   const [slots, setSlots] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
+  const [openAttendaceDialog, setOpenAttendaceDialog] = useState(false);
   const [open, setOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [initialValues, setInitialValues] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
+  const [scheduleData, setScheduleData] = useState(null);
   const totalSlots = 50;
 
   const getTimeSlots = () => {
@@ -63,6 +65,7 @@ const Scheduler = () => {
     if(selectDate !== "Invalid Date") {
       setIsLoading(true);
       apiClient.get("/api/UsersScheduleMapping/GetAllByDateRange?fromDate="+selectDate+"&toDate="+selectDate).then((data) => {
+        setScheduleData(data);
         const transformedData = data.reduce((acc, {timeslotid, userid, userName, id}) => {
           if (!acc[timeslotid]) {
             acc[timeslotid] = [];
@@ -160,6 +163,28 @@ const Scheduler = () => {
     }
   }
 
+  const handleConfirmAttendance = () => {
+    if(selectedRow) {
+      setOpenAttendaceDialog(false);
+      setIsLoading(true);
+      var selected = scheduleData.filter(item => item.timeslotid === selectedRow.slot && item.id === selectedRow.userScheduleId);
+      if(selected && selected.length > 0) {
+        selected[0].attendanancestatusid = "e2d0353d-fee2-4667-844d-66f56f716dfe";
+        apiClient.put("/api/UsersScheduleMapping/Update", selected[0]).then(() =>{        
+          setIsLoading(false);
+          toast.success("Attendance Marked Successfully !", {
+            position: "top-right"
+          });
+        }).catch((error) =>{
+          setIsLoading(false);
+          toast.error("Error while operation " + error, {
+            position: "top-right"
+          });
+        });
+      }
+    }
+  }
+
   const handleDateChange = (newDate) => {
     setSelectedDate(dayjs(newDate));
   };
@@ -176,6 +201,9 @@ const Scheduler = () => {
 
   const handleCloseConfirm = () => {
     setOpen(false);
+  }
+  const handleCloseAttendanceDialog = () => {    
+    setOpenAttendaceDialog(false);
   }
 
   const handleFormSubmit = (values) => {
@@ -209,6 +237,11 @@ const Scheduler = () => {
   const handleNextDate = () => {
     setSelectedDate((prevDate) => prevDate.add(1, 'day'));
   };
+
+  const handleClickMember = (slot, memberId) => {
+    setSelectedRow({slot: slot, userScheduleId: memberId});
+    setOpenAttendaceDialog(true);
+  }
 
   return (
     <div className="container">
@@ -281,6 +314,7 @@ const Scheduler = () => {
                             key={member.userid+index}
                             label= {member.name}
                             onDelete={() => handleRemoveMember(slot.id, member.id)}
+                            onClick={() => handleClickMember(slot.id, member.id)}
                             color="primary"
                             style={{ margin: '5px' }}
                           />
@@ -307,6 +341,18 @@ const Scheduler = () => {
         <DialogActions sx={{padding: "1rem"}}>
           <Button onClick={handleCloseConfirm} sx={{backgroundColor: "#dfe3e6", color: "#000"}} variant="contained">Cancel</Button>
           <Button onClick={handleConfirmDelete} color="primary" variant="contained">Delete</Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={openAttendaceDialog} onClose={handleCloseAttendanceDialog}>
+        <DialogTitle>Confirm Mark Attendance</DialogTitle>
+        <DialogContent sx={{padding: "2rem !important"}}>
+          <DialogContentText>
+            Are you sure you want to mark member as attended.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{padding: "1rem"}}>
+          <Button onClick={handleCloseAttendanceDialog} sx={{backgroundColor: "#dfe3e6", color: "#000"}} variant="contained">Cancel</Button>
+          <Button onClick={handleConfirmAttendance} color="primary" variant="contained">Mark as Attended</Button>
         </DialogActions>
       </Dialog>
     </div>
