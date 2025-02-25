@@ -1675,6 +1675,7 @@ const ViewDetailsDialog = ({open, handleClose, selectedMemberId, getPackageName}
   const [packageDetails, setPackageDetails] = useState([]);
   const [paymentDetails, setPaymentDetails] = useState([]);
   const [attendanceDetails, setAttendanceDetails] = useState([]);
+  const [attendanceSummary, setAttendanceSummary] = useState([]);
 
   const packageColumns = [
     { id: 'packageName', label: 'Package' },
@@ -1694,10 +1695,26 @@ const ViewDetailsDialog = ({open, handleClose, selectedMemberId, getPackageName}
       { id: 'hardwareCheckinTime', label: 'Hardware Checkin Time' }
       
   ];
+  const attendanceSummaryColumns = [
+    { id: 'totalregisteredclass', label: 'Total Registered Classes' },
+    { id: 'totalactualattendendclass', label: 'Total Attended Classes' },
+    { id: 'totalmissedclass', label: 'Total Missed Classes' }
+  ];
+
 
   const getMemberAttendanceDetails = () => {
     apiClient.get("/api/HardwareAttendance/GetHardwareAttendance?userId="+selectedMemberId).then((data) => {
       setAttendanceDetails(data);
+    }).catch((error) => {
+      toast.error("Error while get " + error, {
+        position: "top-right"
+      });
+    });
+  }
+
+  const getMemberAttendanceSummary = () => {
+    apiClient.get("/api/AttendanceSummary/GetAttendanceSummary?userId="+selectedMemberId).then((data) => {
+      setAttendanceSummary([data]);
     }).catch((error) => {
       toast.error("Error while get " + error, {
         position: "top-right"
@@ -1730,6 +1747,7 @@ const ViewDetailsDialog = ({open, handleClose, selectedMemberId, getPackageName}
 
   useEffect(() => {
     if(selectedMemberId) {
+      getMemberAttendanceSummary();
       getMemberDetails();
       getMemberAttendanceDetails();
     }    
@@ -1759,6 +1777,17 @@ const ViewDetailsDialog = ({open, handleClose, selectedMemberId, getPackageName}
         <div className='row'>
           <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
             <ListTable columns={paymentColumns} rows={paymentDetails} tableName="Payment Details" showSearch={false}/>
+          </Box>
+        </div>
+        <div className='row'>
+          <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+            <Typography variant='h5' className='header-text'>Attendance Summary
+            </Typography>
+          </Box>
+        </div>
+        <div className='row'>
+          <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+            <ListTable columns={attendanceSummaryColumns} rows={attendanceSummary} tableName="Attendance Summary" showSearch={false}/>
           </Box>
         </div>
         <div className='row'>

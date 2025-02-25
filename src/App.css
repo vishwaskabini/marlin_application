@@ -9,6 +9,7 @@
   max-height: 100%;
   transition: box-shadow 0.2s;
   object-fit: contain;
+  cursor: pointer;
 }
 
 .button {

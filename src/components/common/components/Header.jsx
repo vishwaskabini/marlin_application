@@ -70,7 +70,7 @@ const Header = ({onMenuClick}) => {
                     <MenuIcon />
                 </IconButton>
                 <Typography variant="h6" noWrap component="div">
-                    <img src="/img/MARLIN.png" className="company-logo"/>
+                    <img src="/img/MARLIN.png" className="company-logo" onClick={() => navigate("/")}/>
                 </Typography>
                 <IconButton
                     edge="end"

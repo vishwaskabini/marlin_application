@@ -59,6 +59,7 @@ const Login = () => {
       apiClient.post("/api/Users/login", {email: email, password: password}).then((data) =>  {
         if(data.temporarypassword !== null) {
           sessionStorage.setItem("email", email);
+          //sessionStorage.setItem("userId", data.);
           navigate("/changepassword");
         } else {
           let isSuperAdmin = handleRole(data.roleid);

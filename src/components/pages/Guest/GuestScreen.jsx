@@ -25,7 +25,7 @@ const GuestScreen = () => {
       setIsLoading(false);
       const formattedData = data.map((item) => ({
         ...item,
-        registereddate: dayjs(item.registereddate).format("DD/MM/YYYY")
+        registereddate: dayjs(item.registereddate).format("DD/MM/YYYY HH:mm:ss")
       }));
       setGuestData(formattedData);
     }).catch((error) => {
