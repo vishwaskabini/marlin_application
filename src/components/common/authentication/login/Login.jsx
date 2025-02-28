@@ -64,8 +64,9 @@ const Login = () => {
         } else {
           let isSuperAdmin = handleRole(data.roleid);
           let isMember = handleUserType(data.usertype);
+          let userId = data.id;
           setIsLoading(false);
-          login(token, isSuperAdmin, isMember, email);
+          login(token, isSuperAdmin, isMember, email, userId);
           if(isMember) {
             navigate("/member/dashboard");
           } else {

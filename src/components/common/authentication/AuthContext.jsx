@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
     console.log(isSuperAdmin);
   }, [isAuthenticated, isMember, isSuperAdmin]);
 
-  const login = (token, isSuperAdminIn, isMemberIn, emailId) => {
+  const login = (token, isSuperAdminIn, isMemberIn, emailId, userId) => {
     setIsMember(isMemberIn);
     setIsSuperAdmin(isSuperAdminIn);
     setToken(token);
@@ -41,6 +41,7 @@ export const AuthProvider = ({ children }) => {
     sessionStorage.setItem("email", emailId);
     sessionStorage.setItem("isSuperAdminIn", isSuperAdminIn); 
     sessionStorage.setItem("isMemberIn", isMemberIn); 
+    sessionStorage.setItem("userId", userId); 
   };
 
   const logout = () => {
@@ -49,6 +50,7 @@ export const AuthProvider = ({ children }) => {
     sessionStorage.removeItem('token');
     sessionStorage.removeItem("isSuperAdminIn"); 
     sessionStorage.removeItem("isMemberIn");
+    sessionStorage.removeItem("userId");
   };
 
   const setAuthentication = (status) => {

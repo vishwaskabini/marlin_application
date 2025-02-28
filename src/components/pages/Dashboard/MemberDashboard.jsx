@@ -135,11 +135,13 @@ const MemberDashboard = () => {
   };
 
   useEffect(() => {
-    selectedMemberId = "";
-    getPackages();
-    getMemberAttendanceSummary();
-    getMemberDetails();
-    getMemberAttendanceDetails();
+    selectedMemberId = sessionStorage.getItem("userId");
+    if(selectedMemberId) {
+      getPackages();
+      getMemberAttendanceSummary();
+      getMemberDetails();
+      getMemberAttendanceDetails();
+    }    
   }, []);
 
   return (
