@@ -33,7 +33,7 @@ const AppBar = styled(MuiAppBar, {
     ],
   }));
 
-const Header = ({onMenuClick}) => {
+const Header = ({onMenuClick, onLogoClick}) => {
     const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = useState(null);    
     const {logout} = useAuth();
@@ -70,7 +70,7 @@ const Header = ({onMenuClick}) => {
                     <MenuIcon />
                 </IconButton>
                 <Typography variant="h6" noWrap component="div">
-                    <img src="/img/MARLIN.png" className="company-logo" onClick={() => navigate("/")}/>
+                    <img src="/img/MARLIN.png" className="company-logo" onClick={onLogoClick}/>
                 </Typography>
                 <IconButton
                     edge="end"

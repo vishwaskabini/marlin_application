@@ -7,11 +7,11 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [token, setToken] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [isMember, setIsMember] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!sessionStorage.getItem("token"));
+  const [isSuperAdmin, setIsSuperAdmin] = useState(() => sessionStorage.getItem("isSuperAdminIn") === "true");
+  const [isMember, setIsMember] = useState(() => sessionStorage.getItem("isMemberIn") === "true");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const storedToken = sessionStorage.getItem('token');
@@ -28,9 +28,7 @@ export const AuthProvider = ({ children }) => {
       setIsMember(true);
     }
     setIsLoading(false);
-    console.log(isMember);
-    console.log(isSuperAdmin);
-  }, [isAuthenticated, isMember, isSuperAdmin]);
+  }, []);
 
   const login = (token, isSuperAdminIn, isMemberIn, emailId, userId) => {
     setIsMember(isMemberIn);

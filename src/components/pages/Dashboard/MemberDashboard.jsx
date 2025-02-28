@@ -1,8 +1,7 @@
 import {
   Box,
-  Dialog,
-  DialogContent,
-  DialogTitle,
+  Card,
+  CardContent,
   Typography,
 } from "@mui/material";
 import ListTable from "../../common/components/ListTable";
@@ -145,80 +144,81 @@ const MemberDashboard = () => {
   }, []);
 
   return (
-    <Dialog PaperProps={{ sx: { minWidth: "80%" } }}>
-      <DialogTitle>View Details</DialogTitle>
-      <DialogContent sx={{ padding: "2rem !important" }}>
-        <div className="row">
-          <Box sx={{ display: "flex", width: "100%", marginBottom: "1rem" }}>
-            <Typography variant="h5" className="header-text">
-              Package Details
-            </Typography>
-          </Box>
-        </div>
-        <div className="row">
-          <Box sx={{ display: "flex", width: "100%", marginBottom: "1rem" }}>
-            <ListTable
-              columns={packageColumns}
-              rows={packageDetails}
-              tableName="Package Details"
-              showSearch={false}
-            />
-          </Box>
-        </div>
-        <div className="row">
-          <Box sx={{ display: "flex", width: "100%", marginBottom: "1rem" }}>
-            <Typography variant="h5" className="header-text">
-              Payment Details
-            </Typography>
-          </Box>
-        </div>
-        <div className="row">
-          <Box sx={{ display: "flex", width: "100%", marginBottom: "1rem" }}>
-            <ListTable
-              columns={paymentColumns}
-              rows={paymentDetails}
-              tableName="Payment Details"
-              showSearch={false}
-            />
-          </Box>
-        </div>
-        <div className="row">
-          <Box sx={{ display: "flex", width: "100%", marginBottom: "1rem" }}>
-            <Typography variant="h5" className="header-text">
-              Attendance Summary
-            </Typography>
-          </Box>
-        </div>
-        <div className="row">
-          <Box sx={{ display: "flex", width: "100%", marginBottom: "1rem" }}>
-            <ListTable
-              columns={attendanceSummaryColumns}
-              rows={attendanceSummary}
-              tableName="Attendance Summary"
-              showSearch={false}
-            />
-          </Box>
-        </div>
-        <div className="row">
-          <Box sx={{ display: "flex", width: "100%", marginBottom: "1rem" }}>
-            <Typography variant="h5" className="header-text">
-              Attendance Details
-            </Typography>
-          </Box>
-        </div>
-        <div className="row">
-          <Box sx={{ display: "flex", width: "100%", marginBottom: "1rem" }}>
-            <ListTable
-              columns={attendanceColumns}
-              rows={attendanceDetails}
-              tableName="Attendance Details"
-              showSearch={false}
-            />
-          </Box>
-        </div>
+    <div className="">
+      <Card sx={{marginBottom: "10px"}}>
+        <CardContent>
+          <div className="row">
+              <Box sx={{ display: "flex", width: "100%", marginBottom: "1rem" }}>
+                <Typography variant="h5" className="header-text">
+                  Package Details
+                </Typography>
+              </Box>
+            </div>
+            <div className="row">
+              <Box sx={{ display: "flex", width: "100%", marginBottom: "1rem" }}>
+                <ListTable
+                  columns={packageColumns}
+                  rows={packageDetails}
+                  tableName="Package Details"
+                  showSearch={false}
+                />
+              </Box>
+            </div>
+            <div className="row">
+              <Box sx={{ display: "flex", width: "100%", marginBottom: "1rem" }}>
+                <Typography variant="h5" className="header-text">
+                  Payment Details
+                </Typography>
+              </Box>
+            </div>
+            <div className="row">
+              <Box sx={{ display: "flex", width: "100%", marginBottom: "1rem" }}>
+                <ListTable
+                  columns={paymentColumns}
+                  rows={paymentDetails}
+                  tableName="Payment Details"
+                  showSearch={false}
+                />
+              </Box>
+            </div>
+            <div className="row">
+              <Box sx={{ display: "flex", width: "100%", marginBottom: "1rem" }}>
+                <Typography variant="h5" className="header-text">
+                  Attendance Summary
+                </Typography>
+              </Box>
+            </div>
+            <div className="row">
+              <Box sx={{ display: "flex", width: "100%", marginBottom: "1rem" }}>
+                <ListTable
+                  columns={attendanceSummaryColumns}
+                  rows={attendanceSummary}
+                  tableName="Attendance Summary"
+                  showSearch={false}
+                />
+              </Box>
+            </div>
+            <div className="row">
+              <Box sx={{ display: "flex", width: "100%", marginBottom: "1rem" }}>
+                <Typography variant="h5" className="header-text">
+                  Attendance Details
+                </Typography>
+              </Box>
+            </div>
+            <div className="row">
+              <Box sx={{ display: "flex", width: "100%", marginBottom: "1rem" }}>
+                <ListTable
+                  columns={attendanceColumns}
+                  rows={attendanceDetails}
+                  tableName="Attendance Details"
+                  showSearch={false}
+                />
+              </Box>
+            </div>
+          </CardContent>
+        </Card>
         <LoadingIndicator isLoading={isLoading} />
-      </DialogContent>
-    </Dialog>
+    </div>
   );
 };
 
