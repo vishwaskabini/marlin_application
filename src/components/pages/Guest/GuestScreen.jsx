@@ -50,15 +50,17 @@ const GuestScreen = () => {
     contactnumber: '',
     gender: '',
     amount: 0,
+    amountcash: 0,
+    amountupi: 0,
     duration: 1,
     totalamount: 0,
-    paymenttype: '22220087-c3c2-4268-a25a-13baa6f3625e',
+    paymenttype: '07fcccea-c2ed-4a4a-a7db-1a950913496d',
     transactionid: '',
     noofpersons: 1,
     registereddate: new Date()
   };
 
-  const handleSubmit = (values) => {
+  const handleSubmit = (values) => {  
     setIsLoading(true);
     apiClient.post("/api/Guests/create", values).then((data) =>  {
       setIsDialogOpen(false);
@@ -107,28 +109,25 @@ const GuestScreen = () => {
 
 
 const CreateGuestDialog = ({open, handleClose, initialValues, handleFormSubmit}) => {
-  const paymentTypeOnline = '22220087-c3c2-4268-a25a-13baa6f3625f';
-  const paymentTypeCash = '22220087-c3c2-4268-a25a-13baa6f3625e';
-
   const validationSchema = Yup.object({
     firstname: Yup.string().required('First Name is required'),
-    lastname: Yup.string().required('Last Name is required'),
+    lastname: Yup.string(),
     contactnumber: Yup.string().required('Contact Number is required'),
-    gender: Yup.string().required('Gender is required'),
+    gender: Yup.string(),
     amount: Yup.number()
-      .required('Amount is required')
+      .positive('Amount must be positive'),
+    amountcash: Yup.number()
+      .positive('Amount must be positive'),
+    amountupi: Yup.number()
       .positive('Amount must be positive'),
     totalamount: Yup.number()
-      .required('Total Amount is required')
       .positive('Total Amount must be positive'),
     duration: Yup.number()
-      .required('Duration is required')
       .positive('Duration must be positive'),
-    paymenttype: Yup.string().required('Payment Type is required'),
+    paymenttype: Yup.string(),
     transactionid: Yup.string(),
     noofpersons: Yup.number()
-      .required('Number of Persons is required')
-      .min(1, 'Number of Persons cannot be less than 1')
+      .positive('Amount must be positive'),
   });
 
   return (
@@ -155,8 +154,7 @@ const CreateGuestDialog = ({open, handleClose, initialValues, handleFormSubmit})
                   {touched.firstname && errors.firstname && (
                     <FormHelperText error>{errors.firstname}</FormHelperText>
                   )}
-                </div>
-
+                </div>                
                 <div className="form-group">
                   <Field
                     name="lastname"
@@ -221,10 +219,16 @@ const CreateGuestDialog = ({open, handleClose, initialValues, handleFormSubmit})
                     error={touched.amount && !!errors.amount}
                     value={values.amount}
                     onChange={(e) => {
-                      const amount = parseFloat(e.target.value) || 0;
-                      setFieldValue('amount', amount);
-                      const totalamount = amount * parseInt(values.duration) * parseInt(values.noofpersons);
-                      setFieldValue('totalamount', totalamount);
+                      const inputValue = e.target.value;
+                      if (inputValue == "") {
+                        setFieldValue('amount', "");
+                        return;
+                      } else {
+                        const amount = parseFloat(e.target.value);
+                        setFieldValue('amount', amount);
+                        const totalamount = amount * (parseInt(values.duration) || 1) * (parseInt(values.noofpersons) || 1);
+                        setFieldValue('totalamount', totalamount);
+                      }
                     }}
                   />
                   {touched.amount && errors.amount && (
@@ -242,10 +246,16 @@ const CreateGuestDialog = ({open, handleClose, initialValues, handleFormSubmit})
                     error={touched.duration && !!errors.duration}
                     value={values.duration}
                     onChange={(e) => {
-                      const duration = parseFloat(e.target.value) || 0;
-                      setFieldValue('duration', duration);
-                      const totalamount = duration * parseInt(values.amount) * parseInt(values.noofpersons);
-                      setFieldValue('totalamount', totalamount);
+                      const inputValue = e.target.value;
+                      if (inputValue == "") {
+                        setFieldValue('duration', "");
+                        return;
+                      } else {
+                        const duration = parseFloat(e.target.value);
+                        setFieldValue('duration', duration);
+                        const totalamount = duration * parseFloat(values.amount) * parseFloat(values.noofpersons);
+                        setFieldValue('totalamount', totalamount);
+                      }
                     }}
                     InputProps={{
                       inputProps: { min: 1, max: 8 },
@@ -266,10 +276,16 @@ const CreateGuestDialog = ({open, handleClose, initialValues, handleFormSubmit})
                     error={touched.noofpersons && !!errors.noofpersons}
                     value={values.noofpersons}
                     onChange={(e) => {
-                      const noofpersons = parseFloat(e.target.value) || 0;
-                      setFieldValue('noofpersons', noofpersons);
-                      const totalamount = noofpersons * parseInt(values.amount) * parseInt(values.duration);
-                      setFieldValue('totalamount', totalamount);
+                      const inputValue = e.target.value;
+                      if (inputValue == "") {
+                        setFieldValue('noofpersons', "");
+                        return;
+                      } else {
+                        const noofpersons = parseFloat(e.target.value);
+                        setFieldValue('noofpersons', noofpersons);
+                        const totalamount = noofpersons * parseFloat(values.amount) * parseFloat(values.duration);
+                        setFieldValue('totalamount', totalamount);
+                      }
                     }}
                     InputProps={{
                       inputProps: { min: 1, max: 10 },
@@ -297,28 +313,47 @@ const CreateGuestDialog = ({open, handleClose, initialValues, handleFormSubmit})
               </div>              
               <div className='row'>
                 <div className="form-group">
-                  <FormControl fullWidth>
-                    <InputLabel id="paymentType-label">Payment Type</InputLabel>
-                    <Field
-                      name="paymentType"
-                      as={Select}
-                      label="Payment Type"
-                      labelId="paymentType-label"
-                      variant="outlined"                      
-                      onChange={(e) => setFieldValue("paymentType", e.target.value)}
-                      error={touched.paymentType && !!errors.paymentType}
-                    >
-                      <MenuItem value="">
-                        <em>Select Payment</em>
-                      </MenuItem>
-                      <MenuItem value={paymentTypeCash}>Cash</MenuItem>
-                      <MenuItem value={paymentTypeOnline}>UPI</MenuItem>
-                    </Field>
-                    <FormHelperText error>{errors.paymentType}</FormHelperText>
-                  </FormControl>
+                  <Field
+                    name="amountcash"
+                    as={TextField}
+                    label="Amount Cash"
+                    type="number"
+                    variant="outlined"
+                    fullWidth                    
+                    error={touched.amountcash && !!errors.amountcash}
+                    value={values.amountcash}
+                    onChange={(e) => {
+                      const inputValue = e.target.value;
+                      if(inputValue == "") {
+                        setFieldValue('amountcash', "");
+                      } else {
+                        const onlineamt = parseFloat(values.totalamount) - parseFloat(inputValue);
+                        setFieldValue('amountcash', inputValue);
+                        setFieldValue('amountupi', onlineamt);
+                      }
+                    }}
+                  />
+                  {touched.amountcash && errors.amountcash && (
+                    <FormHelperText error>{errors.amountcash}</FormHelperText>
+                  )}
                 </div>
-                {values.paymentType === paymentTypeOnline && (
-                  <div className="form-group">
+                <div className="form-group">
+                  <Field
+                    name="amountupi"
+                    as={TextField}
+                    label="Amount Online"
+                    type="number"
+                    variant="outlined"
+                    fullWidth                    
+                    error={touched.amountupi && !!errors.amountupi}
+                    value={values.amountupi}
+                    disabled="true"
+                  />
+                  {touched.amountupi && errors.amountupi && (
+                    <FormHelperText error>{errors.amountupi}</FormHelperText>
+                  )}
+                </div>
+                <div className="form-group">
                     <Field
                       name="transactionId"
                       as={TextField}
@@ -330,10 +365,7 @@ const CreateGuestDialog = ({open, handleClose, initialValues, handleFormSubmit})
                     {touched.transactionId && errors.transactionId && (
                     <FormHelperText error>{errors.transactionId}</FormHelperText>
                   )}
-                  </div>
-                )}                
-              </div>
-              <div className='row'>
+                </div>
               </div>
               <Box className='row save-btn'>
                 <Button variant="contained" type="submit" color='primary'>Save Changes</Button>
