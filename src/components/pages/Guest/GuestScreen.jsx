@@ -116,10 +116,8 @@ const CreateGuestDialog = ({open, handleClose, initialValues, handleFormSubmit})
     gender: Yup.string(),
     amount: Yup.number()
       .positive('Amount must be positive'),
-    amountcash: Yup.number()
-      .positive('Amount must be positive'),
-    amountupi: Yup.number()
-      .positive('Amount must be positive'),
+    amountcash: Yup.number(),
+    amountupi: Yup.number(),
     totalamount: Yup.number()
       .positive('Total Amount must be positive'),
     duration: Yup.number()

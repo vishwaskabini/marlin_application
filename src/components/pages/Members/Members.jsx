@@ -630,7 +630,7 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
   const validationSchema = Yup.object().shape({
     firstname: Yup.string().required('First name is required'),
     lastname: Yup.string(),
-    email: Yup.string().email('Invalid email format').required("Email id is required"),
+    email: Yup.string(),
     gender: Yup.string(),
     schoolorcompanyname: Yup.string(),
     district: Yup.string(),
