@@ -112,7 +112,7 @@ const CreateGuestDialog = ({open, handleClose, initialValues, handleFormSubmit})
   const validationSchema = Yup.object({
     firstname: Yup.string().required('First Name is required'),
     lastname: Yup.string(),
-    contactnumber: Yup.string().required('Contact Number is required'),
+    contactnumber: Yup.string(),
     gender: Yup.string(),
     amount: Yup.number()
       .positive('Amount must be positive'),
@@ -324,6 +324,8 @@ const CreateGuestDialog = ({open, handleClose, initialValues, handleFormSubmit})
                       const inputValue = e.target.value;
                       if(inputValue == "") {
                         setFieldValue('amountcash', "");
+                      } else if (parseFloat(inputValue) > parseFloat(values.totalamount)) {
+                        setFieldValue('amountcash', values.totalamount);
                       } else {
                         const onlineamt = parseFloat(values.totalamount) - parseFloat(inputValue);
                         setFieldValue('amountcash', inputValue);
