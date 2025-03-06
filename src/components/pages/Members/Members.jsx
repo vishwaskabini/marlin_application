@@ -471,7 +471,8 @@ const Members = () => {
   }
 
   const handleViewDetails = (id) => {
-    setSelectedMember(id);
+    const member = allMembers.filter(m => m.id === id);
+    setSelectedMember(member[0]);
     setIsDialogOpenViewDetails(true);
   }
 
@@ -617,7 +618,7 @@ const Members = () => {
       <PaymentDialog open={isDialogOpenPayment} handleClose={onDialogClosePayment}
         initialValues={initialValuesPayments}
         handleFormSubmit={handleFormSubmitPayment}/>
-      <ViewDetailsDialog open={isDialogOpenViewDetails} handleClose={onDialogCloseViewDetails} selectedMemberId={selectedMember}
+      <ViewDetailsDialog open={isDialogOpenViewDetails} handleClose={onDialogCloseViewDetails} selectedMember={selectedMember}
         getPackageName={getPackageName}/>
       <LoadingIndicator isLoading={isLoading} />
     </div>
@@ -1671,7 +1672,7 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
   );
 }
 
-const ViewDetailsDialog = ({open, handleClose, selectedMemberId, getPackageName}) => {
+const ViewDetailsDialog = ({open, handleClose, selectedMember, getPackageName}) => {
   const [packageDetails, setPackageDetails] = useState([]);
   const [paymentDetails, setPaymentDetails] = useState([]);
   const [attendanceDetails, setAttendanceDetails] = useState([]);
@@ -1703,7 +1704,7 @@ const ViewDetailsDialog = ({open, handleClose, selectedMemberId, getPackageName}
 
 
   const getMemberAttendanceDetails = () => {
-    apiClient.get("/api/HardwareAttendance/GetHardwareAttendance?userId="+selectedMemberId).then((data) => {
+    apiClient.get("/api/HardwareAttendance/GetHardwareAttendance?userId="+selectedMember.id).then((data) => {
       setAttendanceDetails(data);
     }).catch((error) => {
       toast.error("Error while get " + error, {
@@ -1713,7 +1714,7 @@ const ViewDetailsDialog = ({open, handleClose, selectedMemberId, getPackageName}
   }
 
   const getMemberAttendanceSummary = () => {
-    apiClient.get("/api/AttendanceSummary/GetAttendanceSummary?userId="+selectedMemberId).then((data) => {
+    apiClient.get("/api/AttendanceSummary/GetAttendanceSummary?userId="+selectedMember.id).then((data) => {
       setAttendanceSummary([data]);
     }).catch((error) => {
       toast.error("Error while get " + error, {
@@ -1723,7 +1724,7 @@ const ViewDetailsDialog = ({open, handleClose, selectedMemberId, getPackageName}
   }
 
   const getMemberDetails = () => {
-    apiClient.get("/api/Users/GetAllWithDetailsByUserId?userId="+selectedMemberId).then((data) => {
+    apiClient.get("/api/Users/GetAllWithDetailsByUserId?userId="+selectedMember.id).then((data) => {
       if(data[0].packageDetails && data[0].packagepaymentDetails) {
         const formattedDataPackage = data[0].packageDetails.map((item) => ({
           ...item,
@@ -1746,16 +1747,16 @@ const ViewDetailsDialog = ({open, handleClose, selectedMemberId, getPackageName}
   }
 
   useEffect(() => {
-    if(selectedMemberId) {
+    if(selectedMember) {
       getMemberAttendanceSummary();
       getMemberDetails();
       getMemberAttendanceDetails();
     }    
-  }, [selectedMemberId])
+  }, [selectedMember])
 
   return (
     <Dialog open={open} onClose={handleClose} PaperProps={{sx: {minWidth: "80%"}}}>
-      <DialogTitle>View Details</DialogTitle>
+      <DialogTitle>View Details - {selectedMember?.name}</DialogTitle>
       <DialogContent sx={{padding: "2rem !important"}}>
         <div className='row'>
           <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
