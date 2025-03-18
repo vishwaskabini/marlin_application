@@ -70,7 +70,7 @@ const Login = () => {
           if(isMember) {
             navigate("/member/dashboard");
           } else {
-            navigate("/");
+            navigate("/dashboard");
           }
         }        
       }).catch((error) => {

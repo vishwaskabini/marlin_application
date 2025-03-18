@@ -296,6 +296,11 @@ const Members = () => {
   }
 
   const handleFormSubmitPayment = (values) => {
+    if (values.paymentstatus.toLowerCase() === "paid" && values.pendingamount > 0) {
+      const additionalDiscount = (values.pendingamount / values.amount) * 100;
+      values.discount += additionalDiscount;
+      values.pendingamount = 0;
+    }
     addPayment(values, true);
   }
 
@@ -331,7 +336,7 @@ const Members = () => {
       notes: values.notes,
       extendby: 0,
       roundedpayment: values.roundedpayment,
-      paymentstatus: values.pendingamount === 0 ? "Paid" : "Partial",
+      paymentstatus: values.paymentstatus,
       pendingamount: values.pendingamount,
       payableamount: values.payableamount,
       discount: values.discount,
@@ -1039,7 +1044,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                           disabled={isEdit}
                         >
                           {packageTypes.map((packageType) => (
-                            <MenuItem key={packageType.id} value={packageType.id}>{packageType.durationtime + " " + packageType.duration}</MenuItem>
+                            <MenuItem key={packageType.id} value={packageType.id}>{packageType.name + " " + packageType.durationtime + " " + packageType.duration + " - " + packageType.cost}</MenuItem>
                           ))}
                         </Field>
                       </div>
@@ -1573,7 +1578,6 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
                         }}
                         error={touched.paymentstatus && Boolean(errors.paymentstatus)}
                         helperText={touched.paymentstatus && errors.paymentstatus}
-                        disabled="true"
                       >
                         <MenuItem value="">
                           <em>Select Payment Status</em>

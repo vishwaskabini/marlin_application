@@ -137,7 +137,7 @@ const Sidebar = ({drawerState}) => {
     const [drawerOpen, setDrawerOpen] = useState(true);
 
     const [menuData, setMenuData] = useState([
-        { Id: 1, label: 'Dashboard', icon: <HomeIcon />, route: '/' },
+        { Id: 1, label: 'Dashboard', icon: <HomeIcon />, route: '/dashboard' },
         { Id: 2, label: 'Reports', icon: <InsightsIcon />, route: "/reports" },        
         { Id: 3, label: 'Members', icon: <GroupsIcon />, route: "/members" },
         { Id: 4, label: 'Scheduler', icon: <CalendarMonthIcon />, route: "/scheduler" },

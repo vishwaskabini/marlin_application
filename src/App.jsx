@@ -22,7 +22,7 @@ const App = () => {
 
   const handleLogoClick = () => {
     if(isSuperAdmin) {
-      navigate("/");
+      navigate("/dashboard");
     } else {
       navigate("/member/dashboard");
     }

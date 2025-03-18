@@ -23,7 +23,7 @@ const ChangePassword = () => {
         apiClient.post("/api/Users/resetpassword", {email: email, newPassword: values.confirmPassword}).then((data) =>  {
             setIsLoading(false);
             if(isAuthenticated) {
-                navigate("/");
+                navigate("/dashboard");
             } else {
                 navigate("/login");
             }            

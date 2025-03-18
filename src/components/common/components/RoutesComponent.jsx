@@ -1,4 +1,5 @@
 import { Route, Routes } from "react-router-dom";
+import Home from "../../pages/WebSiteHome/Home";
 import Dashboard from "../../pages/Dashboard/Dashboard";
 import SmsSettings from "../../pages/AdminConfiguration/SmsSettings";
 import Roles from "../../pages/AdminConfiguration/Roles";
@@ -17,7 +18,7 @@ import Attendance from "../../pages/AdminConfiguration/Attendance";
 const RoutesComponent = () => {
     return(
         <Routes>
-            <Route path="/" element={<PrivateRoute element={<Dashboard /> } /> }/>
+            <Route path="/dashboard" element={<PrivateRoute element={<Dashboard /> } /> }/>
             <Route path="/admin/smssettings" element={<PrivateRoute element={<SmsSettings />} />}/>
             <Route path="/admin/settings" element={<PrivateRoute element={<Settings />} /> }/>
             <Route path="/admin/roles" element={<PrivateRoute element={<Roles />} /> }/>
@@ -30,6 +31,7 @@ const RoutesComponent = () => {
             <Route path="/member/dashboard" element={<PrivateRoute element={<MemberDashboard />} /> }/>
             <Route path="/login" element={<Login/>}/>
             <Route path="/changepassword" element={<ChangePassword/>}/>
+            <Route path="/" element={<Home/>}/>
         </Routes>
     );
 }

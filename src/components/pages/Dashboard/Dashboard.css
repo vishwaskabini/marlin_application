@@ -34,6 +34,7 @@
 .card-title {
   font-weight: bold;
   margin-bottom: 5px;
+  font-size: 1rem;
 }
 
 .card-count {
@@ -49,4 +50,14 @@
   color: white;
   font-weight: bold;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+h2 {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+h3 {
+  font-size: 1.17rem;
+  font-weight: 700;
 }

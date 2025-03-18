@@ -58,45 +58,45 @@ const Header = ({onMenuClick, onLogoClick}) => {
     };
 
     return(
-        <AppBar position="sticky" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-            <Toolbar>
-                <IconButton
-                    color="inherit"
-                    aria-label="open drawer"
-                    onClick={onMenuClick}
-                    edge="start"
-                    sx={{marginRight: "10px"}}
+      <AppBar position="sticky" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+        <Toolbar sx={{minHeight: "84px !important"}}>
+            <IconButton
+                color="inherit"
+                aria-label="open drawer"
+                onClick={onMenuClick}
+                edge="start"
+                sx={{marginRight: "10px"}}
+            >
+                <MenuIcon />
+            </IconButton>
+            <Typography variant="h6" noWrap component="div">
+                <img src="/img/MARLIN.png" className="company-logo" onClick={onLogoClick}/>
+            </Typography>
+            <IconButton
+                edge="end"
+                color="inherit"
+                aria-label="profile"
+                onClick={handleMenuOpen}
+                sx={{marginLeft: "auto"}}>
+                <Avatar sx={{ bgcolor: 'primary.main' }}>
+                    <AccountCircleIcon />
+                </Avatar>
+                <ArrowDropDownIcon />
+            </IconButton>
+            <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+                PaperProps={{
+                    style: {
+                    width: 200, // Control the width of the menu
+                    },
+                }}
                 >
-                    <MenuIcon />
-                </IconButton>
-                <Typography variant="h6" noWrap component="div">
-                    <img src="/img/MARLIN.png" className="company-logo" onClick={onLogoClick}/>
-                </Typography>
-                <IconButton
-                    edge="end"
-                    color="inherit"
-                    aria-label="profile"
-                    onClick={handleMenuOpen}
-                    sx={{marginLeft: "auto"}}>
-                    <Avatar sx={{ bgcolor: 'primary.main' }}>
-                        <AccountCircleIcon />
-                    </Avatar>
-                    <ArrowDropDownIcon />
-                </IconButton>
-                <Menu
-                    anchorEl={anchorEl}
-                    open={Boolean(anchorEl)}
-                    onClose={handleMenuClose}
-                    PaperProps={{
-                        style: {
-                        width: 200, // Control the width of the menu
-                        },
-                    }}
-                    >
-                      <MenuItem onClick={handlePasswordChange}>Change Password</MenuItem>
-                      <MenuItem onClick={handleLogout}>Logout</MenuItem>
-                </Menu>
-            </Toolbar>
+                  <MenuItem onClick={handlePasswordChange}>Change Password</MenuItem>
+                  <MenuItem onClick={handleLogout}>Logout</MenuItem>
+            </Menu>
+        </Toolbar>
       </AppBar>
     );
 }
