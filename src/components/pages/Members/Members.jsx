@@ -1357,12 +1357,16 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                               type="number"
                               fullWidth
                               value={values.pendingamount}
-                              onChange={handleChange}
+                              onChange={(e) => {
+                                const inputValue = e.target.value;
+                                const pendingValue = parseFloat(inputValue) || 0;
+                                setFieldValue("pendingamount", pendingValue);
+                                if(pendingValue == 0) {
+                                  setFieldValue("paymentstatus", "Paid");
+                                }
+                              }}
                               error={touched.pendingamount && Boolean(errors.pendingamount)}
                               helperText={touched.pendingamount && errors.pendingamount}
-                              InputProps={{
-                                readOnly: true,
-                              }}
                               InputLabelProps={{
                                 shrink: values.pendingamount !== '',                                  
                               }}
@@ -1650,12 +1654,16 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
                         type="number"
                         fullWidth
                         value={values.pendingamount}
-                        onChange={handleChange}
+                        onChange={(e) => {
+                          const inputValue = e.target.value;
+                          const pendingValue = parseFloat(inputValue) || 0;
+                          setFieldValue("pendingamount", pendingValue);
+                          if(pendingValue == 0) {
+                            setFieldValue("paymentstatus", "Paid");
+                          }
+                        }}
                         error={touched.pendingamount && Boolean(errors.pendingamount)}
                         helperText={touched.pendingamount && errors.pendingamount}
-                        InputProps={{
-                          readOnly: true
-                        }}
                         InputLabelProps={{                            
                           shrink: values.pendingamount !== '',                            
                         }}
