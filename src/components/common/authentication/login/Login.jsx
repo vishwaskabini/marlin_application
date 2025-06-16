@@ -15,7 +15,6 @@ const Login = () => {
   const [error, setError] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
-  const token = "dummy-token";
   const [isLoading, setIsLoading] = useState(false);
 
   const users = [
@@ -66,7 +65,7 @@ const Login = () => {
           let isMember = handleUserType(data.usertype);
           let userId = data.id;
           setIsLoading(false);
-          login(token, isSuperAdmin, isMember, email, userId);
+          login(data.token, isSuperAdmin, isMember, email, userId);
           if(isMember) {
             navigate("/member/dashboard");
           } else {

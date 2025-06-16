@@ -25,14 +25,23 @@ const ReportGenerator = () => {
   const [memberDetailReport, setMemberDetailReport] = useState([]);
   const [loading, setLoading] = useState(true);
   const [duration, setDuration] = React.useState('1');
+  const [userType, setUserType] = React.useState('1');
 
   const getReportData = async (requestBody) => {
     setLoading(true);
     try {
+      let url1 = "/api/Summary/GetPaymentReportsByDateRange";
+      let url2 = "/api/Summary/GetMemberReportsByDateRange";
+      let url3 = "/api/Summary/GetMemberDetailedReportsByDateRange";
+      if(userType == "2") {
+        url1 = "/api/Summary/GetPaymentReportsByDateRange";
+        url2 = "/api/Summary/GetMemberReportsByDateRange";
+        url3 = "/api/Summary/GetGuestDetailedReportsByDateRange";
+      }
       const [res1, res2, res3] = await Promise.all([
-        apiClient.post("/api/Summary/GetPaymentReportsByDateRange", requestBody),
-        apiClient.post("/api/Summary/GetMemberReportsByDateRange", requestBody),
-        apiClient.post("/api/Summary/GetMemberDetailedReportsByDateRange", requestBody)
+        apiClient.post(url1, requestBody),
+        apiClient.post(url2, requestBody),
+        apiClient.post(url3, requestBody)
       ]);
 
       setPaymentReport([res1]);
@@ -65,13 +74,13 @@ const ReportGenerator = () => {
   ];
 
   const columnsMembersSummary = [
-    { id: 'newlyRegistered', label: 'Total newly registered members' },
-    { id: 'active', label: 'Total Active Members' },
-    { id: 'expired', label: 'Expired Members' }
+    { id: 'newlyRegistered', label: userType == '1' ? 'Total newly registered members' : 'Total newly registered Guests' },
+    { id: 'active', label: userType == '1' ? 'Total Active Members': 'Total Active Guests' },
+    { id: 'expired', label: userType == '1' ? 'Expired Members': 'Expired Guests' }
   ];
 
   const columnsDetailedReport = [
-    { id: 'memberName', label: 'Member Name' },
+    { id: 'memberName', label: userType == '1' ? 'Member Name' : 'Guest Name' },
     { id: 'contact', label: 'Contact' },
     { id: 'packageName', label: 'Package Name' },
     { id: 'totalPayableAmount', label: 'Total' },
@@ -123,6 +132,10 @@ const ReportGenerator = () => {
 
   const handleDateChange = (event) => {
     setDuration(event.target.value);    
+  }
+
+  const handleUserTypeChange = (event) => {
+    setUserType(event.target.value);
   }
 
   const getDateRange = (value) => {
@@ -181,6 +194,21 @@ const ReportGenerator = () => {
       <Card sx={{marginBottom: "10px"}}>
         <CardContent>
           <div className='row'>
+            <div className="form-group">
+            <FormControl fullWidth>
+                <InputLabel id="demo-simple-select-label">User Type</InputLabel>
+                <Select
+                  labelId="demo-simple-select-label"
+                  id="demo-simple-select"
+                  value={userType}
+                  label="User Type"
+                  onChange={handleUserTypeChange}
+                >
+                  <MenuItem value={1}>Members</MenuItem>
+                  <MenuItem value={2}>Guests</MenuItem>
+                </Select>
+              </FormControl>
+            </div>
             <div className="form-group">
             <FormControl fullWidth>
                 <InputLabel id="demo-simple-select-label">Duration</InputLabel>
@@ -251,7 +279,7 @@ const ReportGenerator = () => {
           </div>                
           <div className='row'>
             <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
-              <Typography variant='h5' className='header-text'>Members Summary           
+              <Typography variant='h5' className='header-text'>{userType == '1' ? 'Members Summary' : 'Guests Summary'}         
               </Typography>
             </Box>
           </div>

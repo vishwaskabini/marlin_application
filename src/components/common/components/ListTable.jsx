@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Table
 import { Edit, Delete } from '@mui/icons-material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import SearchIcon from '@mui/icons-material/Search';
+import dayjs from 'dayjs';
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -151,10 +152,22 @@ const ListTable = ({ columns, rows, onEdit, onDelete, tableName, onPackage, onPa
             </TableRow>
           </TableHead>
           <TableBody>
-            {displayedRows.map((row) => (
-              <TableRow hover key={row.id}>
+            {displayedRows.map((row) => {
+              const packageEndDate = row.packageenddate ? dayjs(row.packageenddate, 'DD/MM/YYYY') : null;
+              let cellStyle = {};
+
+              if (packageEndDate && packageEndDate.isValid()) {
+                const daysLeft = packageEndDate.diff(dayjs(), 'day');
+
+                if (daysLeft === 0) {
+                  cellStyle.color = 'red';
+                } else if (daysLeft <= 5 && daysLeft > 0) {
+                  cellStyle.color = 'orange';
+                }
+              }
+              return (<TableRow hover key={row.id}>
                 {columns.map((column) => (
-                  <TableCell key={row.id+column.id}>{row[column.id]}</TableCell>
+                  <TableCell key={row.id+column.id} style={cellStyle}>{row[column.id]}</TableCell>
                 ))}
                 {onEdit !== undefined ? ( tableName.indexOf("Members") !== -1 ? 
                 (<TableCell align='center'>
@@ -191,7 +204,7 @@ const ListTable = ({ columns, rows, onEdit, onDelete, tableName, onPackage, onPa
                   </IconButton>
                 </TableCell>)) : null}
               </TableRow>
-            ))}
+            )})}
           </TableBody>
         </Table>
       </TableContainer>

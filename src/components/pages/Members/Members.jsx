@@ -72,7 +72,8 @@ const Members = () => {
       isspecialchild: data.isspecialchild,
       referredby: data.referredby,
       hardwareuserid: data.hardwareuserid,
-      rfidnumber: data.rfidnumber
+      rfidnumber: data.rfidnumber,
+      registereddate: data.registereddate
     });
     setIsDialogOpen(true);
   };
@@ -340,6 +341,8 @@ const Members = () => {
       pendingamount: values.pendingamount,
       payableamount: values.payableamount,
       discount: values.discount,
+      reminderdate: values.reminderdate,
+      paymentdate: values.paymentdate
     }
     apiClient.post("/api/UsersPaymentMapping/create", payment).then((result) =>  {
       getData();
@@ -391,7 +394,9 @@ const Members = () => {
         transactionid: '',
         notes: '',
         timeslotid: packageDetails.timeslotid,
-        userpackagestatusid: isActive  ? "06cd1d96-f85d-49cd-9d09-bfa7d6825d2b" : '3159aa8b-6bdd-4b34-9fc4-4a618e363fb2'
+        userpackagestatusid: isActive  ? "06cd1d96-f85d-49cd-9d09-bfa7d6825d2b" : '3159aa8b-6bdd-4b34-9fc4-4a618e363fb2',
+        reminderdate: dayjs().format('DD/MM/YYYY'),
+        paymentdate: dayjs().format('DD/MM/YYYY')
       });
     } else {
       setInitialValuesPackages({
@@ -412,7 +417,9 @@ const Members = () => {
         transactionid: '',
         notes: '',
         timeslotid: '',
-        userpackagestatusid: isActive  ? "06cd1d96-f85d-49cd-9d09-bfa7d6825d2b" : '3159aa8b-6bdd-4b34-9fc4-4a618e363fb2'
+        userpackagestatusid: isActive  ? "06cd1d96-f85d-49cd-9d09-bfa7d6825d2b" : '3159aa8b-6bdd-4b34-9fc4-4a618e363fb2',
+        reminderdate: dayjs().format('DD/MM/YYYY'),
+        paymentdate: dayjs().format('DD/MM/YYYY')
       });
     }
     setIsDialogOpenPackage(true);       
@@ -441,6 +448,8 @@ const Members = () => {
           pendingamount: 0,
           transactionid: '',
           notes: paymentDetails[0].notes,
+          paymentdate: paymentDetails[0].paymentdate ?? dayjs().format('DD/MM/YYYY'),
+          reminderdate: paymentDetails[0].reminderdate ?? dayjs().format('DD/MM/YYYY')
         });
       } else {
         setInitialValuesPayments({
@@ -454,6 +463,8 @@ const Members = () => {
           pendingamount: 0,
           transactionid: '',
           notes: '',
+          paymentdate: dayjs().format('DD/MM/YYYY'),
+          reminderdate: dayjs().format('DD/MM/YYYY')
         });
       }      
       setIsDialogOpenPayment(true);
@@ -534,7 +545,8 @@ const Members = () => {
       idproofname: '',
       photoname: '',
       hardwareuserid: '',
-      rfidnumber: ''
+      rfidnumber: '',
+      registereddate: dayjs().format('DD/MM/YYYY')
     });
     setIsDialogOpen(true);
   }
@@ -633,6 +645,11 @@ const Members = () => {
 
 const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmit}) => {
 
+  const parseDate = (dateString) => {
+    const parsedDate = dayjs(dateString, 'DD/MM/YYYY');
+    return formatDate(parsedDate.format());
+  };
+
   const validationSchema = Yup.object().shape({
     firstname: Yup.string().required('First name is required'),
     lastname: Yup.string(),
@@ -652,298 +669,327 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
     aadharUpload: Yup.mixed().nullable(),
     photoUpload: Yup.mixed().nullable(),
     rfidnumber: Yup.string(),
-    hardwareuserid: Yup.string()
+    hardwareuserid: Yup.string(),
+    registereddate: Yup.string()
   });
 
   return (
     <Dialog open={open} onClose={handleClose} PaperProps={{sx: {minWidth: "80%"}}}>
       <DialogTitle>{isEdit ? 'Edit Member' : 'Add Member'}</DialogTitle>
       <DialogContent sx={{padding: "2rem !important"}}>
-        <Formik initialValues={initialValues} validationSchema={validationSchema}
-          onSubmit={handleFormSubmit}
-        >
-          {({errors, touched, setFieldValue, isSubmitting, values }) => (
-            console.log(errors),
-            <Form>
-              <div className='row'>
-                <div className='form-group'>
-                  <Field
-                    name="firstname"
-                    as={TextField}
-                    label="First Name"
-                    variant="outlined"
-                    fullWidth
-                    error={touched.firstname && Boolean(errors.firstname)}
-                    helperText={touched.firstname && errors.firstname}
-                  />
-                </div>
-                <div className='form-group'>
-                  <Field
-                    name="lastname"
-                    label="Last Name"
-                    fullWidth
-                    as={TextField}
-                    variant="outlined"
-                    error={touched.lastname && Boolean(errors.lastname)}
-                    helperText={touched.lastname && errors.lastname}
-                  />
-                </div>
-                <div className='form-group'>
-                  <Field
-                    name="email"                    
-                    label="Email"
-                    fullWidth
-                    as={TextField}
-                    variant="outlined"
-                    error={touched.email && Boolean(errors.email)}
-                    helperText={touched.email && errors.email}
-                  />                                    
-                </div>
-              </div>
-              <div className='row'>
-                <div className='form-group'>
-                  <FormControl fullWidth>
-                    <InputLabel id="gender-label">Gender</InputLabel>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <Formik initialValues={initialValues} validationSchema={validationSchema}
+            onSubmit={handleFormSubmit}
+          >
+            {({errors, touched, setFieldValue, isSubmitting, values }) => (
+              console.log(errors),
+              <Form>
+                <div className='row'>
+                  <div className='form-group'>
                     <Field
-                      name="gender"
-                      as={Select}
-                      label="Gender"
-                      labelId="gender-label"
-                      variant="outlined"                      
-                      onChange={(e) => setFieldValue("gender", e.target.value)}
-                      error={touched.gender && !!errors.gender}
+                      name="firstname"
+                      as={TextField}
+                      label="First Name"
+                      variant="outlined"
+                      fullWidth
+                      error={touched.firstname && Boolean(errors.firstname)}
+                      helperText={touched.firstname && errors.firstname}
+                    />
+                  </div>
+                  <div className='form-group'>
+                    <Field
+                      name="lastname"
+                      label="Last Name"
+                      fullWidth
+                      as={TextField}
+                      variant="outlined"
+                      error={touched.lastname && Boolean(errors.lastname)}
+                      helperText={touched.lastname && errors.lastname}
+                    />
+                  </div>
+                  <div className='form-group'>
+                    <Field
+                      name="email"                    
+                      label="Email"
+                      fullWidth
+                      as={TextField}
+                      variant="outlined"
+                      error={touched.email && Boolean(errors.email)}
+                      helperText={touched.email && errors.email}
+                    />                                    
+                  </div>
+                </div>
+                <div className='row'>
+                  <div className='form-group'>
+                    <FormControl fullWidth>
+                      <InputLabel id="gender-label">Gender</InputLabel>
+                      <Field
+                        name="gender"
+                        as={Select}
+                        label="Gender"
+                        labelId="gender-label"
+                        variant="outlined"                      
+                        onChange={(e) => setFieldValue("gender", e.target.value)}
+                        error={touched.gender && !!errors.gender}
+                      >
+                        <MenuItem value="">
+                          <em>Select Gender</em>
+                        </MenuItem>
+                        <MenuItem value="male">Male</MenuItem>
+                        <MenuItem value="female">Female</MenuItem>
+                        <MenuItem value="other">Other</MenuItem>
+                      </Field>
+                      <FormHelperText error>{errors.gender}</FormHelperText>
+                    </FormControl>                  
+                  </div>
+                  <div className='form-group'>
+                    <Field
+                      name="address1"
+                      label="Address"
+                      fullWidth
+                      as={TextField}
+                      variant="outlined"
+                      error={touched.address1 && Boolean(errors.address1)}
+                      helperText={touched.address1 && errors.address1}
+                    />                  
+                  </div>
+                  <div className='form-group'>
+                    <Field
+                      name="area"
+                      label="Area"
+                      fullWidth
+                      as={TextField}
+                      variant="outlined"
+                      error={touched.area && Boolean(errors.area)}
+                      helperText={touched.area && errors.area}
+                    />                  
+                  </div>
+                </div>
+                <div className='row'>
+                  <div className='form-group'>
+                    <Field
+                      name="district"
+                      label="City"
+                      fullWidth
+                      as={TextField}
+                      variant="outlined"
+                      error={touched.district && Boolean(errors.district)}
+                      helperText={touched.district && errors.district}
+                    />                  
+                  </div>
+                  <div className='form-group'>
+                    <Field
+                      name="state"
+                      label="State"
+                      fullWidth
+                      as={TextField}
+                      variant="outlined"
+                      error={touched.state && Boolean(errors.state)}
+                      helperText={touched.state && errors.state}
+                    />                  
+                  </div>
+                  <div className='form-group'>
+                    <Field
+                      name="pincode"
+                      label="Pincode"
+                      fullWidth
+                      as={TextField}
+                      variant="outlined"
+                      error={touched.pincode && Boolean(errors.pincode)}
+                      helperText={touched.pincode && errors.pincode}
+                    />                  
+                  </div>
+                </div>
+                <div className='row'>
+                  <div className='form-group'>
+                    <Field
+                      name="primarycontactnumber"
+                      label="Contact"
+                      fullWidth
+                      as={TextField}
+                      variant="outlined"
+                      error={touched.primarycontactnumber && Boolean(errors.primarycontactnumber)}
+                      helperText={touched.primarycontactnumber && errors.primarycontactnumber}
+                      InputProps={{
+                        startAdornment: (<InputAdornment position="start">+91</InputAdornment>)
+                      }}
+                    />
+                  </div>
+                  <div className='form-group'>
+                    <Field
+                      name="secondarycontactnumber"
+                      label="Alternate Contact"
+                      fullWidth
+                      as={TextField}
+                      variant="outlined"
+                      error={touched.secondarycontactnumber && Boolean(errors.secondarycontactnumber)}
+                      helperText={touched.secondarycontactnumber && errors.secondarycontactnumber}
+                      InputProps={{
+                        startAdornment: (<InputAdornment position="start">+91</InputAdornment>)
+                      }}
+                    />
+                  </div>
+                  <div className='form-group'>
+                    <Field
+                      name="referredby"
+                      label="Referred By"
+                      fullWidth
+                      as={TextField}
+                      variant="outlined"
+                      error={touched.referredby && Boolean(errors.referredby)}
+                      helperText={touched.referredby && errors.referredby}
+                    />
+                  </div>                                
+                </div>
+                <div className='row'>               
+                  <div className='form-group'>
+                    <Field
+                      name="schoolorcompanyname"
+                      label="School/Company"
+                      fullWidth
+                      as={TextField}
+                      variant="outlined"
+                      error={touched.schoolorcompanyname && Boolean(errors.schoolorcompanyname)}
+                      helperText={touched.schoolorcompanyname && errors.schoolorcompanyname}
+                    />
+                  </div>
+                  <div className='form-group'>
+                    <Field
+                      name="coachingmembership"
+                      label="Member Type"
+                      fullWidth
+                      as={TextField}
+                      variant="outlined"
+                      select
+                      error={touched.coachingmembership && Boolean(errors.coachingmembership)}
+                      helperText={touched.coachingmembership && errors.coachingmembership}
                     >
-                      <MenuItem value="">
-                        <em>Select Gender</em>
-                      </MenuItem>
-                      <MenuItem value="male">Male</MenuItem>
-                      <MenuItem value="female">Female</MenuItem>
-                      <MenuItem value="other">Other</MenuItem>
+                      <MenuItem value="Coaching">Coaching</MenuItem>
+                      <MenuItem value="Membership">Membership</MenuItem>
                     </Field>
-                    <FormHelperText error>{errors.gender}</FormHelperText>
-                  </FormControl>                  
+                  </div>
+                  <div className='form-group'>
+                    <FormControl fullWidth error={touched.isspecialchild && Boolean(errors.isspecialchild)} sx={{justifyContent: "center"}}>
+                      <Field name="isspecialchild">
+                        {({ field }) => (
+                          <FormControlLabel
+                            sx={{marginLeft: "0px"}}
+                            control={
+                              <Checkbox
+                                {...field}
+                                checked={values.isspecialchild}
+                                onChange={e => setFieldValue('isspecialchild', e.target.checked)}
+                              />
+                            }
+                            label="Is Special Child"
+                          />
+                        )}
+                      </Field>
+                      {touched.isspecialchild && errors.isspecialchild && (
+                        <FormHelperText>{errors.isspecialchild}</FormHelperText>
+                      )}
+                    </FormControl>
+                  </div>
                 </div>
-                <div className='form-group'>
-                  <Field
-                    name="address1"
-                    label="Address"
-                    fullWidth
-                    as={TextField}
-                    variant="outlined"
-                    error={touched.address1 && Boolean(errors.address1)}
-                    helperText={touched.address1 && errors.address1}
-                  />                  
-                </div>
-                <div className='form-group'>
-                  <Field
-                    name="area"
-                    label="Area"
-                    fullWidth
-                    as={TextField}
-                    variant="outlined"
-                    error={touched.area && Boolean(errors.area)}
-                    helperText={touched.area && errors.area}
-                  />                  
-                </div>
-              </div>
-              <div className='row'>
-                <div className='form-group'>
-                  <Field
-                    name="district"
-                    label="City"
-                    fullWidth
-                    as={TextField}
-                    variant="outlined"
-                    error={touched.district && Boolean(errors.district)}
-                    helperText={touched.district && errors.district}
-                  />                  
-                </div>
-                <div className='form-group'>
-                  <Field
-                    name="state"
-                    label="State"
-                    fullWidth
-                    as={TextField}
-                    variant="outlined"
-                    error={touched.state && Boolean(errors.state)}
-                    helperText={touched.state && errors.state}
-                  />                  
-                </div>
-                <div className='form-group'>
-                  <Field
-                    name="pincode"
-                    label="Pincode"
-                    fullWidth
-                    as={TextField}
-                    variant="outlined"
-                    error={touched.pincode && Boolean(errors.pincode)}
-                    helperText={touched.pincode && errors.pincode}
-                  />                  
-                </div>
-              </div>
-              <div className='row'>
-                <div className='form-group'>
-                  <Field
-                    name="primarycontactnumber"
-                    label="Contact"
-                    fullWidth
-                    as={TextField}
-                    variant="outlined"
-                    error={touched.primarycontactnumber && Boolean(errors.primarycontactnumber)}
-                    helperText={touched.primarycontactnumber && errors.primarycontactnumber}
-                    InputProps={{
-                      startAdornment: (<InputAdornment position="start">+91</InputAdornment>)
-                    }}
-                  />
-                </div>
-                <div className='form-group'>
-                  <Field
-                    name="secondarycontactnumber"
-                    label="Alternate Contact"
-                    fullWidth
-                    as={TextField}
-                    variant="outlined"
-                    error={touched.secondarycontactnumber && Boolean(errors.secondarycontactnumber)}
-                    helperText={touched.secondarycontactnumber && errors.secondarycontactnumber}
-                    InputProps={{
-                      startAdornment: (<InputAdornment position="start">+91</InputAdornment>)
-                    }}
-                  />
-                </div>
-                <div className='form-group'>
-                  <Field
-                    name="referredby"
-                    label="Referred By"
-                    fullWidth
-                    as={TextField}
-                    variant="outlined"
-                    error={touched.referredby && Boolean(errors.referredby)}
-                    helperText={touched.referredby && errors.referredby}
-                  />
-                </div>                                
-              </div>
-              <div className='row'>               
-                <div className='form-group'>
-                  <Field
-                    name="schoolorcompanyname"
-                    label="School/Company"
-                    fullWidth
-                    as={TextField}
-                    variant="outlined"
-                    error={touched.schoolorcompanyname && Boolean(errors.schoolorcompanyname)}
-                    helperText={touched.schoolorcompanyname && errors.schoolorcompanyname}
-                  />
-                </div>
-                <div className='form-group'>
-                  <Field
-                    name="coachingmembership"
-                    label="Member Type"
-                    fullWidth
-                    as={TextField}
-                    variant="outlined"
-                    select
-                    error={touched.coachingmembership && Boolean(errors.coachingmembership)}
-                    helperText={touched.coachingmembership && errors.coachingmembership}
-                  >
-                    <MenuItem value="Coaching">Coaching</MenuItem>
-                    <MenuItem value="Membership">Membership</MenuItem>
-                  </Field>
-                </div>
-                <div className='form-group'>
-                  <FormControl fullWidth error={touched.isspecialchild && Boolean(errors.isspecialchild)} sx={{justifyContent: "center"}}>
-                    <Field name="isspecialchild">
+                <div className='row'>               
+                  <div className='form-group'>
+                    <Field
+                      name="rfidnumber"
+                      label="RFID Number"
+                      fullWidth
+                      as={TextField}
+                      variant="outlined"
+                      error={touched.rfidnumber && Boolean(errors.rfidnumber)}
+                      helperText={touched.rfidnumber && errors.rfidnumber}
+                    />
+                  </div>
+                  <div className='form-group'>
+                    <Field
+                      name="hardwareuserid"
+                      label="Harware User Id"
+                      fullWidth
+                      as={TextField}
+                      variant="outlined"
+                      error={touched.hardwareuserid && Boolean(errors.hardwareuserid)}
+                      helperText={touched.hardwareuserid && errors.hardwareuserid}
+                    />
+                  </div>
+                  <div className='form-group'>                    
+                    <Field name="registereddate">
                       {({ field }) => (
-                        <FormControlLabel
-                          sx={{marginLeft: "0px"}}
-                          control={
-                            <Checkbox
-                              {...field}
-                              checked={values.isspecialchild}
-                              onChange={e => setFieldValue('isspecialchild', e.target.checked)}
+                        <DatePicker
+                          {...field}                        
+                          value={values.registereddate ? dayjs(values.registereddate, "DD/MM/YYYY") : null}
+                          onChange={(date) => {
+                            setFieldValue('registereddate', parseDate(date));
+                          }}
+                          inputFormat="DD/MM/YYYY"
+                          sx={{width: "100%"}}
+                          label="Registration Date"
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              fullWidth
+                              error={touched.registereddate && Boolean(errors.registereddate)}
+                              helperText={touched.registereddate && errors.registereddate}
+                              placeholder="DD/MM/YYYY"                            
                             />
-                          }
-                          label="Is Special Child"
+                          )}
+                          disabled={isEdit}
                         />
                       )}
                     </Field>
-                    {touched.isspecialchild && errors.isspecialchild && (
-                      <FormHelperText>{errors.isspecialchild}</FormHelperText>
-                    )}
-                  </FormControl>
+                  </div>
                 </div>
-              </div>
-              <div className='row'>               
-                <div className='form-group'>
-                  <Field
-                    name="rfidnumber"
-                    label="RFID Number"
-                    fullWidth
-                    as={TextField}
-                    variant="outlined"
-                    error={touched.rfidnumber && Boolean(errors.rfidnumber)}
-                    helperText={touched.rfidnumber && errors.rfidnumber}
-                  />
+                <div className='row'>
+                  <div className='form-group'>
+                    <FormControl fullWidth>
+                      <Typography variant="body2">Photo Upload</Typography>
+                      <Input
+                        type="file"
+                        name="photoUpload"
+                        onChange={(event) => setFieldValue('photoUpload', event.currentTarget.files[0])}
+                        fullWidth
+                        disabled={initialValues.photoname !== ''}
+                        inputProps={{
+                          style: { border: '1px solid #ccc', padding: '6px 10px' }
+                        }}
+                      />
+                      <FormHelperText>
+                        <ErrorMessage name="photoUpload" />
+                      </FormHelperText>
+                    </FormControl>
+                    {initialValues.photoname && <Chip label={initialValues.photoname} />}
+                  </div>
+                  <div className='form-group'>
+                    <FormControl fullWidth>
+                      <Typography variant="body2">Aadhar Upload</Typography>
+                      <Input
+                        type="file"
+                        name="aadharUpload"
+                        onChange={(event) => setFieldValue('aadharUpload', event.currentTarget.files[0])}
+                        fullWidth
+                        disabled={initialValues.idproofname !== ''}
+                        inputProps={{
+                          style: { border: '1px solid #ccc', padding: '6px 10px' }
+                        }}
+                      />
+                      <FormHelperText>
+                        <ErrorMessage name="aadharUpload" />
+                      </FormHelperText>
+                    </FormControl>
+                    {initialValues.idproofname && <Chip label={initialValues.idproofname} />}
+                  </div>
                 </div>
-                <div className='form-group'>
-                  <Field
-                    name="hardwareuserid"
-                    label="Harware User Id"
-                    fullWidth
-                    as={TextField}
-                    variant="outlined"
-                    error={touched.hardwareuserid && Boolean(errors.hardwareuserid)}
-                    helperText={touched.hardwareuserid && errors.hardwareuserid}
-                  />
+                <div className='row save-btn'>
+                  <Button type="submit" color="primary" variant="contained" disabled={isSubmitting}>
+                    {isEdit ? 'Save Changes' : 'Save'}
+                  </Button>
                 </div>
-              </div>
-              <div className='row'>
-                <div className='form-group'>
-                  <FormControl fullWidth>
-                    <Typography variant="body2">Photo Upload</Typography>
-                    <Input
-                      type="file"
-                      name="photoUpload"
-                      onChange={(event) => setFieldValue('photoUpload', event.currentTarget.files[0])}
-                      fullWidth
-                      disabled={initialValues.photoname !== ''}
-                      inputProps={{
-                        style: { border: '1px solid #ccc', padding: '6px 10px' }
-                      }}
-                    />
-                    <FormHelperText>
-                      <ErrorMessage name="photoUpload" />
-                    </FormHelperText>
-                  </FormControl>
-                  {initialValues.photoname && <Chip label={initialValues.photoname} />}
-                </div>
-                <div className='form-group'>
-                  <FormControl fullWidth>
-                    <Typography variant="body2">Aadhar Upload</Typography>
-                    <Input
-                      type="file"
-                      name="aadharUpload"
-                      onChange={(event) => setFieldValue('aadharUpload', event.currentTarget.files[0])}
-                      fullWidth
-                      disabled={initialValues.idproofname !== ''}
-                      inputProps={{
-                        style: { border: '1px solid #ccc', padding: '6px 10px' }
-                      }}
-                    />
-                    <FormHelperText>
-                      <ErrorMessage name="aadharUpload" />
-                    </FormHelperText>
-                  </FormControl>
-                  {initialValues.idproofname && <Chip label={initialValues.idproofname} />}
-                </div>
-              </div>
-              <div className='row save-btn'>
-                <Button type="submit" color="primary" variant="contained" disabled={isSubmitting}>
-                  {isEdit ? 'Save Changes' : 'Save'}
-                </Button>
-              </div>
-            </Form>
-          )}
-        </Formik>
+              </Form>
+            )}
+          </Formik>
+        </LocalizationProvider>
       </DialogContent>
     </Dialog>
   );
@@ -1006,7 +1052,9 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
     pendingamount: Yup.number(),
     notes: Yup.string(),
     timeslotid: Yup.string().required("slots is required"),
-    userpackagestatusid: Yup.string()
+    userpackagestatusid: Yup.string(),
+    reminderdate: Yup.string().required('Reminder date is required'),
+    paymentdate: Yup.string().required('Payment date is required')
   });
 
   return (
@@ -1373,6 +1421,58 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                             />
                           </div>
                         </div>
+                        <div className='row'>
+                          <div className='form-group'>
+                            <Field name="paymentdate">
+                              {({ field }) => (
+                                <DatePicker
+                                  {...field}                        
+                                  value={values.paymentdate ? dayjs(values.paymentdate, "DD/MM/YYYY") : null}
+                                  onChange={(date) => {
+                                    setFieldValue('paymentdate', parseDate(date));
+                                  }}
+                                  inputFormat="DD/MM/YYYY"
+                                  sx={{width: "100%"}}
+                                  label="Payment Date"
+                                  renderInput={(params) => (
+                                    <TextField
+                                      {...params}
+                                      fullWidth
+                                      error={touched.paymentdate && Boolean(errors.paymentdate)}
+                                      helperText={touched.paymentdate && errors.paymentdate}
+                                      placeholder="DD/MM/YYYY"                            
+                                    />
+                                  )}
+                                />
+                              )}
+                            </Field>
+                          </div>
+                          <div className='form-group'>
+                            <Field name="reminderdate">
+                              {({ field }) => (
+                                <DatePicker
+                                  {...field}                        
+                                  value={values.reminderdate ? dayjs(values.reminderdate, "DD/MM/YYYY") : null}
+                                  onChange={(date) => {
+                                    setFieldValue('reminderdate', parseDate(date));
+                                  }}
+                                  inputFormat="DD/MM/YYYY"
+                                  sx={{width: "100%"}}
+                                  label="Reminder Date"
+                                  renderInput={(params) => (
+                                    <TextField
+                                      {...params}
+                                      fullWidth
+                                      error={touched.reminderdate && Boolean(errors.reminderdate)}
+                                      helperText={touched.reminderdate && errors.reminderdate}
+                                      placeholder="DD/MM/YYYY"                            
+                                    />
+                                  )}
+                                />
+                              )}
+                            </Field>
+                          </div>
+                        </div>
                       </>                      
                     )}                    
                     <div className='row save-btn div-package-btns'>
@@ -1424,6 +1524,11 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
   const paymentTypeCash = '22220087-c3c2-4268-a25a-13baa6f3625e';
   const [previousPayment, setPreviousPayment] = useState(0);
 
+  const parseDate = (dateString) => {
+    const parsedDate = dayjs(dateString, 'DD/MM/YYYY');
+    return formatDate(parsedDate.format());
+  };
+
   const validationSchema = Yup.object().shape({
     amount: Yup.number().required('Amount is required').min(1, 'Amount must be greater than 0'),
     discount: Yup.number().min(0, 'Discount must be positive').max(100, 'Discount cannot exceed 100%'),
@@ -1449,6 +1554,8 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
         otherwise: (schema) => schema.notRequired(),
       }),
     notes: Yup.string(),
+    reminderdate: Yup.string().required('Reminder date is required'),
+    paymentdate: Yup.string().required('Payment date is required')
   });
 
   useEffect(() => {
@@ -1463,222 +1570,276 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
     <Dialog open={open} onClose={handleClose} PaperProps={{sx: {minWidth: "80%"}}}>
       <DialogTitle>Add Payment</DialogTitle>
       <DialogContent sx={{padding: "2rem !important"}}>
-        <Formik initialValues={initialValues} validationSchema={validationSchema}
-            onSubmit={handleFormSubmit}
-          >
-            {({errors, touched, handleChange, values, isSubmitting, setFieldValue, setFieldTouched}) => {
-              return (
-                <Form>
-                  <div className='row'>
-                    <div className='form-group'>
-                      <Field
-                        name="amount"
-                        as={TextField}
-                        label="Total Amount"
-                        type="number"
-                        fullWidth
-                        value={values.amount}
-                        onChange={handleChange}
-                        error={touched.amount && Boolean(errors.amount)}
-                        helperText={touched.amount && errors.amount}
-                        InputProps={{
-                          startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-                          readOnly: true,
-                        }}
-                      />                        
-                    </div>
-                    <div className='form-group'>
-                      <Field
-                        name="discount"
-                        as={TextField}
-                        select
-                        label="Discount"
-                        type="number"
-                        fullWidth
-                        value={values.discount}
-                        onChange={(e) => {
-                          const discountValue = parseFloat(e.target.value) || 0;
-                          const discountedAmount = values.amount - (values.amount * (discountValue / 100));
-                          setFieldValue('discount', discountValue);
-                          setFieldValue('payableamount', discountedAmount);
-                          setFieldValue("roundedpayment", discountedAmount);
-                        }}
-                        error={touched.discount && Boolean(errors.discount)}
-                        helperText={touched.discount && errors.discount}
-                        disabled={values.discount !== 0}
-                      >
-                        <MenuItem value={0}>No Discount</MenuItem>
-                        <MenuItem value={5}>5%</MenuItem>
-                        <MenuItem value={10}>10%</MenuItem>
-                        <MenuItem value={15}>15%</MenuItem>
-                        <MenuItem value={20}>20%</MenuItem>
-                        <MenuItem value={25}>25%</MenuItem>
-                      </Field>
-                    </div>
-                    <div className='form-group'>
-                      <Field
-                        name="notes"
-                        as={TextField}
-                        label="Notes"
-                        fullWidth
-                        value={values.notes}
-                        onChange={handleChange}
-                        error={touched.notes && Boolean(errors.notes)}
-                        helperText={touched.notes && errors.notes}
-                        disabled={values.discount !== 0}
-                      />                        
-                    </div>                       
-                  </div>
-                  <div className='row'>
-                    <div className='form-group'>
-                      <Field
-                        name="payableamount"
-                        as={TextField}
-                        label="Rounded Amount"
-                        type="number"
-                        fullWidth
-                        value={values.payableamount}
-                        onChange={handleChange}
-                        error={touched.payableamount && Boolean(errors.payableamount)}
-                        helperText={touched.payableamount && errors.payableamount}
-                        InputProps={{
-                          startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-                          readOnly: true,
-                        }}
-                      />                        
-                    </div>
-                    <div className='form-group'>
-                      <Field
-                        name="paymenttype"
-                        as={TextField}
-                        label="Payment Type"
-                        select
-                        fullWidth
-                        value={values.paymenttype || ''}
-                        onChange={handleChange}
-                        error={touched.paymenttype && Boolean(errors.paymenttype)}
-                        helperText={touched.paymenttype && errors.paymenttype}
-                      >
-                        <MenuItem value="">
-                          <em>Select Payment</em>
-                        </MenuItem>
-                        <MenuItem value={paymentTypeCash}>Cash</MenuItem>
-                        <MenuItem value={paymentTypeOnline}>UPI</MenuItem>
-                      </Field>                        
-                    </div>
-                    <div className='form-group'>
-                      <Field
-                        name="paymentstatus"
-                        as={TextField}
-                        label="Payment Status"
-                        select
-                        fullWidth
-                        value={values.paymentstatus || ''}
-                        onChange={(e) => {
-                          setFieldValue('paymentstatus', e.target.value);
-                          if(e.target.value == "Partial") {
-                            setFieldValue("pendingamount", (parseFloat(values.payableamount) - parseFloat(values.roundedpayment)));
-                          }
-                        }}
-                        error={touched.paymentstatus && Boolean(errors.paymentstatus)}
-                        helperText={touched.paymentstatus && errors.paymentstatus}
-                      >
-                        <MenuItem value="">
-                          <em>Select Payment Status</em>
-                        </MenuItem>
-                        <MenuItem value="Paid">Paid</MenuItem>
-                        <MenuItem value="Partial">Partial</MenuItem>
-                      </Field>                        
-                    </div>                                     
-                  </div>
-                  <div className='row'>
-                    <div className='form-group'>
-                      <Field
-                        name="roundedpayment"
-                        as={TextField}
-                        label="Payable Amount"
-                        type="number"
-                        fullWidth
-                        value={values.roundedpayment}
-                        onChange={(e) => {
-                          const inputValue = e.target.value;
-                          if (inputValue === "") {
-                            setFieldValue("roundedpayment", "");
-                            setFieldValue("pendingamount", previousPayment);
-                            setFieldValue("paymentstatus", "Partial");
-                            return;
-                          }
-                          const roundedValue = Number(parseFloat(inputValue) || 0);
-                          if(parseFloat(values.payableamount) <=  roundedValue) {
-                            setFieldValue('roundedpayment', values.payableamount);
-                            setFieldValue("pendingamount", 0);
-                            setFieldValue("paymentstatus", "Paid");
-                          } else {
-                            setFieldValue('roundedpayment', roundedValue);                            
-                            if(previousPayment !== 0) {
-                              setFieldValue("pendingamount", (parseFloat(previousPayment) - roundedValue));
-                              ((parseFloat(previousPayment) - roundedValue) === 0) ? setFieldValue("paymentstatus", "Paid") : setFieldValue("paymentstatus", "Partial");
-                            } else {
-                              setFieldValue("pendingamount", (parseFloat(values.payableamount) - roundedValue));
-                              ((parseFloat(values.payableamount) - roundedValue) === 0) ? setFieldValue("paymentstatus", "Paid") : setFieldValue("paymentstatus", "Partial");
-                            }
-                          }
-                          setFieldTouched('pendingamount', true);
-                        }}
-                        error={touched.roundedpayment && Boolean(errors.roundedpayment)}
-                        helperText={touched.roundedpayment && errors.roundedpayment}
-                        InputProps={{
-                          startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-                        }}
-                      />
-                    </div> 
-                    {values.paymenttype === paymentTypeOnline && (
-                      <div className="form-group">
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <Formik initialValues={initialValues} validationSchema={validationSchema}
+              onSubmit={handleFormSubmit}
+            >
+              {({errors, touched, handleChange, values, isSubmitting, setFieldValue, setFieldTouched}) => {
+                return (
+                  <Form>
+                    <div className='row'>
+                      <div className='form-group'>
                         <Field
-                          name="transactionid"
+                          name="amount"
                           as={TextField}
-                          label="Transaction ID"
+                          label="Total Amount"
+                          type="number"
                           fullWidth
-                          value={values.transactionid}
+                          value={values.amount}
                           onChange={handleChange}
-                          error={touched.transactionid && Boolean(errors.transactionid)}
-                          helperText={touched.transactionid && errors.transactionid}
+                          error={touched.amount && Boolean(errors.amount)}
+                          helperText={touched.amount && errors.amount}
+                          InputProps={{
+                            startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                            readOnly: true,
+                          }}
+                        />                        
+                      </div>
+                      <div className='form-group'>
+                        <Field
+                          name="discount"
+                          as={TextField}
+                          select
+                          label="Discount"
+                          type="number"
+                          fullWidth
+                          value={values.discount}
+                          onChange={(e) => {
+                            const discountValue = parseFloat(e.target.value) || 0;
+                            const discountedAmount = values.amount - (values.amount * (discountValue / 100));
+                            setFieldValue('discount', discountValue);
+                            setFieldValue('payableamount', discountedAmount);
+                            setFieldValue("roundedpayment", discountedAmount);
+                          }}
+                          error={touched.discount && Boolean(errors.discount)}
+                          helperText={touched.discount && errors.discount}
+                          disabled={values.discount !== 0}
+                        >
+                          <MenuItem value={0}>No Discount</MenuItem>
+                          <MenuItem value={5}>5%</MenuItem>
+                          <MenuItem value={10}>10%</MenuItem>
+                          <MenuItem value={15}>15%</MenuItem>
+                          <MenuItem value={20}>20%</MenuItem>
+                          <MenuItem value={25}>25%</MenuItem>
+                        </Field>
+                      </div>
+                      <div className='form-group'>
+                        <Field
+                          name="notes"
+                          as={TextField}
+                          label="Notes"
+                          fullWidth
+                          value={values.notes}
+                          onChange={handleChange}
+                          error={touched.notes && Boolean(errors.notes)}
+                          helperText={touched.notes && errors.notes}
+                          disabled={values.discount !== 0}
+                        />                        
+                      </div>                       
+                    </div>
+                    <div className='row'>
+                      <div className='form-group'>
+                        <Field
+                          name="payableamount"
+                          as={TextField}
+                          label="Rounded Amount"
+                          type="number"
+                          fullWidth
+                          value={values.payableamount}
+                          onChange={handleChange}
+                          error={touched.payableamount && Boolean(errors.payableamount)}
+                          helperText={touched.payableamount && errors.payableamount}
+                          InputProps={{
+                            startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                            readOnly: true,
+                          }}
+                        />                        
+                      </div>
+                      <div className='form-group'>
+                        <Field
+                          name="paymenttype"
+                          as={TextField}
+                          label="Payment Type"
+                          select
+                          fullWidth
+                          value={values.paymenttype || ''}
+                          onChange={handleChange}
+                          error={touched.paymenttype && Boolean(errors.paymenttype)}
+                          helperText={touched.paymenttype && errors.paymenttype}
+                        >
+                          <MenuItem value="">
+                            <em>Select Payment</em>
+                          </MenuItem>
+                          <MenuItem value={paymentTypeCash}>Cash</MenuItem>
+                          <MenuItem value={paymentTypeOnline}>UPI</MenuItem>
+                        </Field>                        
+                      </div>
+                      <div className='form-group'>
+                        <Field
+                          name="paymentstatus"
+                          as={TextField}
+                          label="Payment Status"
+                          select
+                          fullWidth
+                          value={values.paymentstatus || ''}
+                          onChange={(e) => {
+                            setFieldValue('paymentstatus', e.target.value);
+                            if(e.target.value == "Partial") {
+                              setFieldValue("pendingamount", (parseFloat(values.payableamount) - parseFloat(values.roundedpayment)));
+                            }
+                          }}
+                          error={touched.paymentstatus && Boolean(errors.paymentstatus)}
+                          helperText={touched.paymentstatus && errors.paymentstatus}
+                        >
+                          <MenuItem value="">
+                            <em>Select Payment Status</em>
+                          </MenuItem>
+                          <MenuItem value="Paid">Paid</MenuItem>
+                          <MenuItem value="Partial">Partial</MenuItem>
+                        </Field>                        
+                      </div>                                     
+                    </div>
+                    <div className='row'>
+                      <div className='form-group'>
+                        <Field
+                          name="roundedpayment"
+                          as={TextField}
+                          label="Payable Amount"
+                          type="number"
+                          fullWidth
+                          value={values.roundedpayment}
+                          onChange={(e) => {
+                            const inputValue = e.target.value;
+                            if (inputValue === "") {
+                              setFieldValue("roundedpayment", "");
+                              setFieldValue("pendingamount", previousPayment);
+                              setFieldValue("paymentstatus", "Partial");
+                              return;
+                            }
+                            const roundedValue = Number(parseFloat(inputValue) || 0);
+                            if(parseFloat(values.payableamount) <=  roundedValue) {
+                              setFieldValue('roundedpayment', values.payableamount);
+                              setFieldValue("pendingamount", 0);
+                              setFieldValue("paymentstatus", "Paid");
+                            } else {
+                              setFieldValue('roundedpayment', roundedValue);                            
+                              if(previousPayment !== 0) {
+                                setFieldValue("pendingamount", (parseFloat(previousPayment) - roundedValue));
+                                ((parseFloat(previousPayment) - roundedValue) === 0) ? setFieldValue("paymentstatus", "Paid") : setFieldValue("paymentstatus", "Partial");
+                              } else {
+                                setFieldValue("pendingamount", (parseFloat(values.payableamount) - roundedValue));
+                                ((parseFloat(values.payableamount) - roundedValue) === 0) ? setFieldValue("paymentstatus", "Paid") : setFieldValue("paymentstatus", "Partial");
+                              }
+                            }
+                            setFieldTouched('pendingamount', true);
+                          }}
+                          error={touched.roundedpayment && Boolean(errors.roundedpayment)}
+                          helperText={touched.roundedpayment && errors.roundedpayment}
+                          InputProps={{
+                            startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                          }}
+                        />
+                      </div> 
+                      {values.paymenttype === paymentTypeOnline && (
+                        <div className="form-group">
+                          <Field
+                            name="transactionid"
+                            as={TextField}
+                            label="Transaction ID"
+                            fullWidth
+                            value={values.transactionid}
+                            onChange={handleChange}
+                            error={touched.transactionid && Boolean(errors.transactionid)}
+                            helperText={touched.transactionid && errors.transactionid}
+                          />
+                        </div>
+                      )}
+                      <div className='form-group'>
+                        <Field
+                          name="pendingamount"
+                          as={TextField}
+                          label="Balance Amount"
+                          type="number"
+                          fullWidth
+                          value={values.pendingamount}
+                          onChange={(e) => {
+                            const inputValue = e.target.value;
+                            const pendingValue = parseFloat(inputValue) || 0;
+                            setFieldValue("pendingamount", pendingValue);
+                            if(pendingValue == 0) {
+                              setFieldValue("paymentstatus", "Paid");
+                            }
+                          }}
+                          error={touched.pendingamount && Boolean(errors.pendingamount)}
+                          helperText={touched.pendingamount && errors.pendingamount}
+                          InputLabelProps={{                            
+                            shrink: values.pendingamount !== '',                            
+                          }}
                         />
                       </div>
-                    )}
-                    <div className='form-group'>
-                      <Field
-                        name="pendingamount"
-                        as={TextField}
-                        label="Balance Amount"
-                        type="number"
-                        fullWidth
-                        value={values.pendingamount}
-                        onChange={(e) => {
-                          const inputValue = e.target.value;
-                          const pendingValue = parseFloat(inputValue) || 0;
-                          setFieldValue("pendingamount", pendingValue);
-                          if(pendingValue == 0) {
-                            setFieldValue("paymentstatus", "Paid");
-                          }
-                        }}
-                        error={touched.pendingamount && Boolean(errors.pendingamount)}
-                        helperText={touched.pendingamount && errors.pendingamount}
-                        InputLabelProps={{                            
-                          shrink: values.pendingamount !== '',                            
-                        }}
-                      />
+                    </div>  
+                    <div className='row'>
+                      <div className='form-group'>
+                        <Field name="paymentdate">
+                          {({ field }) => (
+                            <DatePicker
+                              {...field}                        
+                              value={values.paymentdate ? dayjs(values.paymentdate, "DD/MM/YYYY") : null}
+                              onChange={(date) => {
+                                setFieldValue('paymentdate', parseDate(date));
+                              }}
+                              inputFormat="DD/MM/YYYY"
+                              sx={{width: "100%"}}
+                              label="Payment Date"
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  fullWidth
+                                  error={touched.paymentdate && Boolean(errors.paymentdate)}
+                                  helperText={touched.paymentdate && errors.paymentdate}
+                                  placeholder="DD/MM/YYYY"                            
+                                />
+                              )}
+                            />
+                          )}
+                        </Field>
+                      </div>
+                      <div className='form-group'>
+                        <Field name="reminderdate">
+                          {({ field }) => (
+                            <DatePicker
+                              {...field}                        
+                              value={values.reminderdate ? dayjs(values.reminderdate, "DD/MM/YYYY") : null}
+                              onChange={(date) => {
+                                setFieldValue('reminderdate', parseDate(date));
+                              }}
+                              inputFormat="DD/MM/YYYY"
+                              sx={{width: "100%"}}
+                              label="Reminder Date"
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  fullWidth
+                                  error={touched.reminderdate && Boolean(errors.reminderdate)}
+                                  helperText={touched.reminderdate && errors.reminderdate}
+                                  placeholder="DD/MM/YYYY"                            
+                                />
+                              )}
+                            />
+                          )}
+                        </Field>
+                      </div>
+                    </div>                
+                    <div className='row save-btn'>
+                      <Button type="submit" variant="contained" color="primary" disabled={isSubmitting}>
+                        Save Changes
+                      </Button>
                     </div>
-                  </div>                  
-                  <div className='row save-btn'>
-                    <Button type="submit" variant="contained" color="primary" disabled={isSubmitting}>
-                      Save Changes
-                    </Button>
-                  </div>
-                </Form>
-              );
-            }}
-        </Formik>
+                  </Form>
+                );
+              }}
+          </Formik>
+        </LocalizationProvider>
       </DialogContent>
     </Dialog>
   );
