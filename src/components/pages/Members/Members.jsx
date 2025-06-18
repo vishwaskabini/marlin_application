@@ -211,6 +211,7 @@ const Members = () => {
   }
 
   const handleFormSubmit = (values) => {
+    values.registereddate = convertToDate(values.registereddate).toISOString();
     setIsLoading(true);
     if (isEdit) {
       apiClient.put("/api/Users/update", values).then((data) => {
@@ -254,6 +255,8 @@ const Members = () => {
     values.actualstartdate = convertToDate(values.actualstartdate).toISOString();
     values.packageenddate = convertToDate(values.packageenddate).toISOString();
     values.actualenddate = convertToDate(values.actualenddate).toISOString();
+    values.paymentdate = convertToDate(values.paymentdate).toISOString();
+    values.reminderdate = convertToDate(values.reminderdate).toISOString();
     const packegeObj = {
       userid: values.userid,
       packageid: values.packageid,
@@ -327,7 +330,9 @@ const Members = () => {
     });
   }
 
-  const addPayment = (values, shouldShowMsg) => {    
+  const addPayment = (values, shouldShowMsg) => {   
+    values.paymentdate = convertToDate(values.paymentdate).toISOString();
+    values.reminderdate = convertToDate(values.reminderdate).toISOString();    
     const payment = {
       userpackagemappingid: values.userpackagemappingid,
       paymenttype: values.paymenttype,
@@ -641,7 +646,6 @@ const Members = () => {
     </div>
   );
 };
-
 
 const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmit}) => {
 
@@ -1104,6 +1108,9 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                               value={values.packagestartdate ? dayjs(values.packagestartdate, "DD/MM/YYYY") : null}
                               onChange={(date) => {
                                 setFieldValue('packagestartdate', parseDate(date));
+                                var data = packageTypes.filter(x=>x.id == values.packageid);
+                                const enddate = calculateEndDate(parseDate(date), data[0].duration, data[0].durationtime);
+                                setFieldValue("packageenddate", enddate);
                               }}
                               inputFormat="DD/MM/YYYY"
                               sx={{width: "100%"}}
@@ -1130,6 +1137,9 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                               value={values.actualstartdate ? dayjs(values.actualstartdate, "DD/MM/YYYY") : null}
                               onChange={(date) => {
                                 setFieldValue('actualstartdate', parseDate(date));
+                                var data = packageTypes.filter(x=>x.id == values.packageid);
+                                const enddate = calculateEndDate(parseDate(date), data[0].duration, data[0].durationtime);                                
+                                setFieldValue("actualenddate", enddate);
                               }}
                               inputFormat="DD/MM/YYYY"
                               sx={{width: "100%"}}
@@ -1434,6 +1444,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                                   inputFormat="DD/MM/YYYY"
                                   sx={{width: "100%"}}
                                   label="Payment Date"
+                                  disabled={values.paymentstatus === "Paid"}
                                   renderInput={(params) => (
                                     <TextField
                                       {...params}
@@ -1459,6 +1470,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                                   inputFormat="DD/MM/YYYY"
                                   sx={{width: "100%"}}
                                   label="Reminder Date"
+                                  disabled={values.paymentstatus === "Paid"}
                                   renderInput={(params) => (
                                     <TextField
                                       {...params}
@@ -1791,6 +1803,7 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
                               inputFormat="DD/MM/YYYY"
                               sx={{width: "100%"}}
                               label="Payment Date"
+                              disabled={values.paymentstatus === "Paid"}
                               renderInput={(params) => (
                                 <TextField
                                   {...params}
@@ -1816,6 +1829,7 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
                               inputFormat="DD/MM/YYYY"
                               sx={{width: "100%"}}
                               label="Reminder Date"
+                              disabled={values.paymentstatus === "Paid"}
                               renderInput={(params) => (
                                 <TextField
                                   {...params}
