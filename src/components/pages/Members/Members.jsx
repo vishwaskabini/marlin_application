@@ -255,8 +255,6 @@ const Members = () => {
     values.actualstartdate = convertToDate(values.actualstartdate).toISOString();
     values.packageenddate = convertToDate(values.packageenddate).toISOString();
     values.actualenddate = convertToDate(values.actualenddate).toISOString();
-    values.paymentdate = convertToDate(values.paymentdate).toISOString();
-    values.reminderdate = convertToDate(values.reminderdate).toISOString();
     const packegeObj = {
       userid: values.userid,
       packageid: values.packageid,
