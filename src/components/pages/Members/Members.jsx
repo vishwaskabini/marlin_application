@@ -1441,8 +1441,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                                   }}
                                   inputFormat="DD/MM/YYYY"
                                   sx={{width: "100%"}}
-                                  label="Payment Date"
-                                  disabled={values.paymentstatus === "Paid"}
+                                  label="Payment Date"                                  
                                   renderInput={(params) => (
                                     <TextField
                                       {...params}
@@ -1800,8 +1799,7 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
                               }}
                               inputFormat="DD/MM/YYYY"
                               sx={{width: "100%"}}
-                              label="Payment Date"
-                              disabled={values.paymentstatus === "Paid"}
+                              label="Payment Date"                              
                               renderInput={(params) => (
                                 <TextField
                                   {...params}
