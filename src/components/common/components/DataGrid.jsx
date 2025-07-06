@@ -150,8 +150,7 @@ const ListTableCustom = ({
         onPaginationModelChange={setPaginationModel}
         pageSizeOptions={[5, 10, 25, 50]}
         components={{ Toolbar: GridToolbar }}
-        disableRowSelectionOnClick
-        disableColumnSelector
+        disableRowSelectionOnClick        
         disableCellFocusOutline
         disableColumnResize={true}
         getRowClassName={getRowClassName}
