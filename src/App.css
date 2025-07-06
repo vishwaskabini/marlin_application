@@ -76,7 +76,7 @@ h3 {
   width: 1170px;
 }
 
-.listTableHeader, .css-yseucu-MuiDataGrid-columnHeaderRow {
+.listTableHeader, .MuiDataGrid-columnHeaders [role='row'] {
   background-color: #1976d2 !important;
   color: #fff;
 }
