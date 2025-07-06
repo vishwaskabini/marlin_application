@@ -38,7 +38,7 @@ const App = () => {
             <Sidebar drawerState={isSidebarOpen} />
           )
         )}
-        <Box component="main" sx={[{ flexGrow: 1, minHeight: "86vh" }, isAuthenticated ? {p: 3} : {}]}>
+        <Box component="main" sx={[{ flexGrow: 1, minHeight: "86vh" }, isAuthenticated ? {} : {}]}>
           <RoutesComponent/>
         </Box>        
       </Box>

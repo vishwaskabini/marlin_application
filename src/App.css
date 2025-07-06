@@ -50,6 +50,14 @@ h3 {
   min-width: 150px;
 }
 
+.row-red {
+  color: red;
+}
+
+.row-orange {
+  color: orange;
+}
+
 .container {
   font-family: 'Roboto', sans-serif;
   background: linear-gradient(to right, #f8f9fa, #e9ecef);
@@ -68,14 +76,27 @@ h3 {
   width: 1170px;
 }
 
-.listTableHeader {
-  background-color: #1976d2;
+.listTableHeader, .css-yseucu-MuiDataGrid-columnHeaderRow {
+  background-color: #1976d2 !important;
   color: #fff;
+}
+
+.MuiDataGrid-sortButton, .MuiDataGrid-menuIconButton {
+  color: #fff;
+}
+
+.MuiDataGrid-root {
+  border-width: 0px !important;
 }
 
 .MuiTableCell-head {
   font-weight: bold !important;
   color: #fff !important;
+}
+
+.MuiDataGrid-cell:focus, 
+.MuiDataGrid-cell:focus-within {
+  outline: none !important;
 }
 
 .MuiTableCell-head :hover,

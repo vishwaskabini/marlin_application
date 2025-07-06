@@ -35,7 +35,7 @@ const ReportGenerator = () => {
       let url3 = "/api/Summary/GetMemberDetailedReportsByDateRange";
       if(userType == "2") {
         url1 = "/api/Summary/GetPaymentReportsByDateRange";
-        url2 = "/api/Summary/GetMemberReportsByDateRange";
+        url2 = "/api/Summary/GetGuestReportsByDateRange";
         url3 = "/api/Summary/GetGuestDetailedReportsByDateRange";
       }
       const [res1, res2, res3] = await Promise.all([
@@ -74,7 +74,7 @@ const ReportGenerator = () => {
   ];
 
   const columnsMembersSummary = [
-    { id: 'newlyRegistered', label: userType == '1' ? 'Total newly registered members' : 'Total newly registered Guests' },
+    { id: 'total', label: userType == '1' ? 'Total newly registered members' : 'Total newly registered Guests' },
     { id: 'active', label: userType == '1' ? 'Total Active Members': 'Total Active Guests' },
     { id: 'expired', label: userType == '1' ? 'Expired Members': 'Expired Guests' }
   ];
@@ -102,7 +102,7 @@ const ReportGenerator = () => {
 
     autoTable(doc, {
       head: [['Total newly registered members', 'Total Active Members', 'Expired Members']],
-      body: memberReport.map(member => [member.newlyRegistered, member.active, member.expired]),
+      body: memberReport.map(member => [member.total, member.active, member.expired]),
       startY: doc.autoTable.previous.finalY + 10,
     });
 

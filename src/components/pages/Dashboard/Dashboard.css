@@ -5,6 +5,10 @@
   justify-items: center;
 }
 
+.dashboard {
+  padding: 24px;
+}
+
 /* Adjust the card styling */
 .dashboard-card {
   background-color: #1976d2 !important; 

@@ -11,6 +11,7 @@ import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+import ListTableCustom from '../../common/components/DataGrid';
 
 dayjs.extend(customParseFormat);
 
@@ -630,7 +631,8 @@ const Members = () => {
         </Box>
         <Card sx={{marginBottom: "10px"}}>
           <CardContent>
-            <ListTable columns={columns} rows={rowsData} onEdit={handleEdit} onDelete={handleDelete} onPackage={handlePackages} onPayment={handlePayments} onViewDetails={handleViewDetails} onUpcomingPackage={handleUpcomingPackages} tableName="Full Members List"/>
+            {/* <ListTable columns={columns} rows={rowsData} onEdit={handleEdit} onDelete={handleDelete} onPackage={handlePackages} onPayment={handlePayments} onViewDetails={handleViewDetails} onUpcomingPackage={handleUpcomingPackages} tableName="Full Members List"/> */}
+            <ListTableCustom columns={columns} rows={rowsData} onEdit={handleEdit} onDelete={handleDelete} onPackage={handlePackages} onPayment={handlePayments} onViewDetails={handleViewDetails} onUpcomingPackage={handleUpcomingPackages} tableName="Full Members List"/>
           </CardContent>
         </Card>
       </Box>
