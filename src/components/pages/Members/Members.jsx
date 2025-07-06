@@ -23,6 +23,10 @@ const convertToDate = (dateString) => {
   return new Date(year, month - 1, day);
 };
 
+const formatLocalDateToString = (date) => {
+  return dayjs(date).format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+};
+
 const Members = () => {
   const [membersExpiringToday, setMembersExpiringToday] = useState([]);
   const [membersExpiringIn5Days, setMembersExpiringIn5Days] = useState([]);
@@ -211,7 +215,8 @@ const Members = () => {
   }
 
   const handleFormSubmit = (values) => {
-    values.registereddate = convertToDate(values.registereddate).toISOString();
+    values.registereddate = formatLocalDateToString(convertToDate(values.registereddate));
+    console.log(values);
     setIsLoading(true);
     if (isEdit) {
       apiClient.put("/api/Users/update", values).then((data) => {
@@ -251,10 +256,10 @@ const Members = () => {
   }
 
   const handleFormSubmitPackage = (values) => {
-    values.packagestartdate = convertToDate(values.packagestartdate).toISOString();
-    values.actualstartdate = convertToDate(values.actualstartdate).toISOString();
-    values.packageenddate = convertToDate(values.packageenddate).toISOString();
-    values.actualenddate = convertToDate(values.actualenddate).toISOString();
+    values.packagestartdate = formatLocalDateToString(convertToDate(values.packagestartdate));
+    values.actualstartdate = formatLocalDateToString(convertToDate(values.actualstartdate));
+    values.packageenddate = formatLocalDateToString(convertToDate(values.packageenddate));
+    values.actualenddate = formatLocalDateToString(convertToDate(values.actualenddate));
     const packegeObj = {
       userid: values.userid,
       packageid: values.packageid,
@@ -329,8 +334,8 @@ const Members = () => {
   }
 
   const addPayment = (values, shouldShowMsg) => {   
-    values.paymentdate = convertToDate(values.paymentdate).toISOString();
-    values.reminderdate = convertToDate(values.reminderdate).toISOString();    
+    values.paymentdate = formatLocalDateToString(convertToDate(values.paymentdate));
+    values.reminderdate = formatLocalDateToString(convertToDate(values.reminderdate));    
     const payment = {
       userpackagemappingid: values.userpackagemappingid,
       paymenttype: values.paymenttype,

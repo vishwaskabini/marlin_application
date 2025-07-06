@@ -15,6 +15,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import { Link } from "react-router-dom";
+import CameraEnhanceIcon from '@mui/icons-material/CameraEnhance';
 
 const drawerWidth = 240;
 
@@ -148,7 +149,8 @@ const Sidebar = ({drawerState}) => {
                 { Id: 71, label: 'SMS', icon: <SmsIcon />, route: "/admin/smssettings" },
                 { Id: 72, label: 'Settings', icon: <SettingsIcon />, route: "/admin/settings" },
                 { Id: 73, label: 'Roles', icon: <ManageAccountsIcon />, route: "/admin/roles" },
-                { Id: 73, label: 'Attendance', icon: <AnalyticsIcon />, route: "/admin/attendance" }
+                { Id: 74, label: 'Attendance', icon: <AnalyticsIcon />, route: "/admin/attendance" },
+                { Id: 75, label: 'Gallery', icon: <CameraEnhanceIcon />, route: "/admin/gallery" }
             ]
         }
     ]);

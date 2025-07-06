@@ -14,6 +14,7 @@ import Members from "../../pages/Members/Members";
 import MemberDashboard from "../../pages/Dashboard/MemberDashboard";
 import ChangePassword from "./ChangePassword";
 import Attendance from "../../pages/AdminConfiguration/Attendance";
+import Gallery from "../../pages/AdminConfiguration/Gallery";
 
 const RoutesComponent = () => {
     return(
@@ -23,6 +24,7 @@ const RoutesComponent = () => {
             <Route path="/admin/settings" element={<PrivateRoute element={<Settings />} /> }/>
             <Route path="/admin/roles" element={<PrivateRoute element={<Roles />} /> }/>
             <Route path="/admin/attendance" element={<PrivateRoute element={<Attendance />} /> }/>
+            <Route path="/admin/gallery" element={<PrivateRoute element={<Gallery />} /> }/>
             <Route path="/members" element={<PrivateRoute element={<Members />} /> }/>
             <Route path="/guest" element={<PrivateRoute element={<GuestScreen />} /> }/>
             <Route path="/reports" element={<PrivateRoute element={<ReportGenerator />} /> }/>
