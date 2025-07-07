@@ -34,7 +34,7 @@ const ReportGenerator = () => {
       let url2 = "/api/Summary/GetMemberReportsByDateRange";
       let url3 = "/api/Summary/GetMemberDetailedReportsByDateRange";
       if(userType == "2") {
-        url1 = "/api/Summary/GetPaymentReportsByDateRange";
+        url1 = "/api/Summary/GetGuestPaymentReportsByDateRange";
         url2 = "/api/Summary/GetGuestReportsByDateRange";
         url3 = "/api/Summary/GetGuestDetailedReportsByDateRange";
       }

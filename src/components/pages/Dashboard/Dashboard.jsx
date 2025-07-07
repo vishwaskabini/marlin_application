@@ -117,18 +117,18 @@ const Dashboard = () => {
   const getGuestCount = (guests) => {
     const today = dayjs().startOf('day');
 
-    const registeredToday = guests.filter((item) => dayjs(item.registereddate).isSame(today, 'day'));
+    const registeredToday = guests.filter((item) => dayjs(item.registeredDate).isSame(today, 'day'));
 
     const oneWeekAgo = today.subtract(7, 'days');
-    const registeredInLastWeek = guests.filter((item) => dayjs(item.registereddate).isAfter(oneWeekAgo, 'day'));
+    const registeredInLastWeek = guests.filter((item) => dayjs(item.registeredDate).isAfter(oneWeekAgo, 'day'));
 
 
     const oneMonthAgo = today.subtract(1, 'month');
-    const registeredInLastMonth = guests.filter((item) => dayjs(item.registereddate).isAfter(oneMonthAgo, 'day'));
+    const registeredInLastMonth = guests.filter((item) => dayjs(item.registeredDate).isAfter(oneMonthAgo, 'day'));
 
-    const todaysPayment = registeredToday.reduce((sum, item) => sum + item.totalamount, 0);
-    const weeksPayment = registeredInLastWeek.reduce((sum, item) => sum + item.totalamount, 0);
-    const monthsPayment = registeredInLastMonth.reduce((sum, item) => sum + item.totalamount, 0);
+    const todaysPayment = registeredToday.reduce((sum, item) => sum + item.paidAmount, 0);
+    const weeksPayment = registeredInLastWeek.reduce((sum, item) => sum + item.paidAmount, 0);
+    const monthsPayment = registeredInLastMonth.reduce((sum, item) => sum + item.paidAmount, 0);
 
     let guestData = [];
     guestData.push({ "title": "Total Guests", "count": guests.length });
