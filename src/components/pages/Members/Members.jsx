@@ -78,7 +78,7 @@ const Members = () => {
       referredby: data.referredby,
       hardwareuserid: data.hardwareuserid,
       rfidnumber: data.rfidnumber,
-      registereddate: data.registereddate
+      registereddate: data.registereddate ? formatDate(data.registereddate) : null
     });
     setIsDialogOpen(true);
   };
