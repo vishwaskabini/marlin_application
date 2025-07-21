@@ -375,6 +375,20 @@ const Members = () => {
     addEditPackage(data, true);
   }
 
+  const handleDeletePackage = (id) => {
+    apiClient.delete("/api/UsersPakageMapping/"+id).then((result) =>  {      
+      setIsDialogOpenPackage(false);
+      toast.success("Pakage Deleted Successfully !", {
+        position: "top-right"
+      });      
+    }).catch((error) => {
+      setIsLoading(false);
+      toast.error("Error while while delet pakage" + error, {
+        position: "top-right"
+      });
+    });
+  }
+
   const addEditPackage = (data, isActive) => {    
     setIsActivePackage(isActive);
     const isEditMode = isActive ? (data.packageDetails && data.packageDetails.length > 0) : (data.packageDetails && data.packageDetails.length > 1);
@@ -641,7 +655,7 @@ const Members = () => {
         handleFormSubmit={handleFormSubmit}/>
       <PackageDialog open={isDialogOpenPackage} handleClose={onDialogClosePackage} isEdit={isEditPackage}
         initialValues={initialValuesPackages}
-        handleFormSubmit={handleFormSubmitPackage} packageTypes={packageTypes} isActivePackage={isActivePackage}/>      
+        handleFormSubmit={handleFormSubmitPackage} packageTypes={packageTypes} isActivePackage={isActivePackage} handleDeletePackage={handleDeletePackage}/>      
       <PaymentDialog open={isDialogOpenPayment} handleClose={onDialogClosePayment}
         initialValues={initialValuesPayments}
         handleFormSubmit={handleFormSubmitPayment}/>
@@ -1004,7 +1018,7 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
   );
 }
 
-const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmit, packageTypes, isActivePackage}) => {
+const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmit, packageTypes, isActivePackage, handleDeletePackage}) => {
 
   const paymentTypeOnline = '22220087-c3c2-4268-a25a-13baa6f3625f';
   const paymentTypeCash = '22220087-c3c2-4268-a25a-13baa6f3625e';  
@@ -1381,8 +1395,8 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                                 }
                                 const roundedValue = parseFloat(inputValue) || 0;
                                 if(parseFloat(values.payableamount) <=  roundedValue) {
-                                  setFieldValue('roundedpayment', values.payableamount);
-                                  setFieldValue("pendingamount", 0);
+                                  setFieldValue('roundedpayment', roundedValue);
+                                  setFieldValue("pendingamount", (parseFloat(values.payableamount) - roundedValue));
                                   setFieldValue("paymentstatus", "Paid");
                                 } else {
                                   setFieldValue('roundedpayment', roundedValue);
@@ -1504,13 +1518,19 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                             }}>
                             Complete
                           </Button>
-                          <Button variant="contained" color="error" 
+                          <Button variant="contained" color="secondary" 
                             onClick={() => {
                               setFieldValue("userpackagestatusid", "e5292250-2be0-4774-ace0-db4428640ec2");
                               handleSubmit();
                             }}>
                             Abort
-                          </Button>                      
+                          </Button>         
+                          <Button variant="contained" color="error" 
+                            onClick={() => {
+                              handleDeletePackage(values.id);
+                            }}>
+                            Delete
+                          </Button>              
                         </>
                       )}
                       {!isActivePackage && isEdit && (
@@ -1566,7 +1586,7 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
     pendingamount: Yup.number()
       .when('paymentstatus', {
         is: 'Partial',
-        then: (schema) => schema.required('Balance amount is required').min(0, 'Balance must be positive'),
+        then: (schema) => schema.required('Balance amount is required'),
         otherwise: (schema) => schema.notRequired(),
       }),
     notes: Yup.string(),

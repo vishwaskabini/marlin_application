@@ -30,24 +30,73 @@ const ReportGenerator = () => {
   const getReportData = async (requestBody) => {
     setLoading(true);
     try {
-      let url1 = "/api/Summary/GetPaymentReportsByDateRange";
-      let url2 = "/api/Summary/GetMemberReportsByDateRange";
-      let url3 = "/api/Summary/GetMemberDetailedReportsByDateRange";
-      if(userType == "2") {
-        url1 = "/api/Summary/GetGuestPaymentReportsByDateRange";
-        url2 = "/api/Summary/GetGuestReportsByDateRange";
-        url3 = "/api/Summary/GetGuestDetailedReportsByDateRange";
-      }
-      const [res1, res2, res3] = await Promise.all([
-        apiClient.post(url1, requestBody),
-        apiClient.post(url2, requestBody),
-        apiClient.post(url3, requestBody)
+      const paymentUrls = {
+        1: [
+          "/api/Summary/GetPaymentReportsByDateRange",
+          "/api/Summary/GetGuestPaymentReportsByDateRange"
+        ],
+        2: ["/api/Summary/GetPaymentReportsByDateRange"],
+        3: ["/api/Summary/GetGuestPaymentReportsByDateRange"]
+      };
+
+      const memberUrls = {
+        1: [
+          "/api/Summary/GetMemberReportsByDateRange",
+          "/api/Summary/GetGuestReportsByDateRange"
+        ],
+        2: ["/api/Summary/GetMemberReportsByDateRange"],
+        3: ["/api/Summary/GetGuestReportsByDateRange"]
+      };
+
+      const detailUrls = {
+        1: [
+          "/api/Summary/GetMemberDetailedReportsByDateRange",
+          "/api/Summary/GetGuestDetailedReportsByDateRange"
+        ],
+        2: ["/api/Summary/GetMemberDetailedReportsByDateRange"],
+        3: ["/api/Summary/GetGuestDetailedReportsByDateRange"]
+      };
+
+      const fetchSingle = async (urls) => {
+        const responses = await Promise.all(urls.map(u => apiClient.post(u, requestBody)));
+        return [mergeAndSumObjects(responses)];
+      };
+
+      // Helper to fetch and merge data across URLs
+      const fetchAndMerge = async (urls) => {
+        const calls = urls.map(u => apiClient.post(u, requestBody));
+        const responses = await Promise.all(calls);
+        return userType == '1' ? [...responses[0], ...responses[1]] : [...responses[0]];
+      };
+
+      // Fetch the three categories
+      const [payments, members, details] = await Promise.all([
+        fetchSingle(paymentUrls[userType] || []),
+        fetchSingle(memberUrls[userType] || []),
+        fetchAndMerge(detailUrls[userType] || [])
       ]);
 
-      setPaymentReport([res1]);
-      setMemberReport([res2]);
-      setMemberDetailReport(res3);
+      // Set state
+      setPaymentReport(payments);
+      setMemberReport(members);
+      setMemberDetailReport(details);
+      // let url1 = "/api/Summary/GetPaymentReportsByDateRange";
+      // let url2 = "/api/Summary/GetMemberReportsByDateRange";
+      // let url3 = "/api/Summary/GetMemberDetailedReportsByDateRange";
+      // if(userType == "3") {
+      //   url1 = "/api/Summary/GetGuestPaymentReportsByDateRange";
+      //   url2 = "/api/Summary/GetGuestReportsByDateRange";
+      //   url3 = "/api/Summary/GetGuestDetailedReportsByDateRange";
+      // }
+      // const [res1, res2, res3] = await Promise.all([
+      //   apiClient.post(url1, requestBody),
+      //   apiClient.post(url2, requestBody),
+      //   apiClient.post(url3, requestBody)
+      // ]);
 
+      // setPaymentReport([res1]);
+      // setMemberReport([res2]);
+      // setMemberDetailReport(res3);
       setLoading(false);
     } catch (err) {
       toast.error("Error while getting report data" + err, {
@@ -55,6 +104,19 @@ const ReportGenerator = () => {
       });
       setLoading(false);
     }
+  }
+
+  const mergeAndSumObjects = (objs) => {
+    return objs.reduce((acc, obj) => {
+      Object.entries(obj).forEach(([key, value]) => {
+        if (typeof value === 'number') {
+          acc[key] = (acc[key] || 0) + value;
+        } else {
+          acc[key] = value;
+        }
+      });
+      return acc;
+    }, {});
   }
 
   useEffect(() => {
@@ -74,20 +136,20 @@ const ReportGenerator = () => {
   ];
 
   const columnsMembersSummary = [
-    { id: 'total', label: userType == '1' ? 'Total newly registered members' : 'Total newly registered Guests' },
-    { id: 'active', label: userType == '1' ? 'Total Active Members': 'Total Active Guests' },
-    { id: 'expired', label: userType == '1' ? 'Expired Members': 'Expired Guests' }
+    { id: 'total', label: 'Total newly registered' },
+    { id: 'active', label: 'Total Active' },
+    { id: 'expired', label: 'Expired' }
   ];
 
   const columnsDetailedReport = [
-    { id: 'memberName', label: userType == '1' ? 'Member Name' : 'Guest Name' },
+    { id: 'memberName', label: 'Name' },
     { id: 'contact', label: 'Contact' },
     { id: 'packageName', label: 'Package Name' },
     { id: 'totalPayableAmount', label: 'Total' },
     { id: 'paidAmount', label: 'Paid' },
     { id: 'pendingAmount', label: 'Pending' },
     { id: 'paymentStatus', label: 'Payment Status' },
-    { id: 'memberStatus', label: 'Member status' }
+    { id: 'memberStatus', label: 'Status' }
   ];
   const [rowsData, setRowsData] = useState([]);
   const exportPdf = () => {
@@ -204,8 +266,9 @@ const ReportGenerator = () => {
                   label="User Type"
                   onChange={handleUserTypeChange}
                 >
-                  <MenuItem value={1}>Members</MenuItem>
-                  <MenuItem value={2}>Guests</MenuItem>
+                  <MenuItem value={1}>All</MenuItem>
+                  <MenuItem value={2}>Members</MenuItem>
+                  <MenuItem value={3}>Guests</MenuItem>                  
                 </Select>
               </FormControl>
             </div>
@@ -279,7 +342,7 @@ const ReportGenerator = () => {
           </div>                
           <div className='row'>
             <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
-              <Typography variant='h5' className='header-text'>{userType == '1' ? 'Members Summary' : 'Guests Summary'}         
+              <Typography variant='h5' className='header-text'>Summary       
               </Typography>
             </Box>
           </div>
