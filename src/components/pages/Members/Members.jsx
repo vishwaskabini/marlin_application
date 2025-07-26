@@ -376,7 +376,7 @@ const Members = () => {
   }
 
   const handleDeletePackage = (id) => {
-    apiClient.delete("/api/UsersPakageMapping/"+id).then((result) =>  {      
+    apiClient.delete("/api/UsersPakageMapping/DeleteAll/"+id).then((result) =>  {      
       setIsDialogOpenPackage(false);
       toast.success("Pakage Deleted Successfully !", {
         position: "top-right"
@@ -949,6 +949,11 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
                           inputFormat="DD/MM/YYYY"
                           sx={{width: "100%"}}
                           label="Registration Date"
+                          slotProps={{
+                            popper: {
+                              disablePortal: true,
+                            },
+                          }}
                           renderInput={(params) => (
                             <TextField
                               {...params}
@@ -1826,7 +1831,12 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
                               }}
                               inputFormat="DD/MM/YYYY"
                               sx={{width: "100%"}}
-                              label="Payment Date"                              
+                              label="Payment Date"
+                              slotProps={{
+                                popper: {
+                                  disablePortal: true,
+                                },
+                              }}
                               renderInput={(params) => (
                                 <TextField
                                   {...params}
@@ -1853,6 +1863,11 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
                               sx={{width: "100%"}}
                               label="Reminder Date"
                               disabled={values.paymentstatus === "Paid"}
+                              slotProps={{
+                                popper: {
+                                  disablePortal: true,
+                                },
+                              }}
                               renderInput={(params) => (
                                 <TextField
                                   {...params}

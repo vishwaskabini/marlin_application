@@ -23,6 +23,7 @@ const ReportGenerator = () => {
   const [paymentReport, setPaymentReport] = useState([]);
   const [memberReport, setMemberReport] = useState([]);
   const [memberDetailReport, setMemberDetailReport] = useState([]);
+  const [memberCollectionReport, setMemberCollectionReport] = useState([]);
   const [loading, setLoading] = useState(true);
   const [duration, setDuration] = React.useState('1');
   const [userType, setUserType] = React.useState('1');
@@ -33,7 +34,7 @@ const ReportGenerator = () => {
       const paymentUrls = {
         1: [
           "/api/Summary/GetPaymentReportsByDateRange",
-          "/api/Summary/GetGuestPaymentReportsByDateRange"
+          "/api/Summary/GetGuestPaymentReportsByDateRange",          
         ],
         2: ["/api/Summary/GetPaymentReportsByDateRange"],
         3: ["/api/Summary/GetGuestPaymentReportsByDateRange"]
@@ -57,6 +58,15 @@ const ReportGenerator = () => {
         3: ["/api/Summary/GetGuestDetailedReportsByDateRange"]
       };
 
+      const collectionUrls = {
+        1: [
+          "/api/Summary/GetMemberCollectionReportsByDateRange",
+          "/api/Summary/GetGuestsCollectionReportsByDateRange"
+        ],
+        2: ["/api/Summary/GetMemberCollectionReportsByDateRange"],
+        3: ["/api/Summary/GetGuestsCollectionReportsByDateRange"]
+      };
+
       const fetchSingle = async (urls) => {
         const responses = await Promise.all(urls.map(u => apiClient.post(u, requestBody)));
         return [mergeAndSumObjects(responses)];
@@ -66,37 +76,37 @@ const ReportGenerator = () => {
       const fetchAndMerge = async (urls) => {
         const calls = urls.map(u => apiClient.post(u, requestBody));
         const responses = await Promise.all(calls);
-        return userType == '1' ? [...responses[0], ...responses[1]] : [...responses[0]];
+        const merged = userType == '1' ? [...responses[0], ...responses[1]] : [...responses[0]];
+        const formatted = merged.map(item => {
+          const newItem = { ...item };
+
+          for (const key in newItem) {
+            if (newItem[key] && key == 'date') {
+              const dateValue = dayjs(newItem[key]);
+              if (dateValue.$d instanceof Date) {
+                newItem[key] = dateValue.format('DD/MM/YYYY');
+              }
+            }
+          }
+
+          return newItem;
+        });
+        return formatted;
       };
 
       // Fetch the three categories
-      const [payments, members, details] = await Promise.all([
+      const [payments, members, collections, details] = await Promise.all([
         fetchSingle(paymentUrls[userType] || []),
         fetchSingle(memberUrls[userType] || []),
-        fetchAndMerge(detailUrls[userType] || [])
+        fetchAndMerge(collectionUrls[userType] || []),
+        fetchAndMerge(detailUrls[userType] || []),
       ]);
 
       // Set state
       setPaymentReport(payments);
       setMemberReport(members);
       setMemberDetailReport(details);
-      // let url1 = "/api/Summary/GetPaymentReportsByDateRange";
-      // let url2 = "/api/Summary/GetMemberReportsByDateRange";
-      // let url3 = "/api/Summary/GetMemberDetailedReportsByDateRange";
-      // if(userType == "3") {
-      //   url1 = "/api/Summary/GetGuestPaymentReportsByDateRange";
-      //   url2 = "/api/Summary/GetGuestReportsByDateRange";
-      //   url3 = "/api/Summary/GetGuestDetailedReportsByDateRange";
-      // }
-      // const [res1, res2, res3] = await Promise.all([
-      //   apiClient.post(url1, requestBody),
-      //   apiClient.post(url2, requestBody),
-      //   apiClient.post(url3, requestBody)
-      // ]);
-
-      // setPaymentReport([res1]);
-      // setMemberReport([res2]);
-      // setMemberDetailReport(res3);
+      setMemberCollectionReport(collections);
       setLoading(false);
     } catch (err) {
       toast.error("Error while getting report data" + err, {
@@ -151,6 +161,15 @@ const ReportGenerator = () => {
     { id: 'paymentStatus', label: 'Payment Status' },
     { id: 'memberStatus', label: 'Status' }
   ];
+
+  const columnsCollectionReport = [
+    { id: 'date', label: 'Date' },
+    { id: 'employee', label: 'Employee' },
+    { id: 'byCash', label: 'Cash' },
+    { id: 'byUPI', label: 'UPI' },
+    { id: 'total', label: 'Total' }
+  ];
+
   const [rowsData, setRowsData] = useState([]);
   const exportPdf = () => {
     const doc = new jsPDF();
@@ -174,6 +193,12 @@ const ReportGenerator = () => {
       startY: doc.autoTable.previous.finalY + 10,
     });
 
+    autoTable(doc, {
+      head: [['Date', 'Employee', 'Cash', 'UPI', 'Total']],
+      body: memberCollectionReport.map(member => [member.date, member.employee, member.bycash, member.byUPI, member.total]),
+      startY: doc.autoTable.previous.finalY + 10,
+    });
+
     doc.save('report.pdf');
   };
 
@@ -184,10 +209,13 @@ const ReportGenerator = () => {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'PaymentSummary');
 
     const worksheet1 = XLSX.utils.json_to_sheet(memberReport);    
-    XLSX.utils.book_append_sheet(workbook, worksheet1, 'MembersSummary');
+    XLSX.utils.book_append_sheet(workbook, worksheet1, 'SummaryReport');
 
     const worksheet2 = XLSX.utils.json_to_sheet(memberDetailReport);    
-    XLSX.utils.book_append_sheet(workbook, worksheet2, 'MembersDetails');
+    XLSX.utils.book_append_sheet(workbook, worksheet2, 'DetailsReport');
+
+    const worksheet3 = XLSX.utils.json_to_sheet(memberCollectionReport);    
+    XLSX.utils.book_append_sheet(workbook, worksheet3, 'CollectionReport');
 
     XLSX.writeFile(workbook, 'report.xlsx');
   };
@@ -349,6 +377,17 @@ const ReportGenerator = () => {
           <div className='row'>
             <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
             <ListTable columns={columnsMembersSummary} rows={memberReport} tableName="Members Summary" showSearch={false}/>
+            </Box>
+          </div>
+          <div className='row'>
+            <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+              <Typography variant='h5' className='header-text'>Collection Report           
+              </Typography>
+            </Box>
+          </div>
+          <div className='row'>
+            <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
+            <ListTable columns={columnsCollectionReport} rows={memberCollectionReport} tableName="Collection Report" showSearch={false}/>
             </Box>
           </div>
           <div className='row'>
