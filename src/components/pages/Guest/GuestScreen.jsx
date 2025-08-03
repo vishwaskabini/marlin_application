@@ -286,7 +286,7 @@ const CreateGuestDialog = ({open, handleClose, initialValues, handleFormSubmit})
                       }
                     }}
                     InputProps={{
-                      inputProps: { min: 1, max: 10 },
+                      inputProps: { min: 1, max: 1000 },
                     }}
                   />
                   {touched.noofpersons && errors.noofpersons && (

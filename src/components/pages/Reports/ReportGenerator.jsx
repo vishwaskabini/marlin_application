@@ -81,7 +81,7 @@ const ReportGenerator = () => {
           const newItem = { ...item };
 
           for (const key in newItem) {
-            if (newItem[key] && key == 'date') {
+            if (newItem[key] && (key == 'date' || key == 'updateddate')) {
               const dateValue = dayjs(newItem[key]);
               if (dateValue.$d instanceof Date) {
                 newItem[key] = dateValue.format('DD/MM/YYYY');
@@ -159,7 +159,9 @@ const ReportGenerator = () => {
     { id: 'paidAmount', label: 'Paid' },
     { id: 'pendingAmount', label: 'Pending' },
     { id: 'paymentStatus', label: 'Payment Status' },
-    { id: 'memberStatus', label: 'Status' }
+    { id: 'memberStatus', label: 'Status' },
+    { id: 'updatedby', label: 'Updated By' },
+    { id: 'updateddate', label: 'Updated Date' }
   ];
 
   const columnsCollectionReport = [
