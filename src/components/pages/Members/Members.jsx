@@ -376,7 +376,8 @@ const Members = () => {
   }
 
   const handleDeletePackage = (id) => {
-    apiClient.delete("/api/UsersPackageMapping/DeleteAll/"+id).then((result) =>  {      
+    apiClient.delete("/api/UsersPackageMapping/DeleteAll/"+id).then((result) =>  {
+      getData();   
       setIsDialogOpenPackage(false);
       toast.success("Pakage Deleted Successfully !", {
         position: "top-right"
