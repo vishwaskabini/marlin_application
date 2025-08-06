@@ -472,8 +472,8 @@ const Members = () => {
           pendingamount: 0,
           transactionid: '',
           notes: paymentDetails[0].notes,
-          paymentdate: paymentDetails[0].paymentdate ?? dayjs().format('DD/MM/YYYY'),
-          reminderdate: paymentDetails[0].reminderdate ?? dayjs().format('DD/MM/YYYY')
+          paymentdate: paymentDetails[0].paymentdate ? formatDate(paymentDetails[0].paymentdate) : dayjs().format('DD/MM/YYYY'),
+          reminderdate: paymentDetails[0].reminderdate ? formatDate(paymentDetails[0].reminderdate) : dayjs().format('DD/MM/YYYY')
         });
       } else {
         setInitialValuesPayments({

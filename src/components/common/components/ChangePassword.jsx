@@ -23,8 +23,16 @@ const ChangePassword = () => {
         apiClient.post("/api/Users/resetpassword", {email: email, newPassword: values.confirmPassword}).then((data) =>  {
             setIsLoading(false);
             if(isAuthenticated) {
+                toast.success("New password is set successfully.!", {
+                    position: "top-right"
+                });
                 navigate("/dashboard");
             } else {
+                toast.success("New password is set successfully. Please Login Again!", {
+                    position: "top-right"
+                });
+                sessionStorage.removeItem('token');
+                sessionStorage.removeItem('userId');
                 navigate("/login");
             }            
         }).catch((error) => {
