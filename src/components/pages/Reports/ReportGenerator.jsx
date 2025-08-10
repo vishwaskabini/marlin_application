@@ -197,7 +197,7 @@ const ReportGenerator = () => {
 
     autoTable(doc, {
       head: [['Date', 'Employee', 'Cash', 'UPI', 'Total']],
-      body: memberCollectionReport.map(member => [member.date, member.employee, member.bycash, member.byUPI, member.total]),
+      body: memberCollectionReport.map(member => [member.date, member.employee, member.byCash, member.byUPI, member.total]),
       startY: doc.autoTable.previous.finalY + 10,
     });
 
