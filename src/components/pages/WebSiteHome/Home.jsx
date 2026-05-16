@@ -21,6 +21,7 @@ const Home = () => {
     useEffect(() => {
         logout();
         setLandingPageData(JsonData);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (

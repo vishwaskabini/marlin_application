@@ -54,7 +54,7 @@ const Members = () => {
 
   const handleEdit = (id) => {
     setIsEdit(true);
-    var data = members.find(item => item.id == id);
+    var data = members.find(item => item.id === id);
     setInitialValues({
       userType: userTypeId,
       id: data.id,
@@ -102,7 +102,7 @@ const Members = () => {
   const getData = () => {
     setIsLoading(true);
     apiClient.get("/api/Users/GetAllWithDetailsActive").then((data) => {
-      var members = data.filter((user) => user.usertype == userTypeId);
+      var members = data.filter((user) => user.usertype === userTypeId);
       setMembers(members);
       let membersData = members.map((item) => {
         return {
@@ -185,6 +185,7 @@ const Members = () => {
     if (packageTypes.length > 0) {
       getData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [packageTypes]);
 
   useEffect(() => {
@@ -194,6 +195,7 @@ const Members = () => {
     }).catch((error) => {
       toast.error("Error while fetching payment types: " + error, { position: "top-right" });
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const columns = [
@@ -378,7 +380,7 @@ const Members = () => {
   }
 
   const handlePackages = (id) => {
-    var data = members.find(item => item.id == id);
+    var data = members.find(item => item.id === id);
     addEditPackage(data, true);
   }
 
@@ -403,7 +405,7 @@ const Members = () => {
     setIsEditPackage(isEditMode);
 
     const packageDetails = isEditMode 
-      ? (!isActive && data.packageDetails.length == 2 ? data.packageDetails[1] : data.packageDetails[0]) 
+      ? (!isActive && data.packageDetails.length === 2 ? data.packageDetails[1] : data.packageDetails[0])
       : null;
 
     if(isEditMode) {      
@@ -465,7 +467,7 @@ const Members = () => {
   };
 
   const handlePayments = (id) => {
-    var data = members.find(item => item.id == id);
+    var data = members.find(item => item.id === id);
     if(data.packageDetails && data.packageDetails.length > 0) {
       const packageDetails = getPackageDetails(data.packageDetails[0].packageid);
       if(data.packagepaymentDetails && data.packagepaymentDetails.length > 0) {
@@ -509,7 +511,7 @@ const Members = () => {
   }
 
   const handleUpcomingPackages = (id) => {
-    var data = members.find(item => item.id == id);
+    var data = members.find(item => item.id === id);
     if(data.packageDetails && data.packageDetails.length > 0){
       addEditPackage(data, false);
     } else {
@@ -609,7 +611,7 @@ const Members = () => {
         <Box sx={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
           <Card sx={{ width: "19%", cursor: "pointer" }} onClick={() => handleSummary(allMembers)}>
             <CardContent className='members-summary-div'>
-              <img src='/img/team.png' className='summary-image'/>
+              <img src='/img/team.png' className='summary-image' alt=""/>
               <Box className='members-summary'>
                 <Typography variant="h6" color="textSecondary" className='members-summary-text'>All</Typography>
                 <Typography variant="h5">{allMembers.length}</Typography>
@@ -618,7 +620,7 @@ const Members = () => {
           </Card>
           <Card sx={{ width: "19%", cursor: "pointer" }} onClick={() => handleSummary(activeMembers)}>
             <CardContent className='members-summary-div'>
-              <img src='/img/active.png' className='summary-image'/>
+              <img src='/img/active.png' className='summary-image' alt=""/>
               <Box className='members-summary'>
                 <Typography variant="h6" color="textSecondary" className='members-summary-text'>Active</Typography>
                 <Typography variant="h5">{activeMembers.length}</Typography>
@@ -627,7 +629,7 @@ const Members = () => {
           </Card>
           <Card sx={{ width: "19%", cursor: "pointer" }} onClick={() => handleSummary(membersRegisteredToday)}>
             <CardContent className='members-summary-div'>
-              <img src='/img/registered.png' className='summary-image'/>
+              <img src='/img/registered.png' className='summary-image' alt=""/>
               <Box className='members-summary'>
                 <Typography variant="h6" color="textSecondary" className='members-summary-text'>Registered Today</Typography>
                 <Typography variant="h5">{membersRegisteredToday.length}</Typography>
@@ -636,7 +638,7 @@ const Members = () => {
           </Card>
           <Card sx={{ width: "19%", cursor: "pointer" }} onClick={() => handleSummary(membersExpiringToday)}>
             <CardContent className='members-summary-div member-summary-fullwidth'>
-              <img src='/img/subscribe.png' className='summary-image'/>
+              <img src='/img/subscribe.png' className='summary-image' alt=""/>
               <Box className='members-summary'>
                 <Typography variant="h6" color="textSecondary" className='members-summary-text'>Expiring Today</Typography>
                 <Typography variant="h5">{membersExpiringToday.length}</Typography>
@@ -645,7 +647,7 @@ const Members = () => {
           </Card>
           <Card sx={{ width: "19%", cursor: "pointer" }} onClick={() => handleSummary(membersExpiringIn5Days)}>
             <CardContent className='members-summary-div member-summary-fullwidth'>
-              <img src='/img/subscription-model.png' className='summary-image'/>
+              <img src='/img/subscription-model.png' className='summary-image' alt=""/>
               <Box className='members-summary'>
                 <Typography variant="h6" color="textSecondary" className='members-summary-text'>Expiring in 5 Days</Typography>
                 <Typography variant="h5">{membersExpiringIn5Days.length}</Typography>
@@ -715,7 +717,6 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
             onSubmit={handleFormSubmit}
           >
             {({errors, touched, setFieldValue, isSubmitting, values }) => (
-              console.log(errors),
               <Form>
                 <div className='row'>
                   <div className='form-group'>
@@ -1117,7 +1118,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                           error={touched.packageid && Boolean(errors.packageid)}
                           helperText={touched.packageid && errors.packageid}
                           onChange={(e) => {
-                            var data = packageTypes.filter(x=>x.id == e.target.value);
+                            var data = packageTypes.filter(x=>x.id === e.target.value);
                             (data && data.length > 0) ? setFieldValue("amount", data[0].cost) : setFieldValue("amount", 0);
                             const enddate = calculateEndDate(values.packagestartdate, data[0].duration, data[0].durationtime);
                             setFieldValue("packageid", e.target.value);
@@ -1141,7 +1142,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                               value={values.packagestartdate ? dayjs(values.packagestartdate, "DD/MM/YYYY") : null}
                               onChange={(date) => {
                                 setFieldValue('packagestartdate', parseDate(date));
-                                var data = packageTypes.filter(x=>x.id == values.packageid);
+                                var data = packageTypes.filter(x=>x.id === values.packageid);
                                 const enddate = calculateEndDate(parseDate(date), data[0].duration, data[0].durationtime);
                                 setFieldValue("packageenddate", enddate);
                               }}
@@ -1170,7 +1171,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                               value={values.actualstartdate ? dayjs(values.actualstartdate, "DD/MM/YYYY") : null}
                               onChange={(date) => {
                                 setFieldValue('actualstartdate', parseDate(date));
-                                var data = packageTypes.filter(x=>x.id == values.packageid);
+                                var data = packageTypes.filter(x=>x.id === values.packageid);
                                 const enddate = calculateEndDate(parseDate(date), data[0].duration, data[0].durationtime);                                
                                 setFieldValue("actualenddate", enddate);
                               }}
@@ -1389,7 +1390,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                               value={values.paymentstatus || ''}
                               onChange={(e) => {
                                 setFieldValue('paymentstatus', e.target.value);
-                                if(e.target.value == "Partial") {
+                                if(e.target.value === "Partial") {
                                   setFieldValue("pendingamount", (parseFloat(values.payableamount) - parseFloat(values.roundedpayment)));
                                 }
                               }}
@@ -1467,7 +1468,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                                 const inputValue = e.target.value;
                                 const pendingValue = parseFloat(inputValue) || 0;
                                 setFieldValue("pendingamount", pendingValue);
-                                if(pendingValue == 0) {
+                                if(pendingValue === 0) {
                                   setFieldValue("paymentstatus", "Paid");
                                 }
                               }}
@@ -1748,7 +1749,7 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit, paym
                           value={values.paymentstatus || ''}
                           onChange={(e) => {
                             setFieldValue('paymentstatus', e.target.value);
-                            if(e.target.value == "Partial") {
+                            if(e.target.value === "Partial") {
                               setFieldValue("pendingamount", (parseFloat(values.payableamount) - parseFloat(values.roundedpayment)));
                             }
                           }}
@@ -1830,13 +1831,13 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit, paym
                             const inputValue = e.target.value;
                             const pendingValue = parseFloat(inputValue) || 0;
                             setFieldValue("pendingamount", pendingValue);
-                            if(pendingValue == 0) {
+                            if(pendingValue === 0) {
                               setFieldValue("paymentstatus", "Paid");
                             }
                           }}
                           error={touched.pendingamount && Boolean(errors.pendingamount)}
                           helperText={touched.pendingamount && errors.pendingamount}
-                          InputLabelProps={{                            
+                          InputLabelProps={{
                             shrink: values.pendingamount !== '',                            
                           }}
                         />
@@ -1999,7 +2000,8 @@ const ViewDetailsDialog = ({open, handleClose, selectedMember, getPackageName}) 
       getMemberAttendanceSummary();
       getMemberDetails();
       getMemberAttendanceDetails();
-    }    
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMember])
 
   return (

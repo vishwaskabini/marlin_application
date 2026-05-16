@@ -76,12 +76,12 @@ const ReportGenerator = () => {
       const fetchAndMerge = async (urls) => {
         const calls = urls.map(u => apiClient.post(u, requestBody));
         const responses = await Promise.all(calls);
-        const merged = userType == '1' ? [...responses[0], ...responses[1]] : [...responses[0]];
+        const merged = userType === '1' ? [...responses[0], ...responses[1]] : [...responses[0]];
         const formatted = merged.map(item => {
           const newItem = { ...item };
 
           for (const key in newItem) {
-            if (newItem[key] && (key == 'date' || key == 'updateddate')) {
+            if (newItem[key] && (key === 'date' || key === 'updateddate')) {
               const dateValue = dayjs(newItem[key]);
               if (dateValue.$d instanceof Date) {
                 newItem[key] = dateValue.format('DD/MM/YYYY');
@@ -132,6 +132,7 @@ const ReportGenerator = () => {
   useEffect(() => {
     let dateRangeRequest = getDateRange("1");
     getReportData(dateRangeRequest);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const generateReport = () => {
@@ -172,7 +173,6 @@ const ReportGenerator = () => {
     { id: 'total', label: 'Total' }
   ];
 
-  const [rowsData, setRowsData] = useState([]);
   const exportPdf = () => {
     const doc = new jsPDF();
     doc.text('Report', 14, 16);
@@ -321,7 +321,7 @@ const ReportGenerator = () => {
                 </Select>
               </FormControl>
             </div>
-            {duration == "6" && 
+            {duration === "6" &&
               <>
                 <div className='form-group'>
                   <LocalizationProvider dateAdapter={AdapterDayjs}>

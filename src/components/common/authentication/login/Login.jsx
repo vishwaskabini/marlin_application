@@ -101,7 +101,7 @@ const Login = () => {
           padding: 3,
           flexDirection: 'column',
         }}>
-        <img src="/img/MARLIN.png" style={{paddingBottom: "2rem"}}/>
+        <img src="/img/MARLIN.png" style={{paddingBottom: "2rem"}} alt=""/>
         <Typography variant="h6" gutterBottom>
           Welcome to Our App!
         </Typography>

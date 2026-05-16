@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Paper, Chip, IconButton, Box, Dialog, DialogActions, DialogContent, DialogTitle, Button, TextField, Grid2 as Grid, Card, CardContent, Autocomplete, DialogContentText } from '@mui/material';
+import { Typography, Paper, Chip, IconButton, Box, Dialog, DialogActions, DialogContent, DialogTitle, Button, TextField, Card, CardContent, Autocomplete, DialogContentText } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -17,11 +17,6 @@ import timezone from 'dayjs/plugin/timezone';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
-
-const convertToDateUTC = (dateString) => {
-  const [day, month, year] = dateString.split('/');
-  return new Date(year, month - 1, day);
-};
 
 const formatDate = (date) => {
   return dayjs(date).format('DD/MM/YYYY');
@@ -105,6 +100,7 @@ const Scheduler = () => {
 
   useEffect(() => {
     getAssignedUsers(convertDate(selectedDate));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   },[selectedDate])
 
   useEffect(() => {
@@ -112,7 +108,8 @@ const Scheduler = () => {
     setInitialValues({
       startDate: dayjs().format('DD/MM/YYYY'),
       endDate: dayjs().format('DD/MM/YYYY')
-    })   
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const updateAvailableSlots = (transformedData) => {

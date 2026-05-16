@@ -62,11 +62,13 @@ const Dashboard = () => {
       if(item.packageDetails && item.packageDetails.length > 0) {
         return dayjs(item.packageDetails[0].actualenddate).isSameOrAfter(today, 'day');
       }
+      return false;
     });
     const expiredMembers = members.filter((item) => {
       if(item.packageDetails && item.packageDetails.length > 0) {
         return dayjs(item.packageDetails[0].actualenddate).isBefore(today, 'day');
       }
+      return false;
     });    
 
     const registeredToday = members.filter((item) => dayjs(item.registereddate).isSame(today, 'day'));
@@ -158,11 +160,13 @@ const Dashboard = () => {
 
   useEffect(() => {
     getPaymentCount();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardDataGuests, cardDataMembers])
 
   useEffect(() => {
     getData();
     getGuestData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

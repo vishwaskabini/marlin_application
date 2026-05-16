@@ -83,7 +83,7 @@ const NestedList = ({ data, level = 0, drawerState, onToggle }) => {
                                 {
                                     minHeight: 48,
                                     px: 2.5,
-                                    pl: (level == 0) ? 2.5 : level *4
+                                    pl: (level === 0) ? 2.5 : level *4
                                 },
                                 drawerState
                                     ? {
@@ -134,8 +134,6 @@ const NestedList = ({ data, level = 0, drawerState, onToggle }) => {
 };
 
 const Sidebar = ({drawerState}) => {
-
-    const [drawerOpen, setDrawerOpen] = useState(true);
 
     const [menuData, setMenuData] = useState([
         { Id: 1, label: 'Dashboard', icon: <HomeIcon />, route: '/dashboard' },

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { Button, Card, CardContent, Box, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography } from '@mui/material';
@@ -86,7 +86,7 @@ const Roles = () => {
 
   const handleEditRoleDiaglog = (id) => {
     setIsEdit(true);
-    var data = roles.find(item => item.id == id);
+    var data = roles.find(item => item.id === id);
     setInitialValues(data);
     setIsDialogOpen(true);
   }

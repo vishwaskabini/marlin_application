@@ -1,4 +1,4 @@
-import {Box, Button, Card, CardContent, TextField, Dialog, DialogContent, DialogTitle, Typography, MenuItem, Select, duration} from '@mui/material';
+import {Box, Button, Card, CardContent, TextField, Dialog, DialogContent, DialogTitle, Typography, MenuItem, Select} from '@mui/material';
 import ListTable from '../../common/components/ListTable';
 import AddIcon from '@mui/icons-material/Add';
 import { useEffect, useState } from 'react';
@@ -38,7 +38,7 @@ const Packages = () => {
   
   const handleEditRoleDiaglog = (id) => {
     setIsEdit(true);
-    var data = packages.find(item => item.id == id);
+    var data = packages.find(item => item.id === id);
     setInitialValues(data);
     setIsDialogOpen(true);
   }

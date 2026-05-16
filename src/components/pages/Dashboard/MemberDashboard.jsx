@@ -5,7 +5,7 @@ import {
   Typography,
 } from "@mui/material";
 import ListTable from "../../common/components/ListTable";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import apiClient from "../../services/apiClientService";
 import { toast } from "react-toastify";
 import LoadingIndicator from "../../common/components/LoadingIndicator";
@@ -21,7 +21,7 @@ const MemberDashboard = () => {
   const [attendanceSummary, setAttendanceSummary] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [packageTypes, setPackageTypes] = useState([]);
-  let selectedMemberId = "";
+  const selectedMemberIdRef = useRef("");
 
   const packageColumns = [
     { id: "packageName", label: "Package" },
@@ -51,7 +51,7 @@ const MemberDashboard = () => {
     apiClient
       .get(
         "/api/HardwareAttendance/GetHardwareAttendance?userId=" +
-          selectedMemberId
+          selectedMemberIdRef.current
       )
       .then((data) => {
         setIsLoading(false);
@@ -69,7 +69,7 @@ const MemberDashboard = () => {
     setIsLoading(true);
     apiClient
       .get(
-        "/api/AttendanceSummary/GetAttendanceSummary?userId=" + selectedMemberId
+        "/api/AttendanceSummary/GetAttendanceSummary?userId=" + selectedMemberIdRef.current
       )
       .then((data) => {
         setIsLoading(false);
@@ -107,7 +107,7 @@ const MemberDashboard = () => {
   const getMemberDetails = () => {
     setIsLoading(true);
     apiClient
-      .get("/api/Users/GetAllWithDetailsByUserId?userId=" + selectedMemberId)
+      .get("/api/Users/GetAllWithDetailsByUserId?userId=" + selectedMemberIdRef.current)
       .then((data) => {
         setIsLoading(false);
         if (data[0].packageDetails && data[0].packagepaymentDetails) {
@@ -134,13 +134,14 @@ const MemberDashboard = () => {
   };
 
   useEffect(() => {
-    selectedMemberId = sessionStorage.getItem("userId");
-    if(selectedMemberId) {
+    selectedMemberIdRef.current = sessionStorage.getItem("userId");
+    if(selectedMemberIdRef.current) {
       getPackages();
       getMemberAttendanceSummary();
       getMemberDetails();
       getMemberAttendanceDetails();
-    }    
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

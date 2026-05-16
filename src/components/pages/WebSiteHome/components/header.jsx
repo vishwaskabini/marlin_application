@@ -31,7 +31,7 @@ export const Header = (props) => {
         <div className="overlay">
           <img
             src={images[currentImageIndex]}
-            alt="Slide Image"
+            alt="Slide"
             style={{ 
               width: "100%", // Full width of the container
               height: "900px", // Fixed height for the image

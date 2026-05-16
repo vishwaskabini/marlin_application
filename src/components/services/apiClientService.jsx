@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { useAuth } from '../common/authentication/AuthContext';
 
 const apiClient = axios.create({
   baseURL: 'https://marlinapi-c5bacuaghzcdf0hb.canadacentral-01.azurewebsites.net/',

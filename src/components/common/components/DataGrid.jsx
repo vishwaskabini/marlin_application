@@ -1,11 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import {
   DataGrid,
-  GridToolbar,
   GridActionsCellItem,
 } from '@mui/x-data-grid';
 import {
-  IconButton,
   Menu,
   MenuItem,
   Dialog,
@@ -112,7 +110,8 @@ const ListTableCustom = ({
     }
 
     return baseColumns;
-  }, [columns, onEdit, tableName]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [columns, onEdit, tableName, menuActions]);
 
   const getRowClassName = (params) => {
     const packageEndDate = dayjs(params.row.packageenddate, 'DD/MM/YYYY');

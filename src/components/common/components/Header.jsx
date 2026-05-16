@@ -1,4 +1,4 @@
-import { Avatar, Divider, IconButton, Menu, MenuItem, Toolbar, Typography } from "@mui/material";
+import { Avatar, IconButton, Menu, MenuItem, Toolbar, Typography } from "@mui/material";
 import MuiAppBar from '@mui/material/AppBar';
 import MenuIcon from '@mui/icons-material/Menu';
 import { styled } from '@mui/material/styles';
@@ -70,7 +70,7 @@ const Header = ({onMenuClick, onLogoClick}) => {
                 <MenuIcon />
             </IconButton>
             <Typography variant="h6" noWrap component="div">
-                <img src="/img/MARLIN.png" className="company-logo" onClick={onLogoClick}/>
+                <img src="/img/MARLIN.png" className="company-logo" onClick={onLogoClick} alt=""/>
             </Typography>
             <IconButton
                 edge="end"
