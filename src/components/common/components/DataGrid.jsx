@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import {
   DataGrid,
   GridToolbar,
-  GridActionsCellItem
+  GridActionsCellItem,
 } from '@mui/x-data-grid';
 import {
   IconButton,
@@ -30,7 +30,8 @@ const ListTableCustom = ({
   onPayment,
   showSearch = true,
   onViewDetails,
-  onUpcomingPackage
+  onUpcomingPackage,
+  menuActions,
 }) => {
   const [deleteId, setDeleteId] = useState(null);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
@@ -41,6 +42,7 @@ const ListTableCustom = ({
     page: 0,
     pageSize: 10,
   });
+  const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
 
   const handleDeleteOpen = (id) => {
     setDeleteId(id);
@@ -86,16 +88,17 @@ const ListTableCustom = ({
       field: col.id,
       headerName: col.label,
       flex: 1,
-    }));    
+      hideable: col.id !== 'notes',
+    }));
 
-    if (onEdit) {
+    if (onEdit || menuActions) {
       baseColumns.push({
         field: 'actions',
         headerName: 'Actions',
         type: 'actions',
         getActions: (params) => {
           const rowId = params.row.id;
-          if (tableName.includes("Members")) {
+          if (menuActions || tableName.includes("Members")) {
             return [
               <GridActionsCellItem icon={<MoreVertIcon />} label="More" onClick={(e) => handleClick(e, rowId)} />
             ];
@@ -149,8 +152,16 @@ const ListTableCustom = ({
         paginationModel={paginationModel}
         onPaginationModelChange={setPaginationModel}
         pageSizeOptions={[5, 10, 25, 50]}
-        components={{ Toolbar: GridToolbar }}
-        disableRowSelectionOnClick        
+        slots={{ toolbar: null }}
+        columnVisibilityModel={columnVisibilityModel}
+        onColumnVisibilityModelChange={(model) => {
+          const updated = { ...model };
+          columns.forEach((col) => {
+            if (col.id === 'notes') updated['notes'] = true;
+          });
+          setColumnVisibilityModel(updated);
+        }}
+        disableRowSelectionOnClick
         disableCellFocusOutline
         disableColumnResize={true}
         getRowClassName={getRowClassName}
@@ -164,11 +175,24 @@ const ListTableCustom = ({
         anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
-        <MenuItem onClick={() => { handleCloseMenu(); onPackage(currentRowId); }}>Add/Edit Package</MenuItem>
-        <MenuItem onClick={() => { handleCloseMenu(); onPayment(currentRowId); }} disabled={rows.find(r => r.id === currentRowId)?.paymentstatusAction}>Payment</MenuItem>
-        <MenuItem onClick={() => { handleCloseMenu(); onEdit(currentRowId); }}>Edit</MenuItem>
-        <MenuItem onClick={() => { handleCloseMenu(); onViewDetails(currentRowId); }}>View Details</MenuItem>
-        <MenuItem onClick={() => { handleCloseMenu(); onUpcomingPackage(currentRowId); }}>Renew Package</MenuItem>
+        {menuActions
+          ? menuActions.map((action) => (
+              <MenuItem
+                key={action.label}
+                onClick={() => { handleCloseMenu(); action.onClick(currentRowId); }}
+                disabled={action.disabled ? action.disabled(rows.find(r => r.id === currentRowId)) : false}
+              >
+                {action.label}
+              </MenuItem>
+            ))
+          : [
+              <MenuItem key="package" onClick={() => { handleCloseMenu(); onPackage(currentRowId); }}>Add/Edit Package</MenuItem>,
+              <MenuItem key="payment" onClick={() => { handleCloseMenu(); onPayment(currentRowId); }} disabled={rows.find(r => r.id === currentRowId)?.paymentstatusAction}>Payment</MenuItem>,
+              <MenuItem key="edit" onClick={() => { handleCloseMenu(); onEdit(currentRowId); }}>Edit</MenuItem>,
+              <MenuItem key="viewdetails" onClick={() => { handleCloseMenu(); onViewDetails(currentRowId); }}>View Details</MenuItem>,
+              <MenuItem key="renew" onClick={() => { handleCloseMenu(); onUpcomingPackage(currentRowId); }}>Renew Package</MenuItem>,
+            ]
+        }
       </Menu>
 
       <Dialog open={openConfirmDialog} onClose={handleCloseConfirmDialog}>

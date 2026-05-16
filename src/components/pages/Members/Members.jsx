@@ -49,7 +49,8 @@ const Members = () => {
   const [isActivePackage, setIsActivePackage] = useState(false);
   const [selectedMember, setSelectedMember] = useState();
   const userTypeId = 'a4e1f874-9c36-41aa-8af4-f94615c6c363';
-  const [packageTypes, setPackageTypes] = useState([]); 
+  const [packageTypes, setPackageTypes] = useState([]);
+  const [paymentTypes, setPaymentTypes] = useState([]);
 
   const handleEdit = (id) => {
     setIsEdit(true);
@@ -187,7 +188,12 @@ const Members = () => {
   }, [packageTypes]);
 
   useEffect(() => {
-    getPackages();    
+    getPackages();
+    apiClient.get("/api/PaymentTypes").then((data) => {
+      setPaymentTypes(data);
+    }).catch((error) => {
+      toast.error("Error while fetching payment types: " + error, { position: "top-right" });
+    });
   }, []);
 
   const columns = [
@@ -270,6 +276,7 @@ const Members = () => {
       actualenddate: values.actualenddate,
       id: values.id,
       timeslotid: values.timeslotid,
+      noofclasses: values.noofclasses,
       userpackagestatusid: values.userpackagestatusid
     }
     setIsLoading(true);
@@ -412,12 +419,13 @@ const Members = () => {
         discount: 0,
         roundedpayment: 0,
         payableamount: 0,
-        paymenttype: '22220087-c3c2-4268-a25a-13baa6f3625e',
+        paymenttype: '',
         paymentstatus: 'Paid',
         pendingamount: 0,
         transactionid: '',
         notes: '',
         timeslotid: packageDetails.timeslotid,
+        noofclasses: 0,
         userpackagestatusid: isActive  ? "06cd1d96-f85d-49cd-9d09-bfa7d6825d2b" : '3159aa8b-6bdd-4b34-9fc4-4a618e363fb2',
         reminderdate: dayjs().format('DD/MM/YYYY'),
         paymentdate: dayjs().format('DD/MM/YYYY')
@@ -435,12 +443,13 @@ const Members = () => {
         discount: 0,
         payableamount: 0,
         roundedpayment: 0,
-        paymenttype: '22220087-c3c2-4268-a25a-13baa6f3625e',
+        paymenttype: '',
         paymentstatus: 'Paid',
         pendingamount: 0,
         transactionid: '',
         notes: '',
         timeslotid: '',
+        noofclasses: 0,
         userpackagestatusid: isActive  ? "06cd1d96-f85d-49cd-9d09-bfa7d6825d2b" : '3159aa8b-6bdd-4b34-9fc4-4a618e363fb2',
         reminderdate: dayjs().format('DD/MM/YYYY'),
         paymentdate: dayjs().format('DD/MM/YYYY')
@@ -467,12 +476,12 @@ const Members = () => {
           discount: paymentDetails[0].discount,
           payableamount: paymentDetails[0].payableamount,
           roundedpayment: paymentDetails[0].pendingamount,
-          paymenttype: '22220087-c3c2-4268-a25a-13baa6f3625e',
+          paymenttype: '',
           paymentstatus: paymentDetails[0].paymentstatus,
           pendingamount: 0,
           transactionid: '',
           notes: paymentDetails[0].notes,
-          paymentdate: paymentDetails[0].paymentdate ? formatDate(paymentDetails[0].paymentdate) : dayjs().format('DD/MM/YYYY'),
+          paymentdate: dayjs().format('DD/MM/YYYY'),
           reminderdate: paymentDetails[0].reminderdate ? formatDate(paymentDetails[0].reminderdate) : dayjs().format('DD/MM/YYYY')
         });
       } else {
@@ -482,7 +491,7 @@ const Members = () => {
           discount: 0,
           payableamount: packageDetails.cost,
           roundedpayment: packageDetails.cost,
-          paymenttype: '22220087-c3c2-4268-a25a-13baa6f3625e',
+          paymenttype: '',
           paymentstatus: 'Paid',
           pendingamount: 0,
           transactionid: '',
@@ -656,10 +665,10 @@ const Members = () => {
         handleFormSubmit={handleFormSubmit}/>
       <PackageDialog open={isDialogOpenPackage} handleClose={onDialogClosePackage} isEdit={isEditPackage}
         initialValues={initialValuesPackages}
-        handleFormSubmit={handleFormSubmitPackage} packageTypes={packageTypes} isActivePackage={isActivePackage} handleDeletePackage={handleDeletePackage}/>      
+        handleFormSubmit={handleFormSubmitPackage} packageTypes={packageTypes} isActivePackage={isActivePackage} handleDeletePackage={handleDeletePackage} paymentTypes={paymentTypes}/>
       <PaymentDialog open={isDialogOpenPayment} handleClose={onDialogClosePayment}
         initialValues={initialValuesPayments}
-        handleFormSubmit={handleFormSubmitPayment}/>
+        handleFormSubmit={handleFormSubmitPayment} paymentTypes={paymentTypes}/>
       <ViewDetailsDialog open={isDialogOpenViewDetails} handleClose={onDialogCloseViewDetails} selectedMember={selectedMember}
         getPackageName={getPackageName}/>
       <LoadingIndicator isLoading={isLoading} />
@@ -1024,10 +1033,8 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
   );
 }
 
-const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmit, packageTypes, isActivePackage, handleDeletePackage}) => {
+const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmit, packageTypes, isActivePackage, handleDeletePackage, paymentTypes}) => {
 
-  const paymentTypeOnline = '22220087-c3c2-4268-a25a-13baa6f3625f';
-  const paymentTypeCash = '22220087-c3c2-4268-a25a-13baa6f3625e';  
   const [slots, setSlots] = useState([]);
 
   const parseDate = (dateString) => {
@@ -1081,6 +1088,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
     pendingamount: Yup.number(),
     notes: Yup.string(),
     timeslotid: Yup.string().required("slots is required"),
+    noofclasses: Yup.number().min(0, 'Must be 0 or more'),
     userpackagestatusid: Yup.string(),
     reminderdate: Yup.string().required('Reminder date is required'),
     paymentdate: Yup.string().required('Payment date is required')
@@ -1236,7 +1244,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                           )}
                         </Field>
                       </div>
-                      <div className='form-group'>                        
+                      <div className='form-group'>
                         <Field
                           name="timeslotid"
                           as={TextField}
@@ -1253,7 +1261,21 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                             <MenuItem key={slot.id} value={slot.id}>{slot.name} - {slot.time}</MenuItem>
                           ))}
                         </Field>
-                      </div>                
+                      </div>
+                      <div className='form-group'>
+                        <Field
+                          name="noofclasses"
+                          as={TextField}
+                          label="No of Classes"
+                          type="number"
+                          fullWidth
+                          value={values.noofclasses}
+                          onChange={handleChange}
+                          error={touched.noofclasses && Boolean(errors.noofclasses)}
+                          helperText={touched.noofclasses && errors.noofclasses}
+                          InputProps={{ inputProps: { min: 0 } }}
+                        />
+                      </div>
                     </div>
                     {!isEdit && (
                       <>
@@ -1352,9 +1374,10 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                               <MenuItem value="">
                                 <em>Select Payment</em>
                               </MenuItem>
-                              <MenuItem value={paymentTypeCash}>Cash</MenuItem>
-                              <MenuItem value={paymentTypeOnline}>UPI</MenuItem>
-                            </Field>                        
+                              {paymentTypes.map((pt) => (
+                                <MenuItem key={pt.id} value={pt.id}>{pt.name}</MenuItem>
+                              ))}
+                            </Field>
                           </div>
                           <div className='form-group'>
                             <Field
@@ -1418,7 +1441,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                               }}
                             />
                           </div> 
-                        {values.paymenttype === paymentTypeOnline && (
+                        {paymentTypes.find(pt => pt.id === values.paymenttype)?.name?.toLowerCase().includes('upi') && (
                             <div className="form-group">
                               <Field
                                 name="transactionid"
@@ -1561,9 +1584,7 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
   );
 }
 
-const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => {
-  const paymentTypeOnline = '22220087-c3c2-4268-a25a-13baa6f3625f';
-  const paymentTypeCash = '22220087-c3c2-4268-a25a-13baa6f3625e';
+const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit, paymentTypes}) => {
   const [previousPayment, setPreviousPayment] = useState(0);
 
   const parseDate = (dateString) => {
@@ -1712,9 +1733,10 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
                           <MenuItem value="">
                             <em>Select Payment</em>
                           </MenuItem>
-                          <MenuItem value={paymentTypeCash}>Cash</MenuItem>
-                          <MenuItem value={paymentTypeOnline}>UPI</MenuItem>
-                        </Field>                        
+                          {paymentTypes.map((pt) => (
+                            <MenuItem key={pt.id} value={pt.id}>{pt.name}</MenuItem>
+                          ))}
+                        </Field>
                       </div>
                       <div className='form-group'>
                         <Field
@@ -1782,7 +1804,7 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit}) => 
                           }}
                         />
                       </div> 
-                      {values.paymenttype === paymentTypeOnline && (
+                      {paymentTypes.find(pt => pt.id === values.paymenttype)?.name?.toLowerCase().includes('upi') && (
                         <div className="form-group">
                           <Field
                             name="transactionid"
