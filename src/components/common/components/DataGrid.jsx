@@ -186,7 +186,7 @@ const ListTableCustom = ({
             ))
           : [
               <MenuItem key="package" onClick={() => { handleCloseMenu(); onPackage(currentRowId); }}>Add/Edit Package</MenuItem>,
-              <MenuItem key="payment" onClick={() => { handleCloseMenu(); onPayment(currentRowId); }} disabled={rows.find(r => r.id === currentRowId)?.paymentstatusAction}>Payment</MenuItem>,
+              <MenuItem key="payment" onClick={() => { handleCloseMenu(); onPayment(currentRowId); }}>Payment</MenuItem>,
               <MenuItem key="edit" onClick={() => { handleCloseMenu(); onEdit(currentRowId); }}>Edit</MenuItem>,
               <MenuItem key="viewdetails" onClick={() => { handleCloseMenu(); onViewDetails(currentRowId); }}>View Details</MenuItem>,
               <MenuItem key="renew" onClick={() => { handleCloseMenu(); onUpcomingPackage(currentRowId); }}>Renew Package</MenuItem>,

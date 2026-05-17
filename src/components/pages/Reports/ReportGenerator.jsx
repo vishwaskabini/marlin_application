@@ -170,6 +170,7 @@ const ReportGenerator = () => {
     { id: 'employee', label: 'Employee' },
     { id: 'byCash', label: 'Cash' },
     { id: 'byUPI', label: 'UPI' },
+    { id: 'byUPICompany', label: 'UPI - Company' },
     { id: 'total', label: 'Total' }
   ];
 
@@ -196,8 +197,8 @@ const ReportGenerator = () => {
     });
 
     autoTable(doc, {
-      head: [['Date', 'Employee', 'Cash', 'UPI', 'Total']],
-      body: memberCollectionReport.map(member => [member.date, member.employee, member.byCash, member.byUPI, member.total]),
+      head: [['Date', 'Employee', 'Cash', 'UPI', 'UPI - Company', 'Total']],
+      body: memberCollectionReport.map(member => [member.date, member.employee, member.byCash, member.byUPI, member.byUPICompany, member.total]),
       startY: doc.autoTable.previous.finalY + 10,
     });
 

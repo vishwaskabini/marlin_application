@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import ListTable from '../../common/components/ListTable';
 import AddIcon from '@mui/icons-material/Add';
-import { Box, Button, Card, CardContent, Chip, Dialog, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, FormHelperText, Input, InputAdornment, InputLabel, MenuItem, Select, TextField, Typography, Checkbox } from '@mui/material';
+import { DataGrid, GridRowModes, GridActionsCellItem } from '@mui/x-data-grid';
+import SaveIcon from '@mui/icons-material/Save';
+import CancelIcon from '@mui/icons-material/Cancel';
+import EditIcon from '@mui/icons-material/Edit';
+import { Box, Button, Card, CardContent, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, FormHelperText, Input, InputAdornment, InputLabel, MenuItem, Select, TextField, Typography, Checkbox } from '@mui/material';
 import * as Yup from 'yup';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import apiClient from '../../services/apiClientService';
@@ -39,10 +43,12 @@ const Members = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [initialValues, setInitialValues] = useState();
   const [initialValuesPackages, setInitialValuesPackages] = useState();
-  const [initialValuesPayments, setInitialValuesPayments] = useState();
+  const [initialValuesPayments, setInitialValuesPayments] = useState(); // eslint-disable-line no-unused-vars
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDialogOpenPackage, setIsDialogOpenPackage] = useState(false);
   const [isDialogOpenPayment, setIsDialogOpenPayment] = useState(false);
+  const [isDialogOpenPaymentsList, setIsDialogOpenPaymentsList] = useState(false);
+  const [paymentListMember, setPaymentListMember] = useState(null);
   const [isDialogOpenViewDetails, setIsDialogOpenViewDetails] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [isEditPackage, setIsEditPackage] = useState(false);
@@ -314,8 +320,7 @@ const Members = () => {
 
   const handleFormSubmitPayment = (values) => {
     if (values.paymentstatus.toLowerCase() === "paid" && values.pendingamount > 0) {
-      const additionalDiscount = (values.pendingamount / values.amount) * 100;
-      values.discount += additionalDiscount;
+      values.discount += values.pendingamount;
       values.pendingamount = 0;
     }
     addPayment(values, true);
@@ -460,54 +465,14 @@ const Members = () => {
     setIsDialogOpenPackage(true);       
   }
 
-  const sortedData = (data) => {
-    return data.sort((a, b) => {
-      return new Date(b.updateddate) - new Date(a.updateddate);
-    });
-  };
-
   const handlePayments = (id) => {
-    var data = members.find(item => item.id === id);
-    if(data.packageDetails && data.packageDetails.length > 0) {
-      const packageDetails = getPackageDetails(data.packageDetails[0].packageid);
-      if(data.packagepaymentDetails && data.packagepaymentDetails.length > 0) {
-        let paymentDetails = sortedData(data.packagepaymentDetails);
-        setInitialValuesPayments({
-          userpackagemappingid: paymentDetails[0].userpackagemappingid,
-          amount: paymentDetails[0].amount,
-          discount: paymentDetails[0].discount,
-          payableamount: paymentDetails[0].payableamount,
-          roundedpayment: paymentDetails[0].pendingamount,
-          paymenttype: '',
-          paymentstatus: paymentDetails[0].paymentstatus,
-          pendingamount: 0,
-          transactionid: '',
-          notes: paymentDetails[0].notes,
-          paymentdate: dayjs().format('DD/MM/YYYY'),
-          reminderdate: paymentDetails[0].reminderdate ? formatDate(paymentDetails[0].reminderdate) : dayjs().format('DD/MM/YYYY')
-        });
-      } else {
-        setInitialValuesPayments({
-          userpackagemappingid: data.packageDetails[0].userpackagemappingid,
-          amount: packageDetails.cost,
-          discount: 0,
-          payableamount: packageDetails.cost,
-          roundedpayment: packageDetails.cost,
-          paymenttype: '',
-          paymentstatus: 'Paid',
-          pendingamount: 0,
-          transactionid: '',
-          notes: '',
-          paymentdate: dayjs().format('DD/MM/YYYY'),
-          reminderdate: dayjs().format('DD/MM/YYYY')
-        });
-      }      
-      setIsDialogOpenPayment(true);
-    } else {
-      toast.error("No valid packages available, Please add package before making payment", {
-        position: "top-right"
-      });
-    }
+    const data = members.find(item => item.id === id);
+    if (!data) return;
+    setPaymentListMember({
+      ...data,
+      name: (data.firstname || '') + ' ' + (data.lastname || '')
+    });
+    setIsDialogOpenPaymentsList(true);
   }
 
   const handleUpcomingPackages = (id) => {
@@ -596,9 +561,6 @@ const Members = () => {
     return packageDetails ? packageDetails.name : "";
   }
 
-  const getPackageDetails = (packageId) => {
-    return packageTypes.find(pkg => pkg.id === packageId);;
-  }
 
   return (
     <div className="container">
@@ -671,6 +633,13 @@ const Members = () => {
       <PaymentDialog open={isDialogOpenPayment} handleClose={onDialogClosePayment}
         initialValues={initialValuesPayments}
         handleFormSubmit={handleFormSubmitPayment} paymentTypes={paymentTypes}/>
+      <PaymentsListDialog
+        open={isDialogOpenPaymentsList}
+        handleClose={() => setIsDialogOpenPaymentsList(false)}
+        member={paymentListMember}
+        paymentTypes={paymentTypes}
+        onPaymentSaved={() => { getData(); }}
+      />
       <ViewDetailsDialog open={isDialogOpenViewDetails} handleClose={onDialogCloseViewDetails} selectedMember={selectedMember}
         getPackageName={getPackageName}/>
       <LoadingIndicator isLoading={isLoading} />
@@ -1305,29 +1274,20 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                             <Field
                               name="discount"
                               as={TextField}
-                              select
                               label="Discount"
                               type="number"
                               fullWidth
                               value={values.discount}
                               onChange={(e) => {
-                                const discountValue = parseFloat(e.target.value) || 0;
-                                const discountedAmount = values.amount - (values.amount * (discountValue / 100));
+                                const discountValue = Math.max(0, parseFloat(e.target.value) || 0);
                                 setFieldValue('discount', discountValue);
-                                setFieldValue('payableamount', discountedAmount);
-                                setFieldValue("roundedpayment", discountedAmount);
+                                setFieldValue('payableamount', values.amount - discountValue);
+                                setFieldValue("roundedpayment", values.amount - discountValue);
                               }}
                               error={touched.discount && Boolean(errors.discount)}
                               helperText={touched.discount && errors.discount}
-                              // disabled={values.discount !== 0}
-                            >
-                              <MenuItem value={0}>No Discount</MenuItem>
-                              <MenuItem value={5}>5%</MenuItem>
-                              <MenuItem value={10}>10%</MenuItem>
-                              <MenuItem value={15}>15%</MenuItem>
-                              <MenuItem value={20}>20%</MenuItem>
-                              <MenuItem value={25}>25%</MenuItem>
-                            </Field>                      
+                              InputProps={{ inputProps: { min: 0 } }}
+                            />
                           </div>
                           <div className='form-group'>
                             <Field
@@ -1595,7 +1555,7 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit, paym
 
   const validationSchema = Yup.object().shape({
     amount: Yup.number().required('Amount is required').min(1, 'Amount must be greater than 0'),
-    discount: Yup.number().min(0, 'Discount must be positive').max(100, 'Discount cannot exceed 100%'),
+    discount: Yup.number().min(0, 'Discount must be non-negative'),
     payableamount: Yup.number().required('Amount is required').min(1, 'Amount must be greater than 0'),
     paymenttype: Yup.string().required('Payment type is required'),
     paymentstatus: Yup.string().required('Payment status is required'),
@@ -1663,29 +1623,20 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit, paym
                         <Field
                           name="discount"
                           as={TextField}
-                          select
                           label="Discount"
                           type="number"
                           fullWidth
                           value={values.discount}
                           onChange={(e) => {
-                            const discountValue = parseFloat(e.target.value) || 0;
-                            const discountedAmount = values.amount - (values.amount * (discountValue / 100));
+                            const discountValue = Math.max(0, parseFloat(e.target.value) || 0);
                             setFieldValue('discount', discountValue);
-                            setFieldValue('payableamount', discountedAmount);
-                            setFieldValue("roundedpayment", discountedAmount);
+                            setFieldValue('payableamount', values.amount - discountValue);
+                            setFieldValue("roundedpayment", values.amount - discountValue);
                           }}
                           error={touched.discount && Boolean(errors.discount)}
                           helperText={touched.discount && errors.discount}
-                          disabled={values.discount !== 0}
-                        >
-                          <MenuItem value={0}>No Discount</MenuItem>
-                          <MenuItem value={5}>5%</MenuItem>
-                          <MenuItem value={10}>10%</MenuItem>
-                          <MenuItem value={15}>15%</MenuItem>
-                          <MenuItem value={20}>20%</MenuItem>
-                          <MenuItem value={25}>25%</MenuItem>
-                        </Field>
+                          InputProps={{ inputProps: { min: 0 } }}
+                        />
                       </div>
                       <div className='form-group'>
                         <Field
@@ -1697,7 +1648,6 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit, paym
                           onChange={handleChange}
                           error={touched.notes && Boolean(errors.notes)}
                           helperText={touched.notes && errors.notes}
-                          disabled={values.discount !== 0}
                         />                        
                       </div>                       
                     </div>
@@ -1920,6 +1870,180 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit, paym
     </Dialog>
   );
 }
+
+const PaymentsListDialog = ({ open, handleClose, member, paymentTypes, onPaymentSaved }) => {
+  const [rows, setRows] = useState([]);
+  const [rowModesModel, setRowModesModel] = useState({});
+
+  useEffect(() => {
+    if (open && member) {
+      const payments = member.packagepaymentDetails || [];
+      setRows(payments.map(item => ({
+        ...item,
+        paymentdate: item.paymentdate
+          ? dayjs(item.paymentdate).format('DD/MM/YYYY')
+          : dayjs(item.updateddate).format('DD/MM/YYYY'),
+        reminderdate: item.reminderdate
+          ? dayjs(item.reminderdate).format('DD/MM/YYYY')
+          : dayjs().format('DD/MM/YYYY'),
+        isNew: false,
+      })));
+      setRowModesModel({});
+    }
+  }, [open, member]);
+
+  const getDefaultMappingId = () => {
+    if (member?.packagepaymentDetails?.length > 0) {
+      return member.packagepaymentDetails[0].userpackagemappingid;
+    }
+    return member?.packageDetails?.[0]?.userpackagemappingid || member?.packageDetails?.[0]?.id || '';
+  };
+
+  const handleAddRow = () => {
+    const id = `new-${Date.now()}`;
+    const newRow = {
+      id,
+      userpackagemappingid: getDefaultMappingId(),
+      paymenttype: '',
+      amount: 0,
+      transactionid: '',
+      notes: '',
+      roundedpayment: 0,
+      paymentstatus: 'Paid',
+      pendingamount: 0,
+      payableamount: 0,
+      discount: 0,
+      reminderdate: dayjs().format('DD/MM/YYYY'),
+      paymentdate: dayjs().format('DD/MM/YYYY'),
+      isNew: true,
+    };
+    setRows(prev => [...prev, newRow]);
+    setRowModesModel(prev => ({ ...prev, [id]: { mode: GridRowModes.Edit } }));
+  };
+
+  const handleSaveClick = (id) => () => {
+    setRowModesModel(prev => ({ ...prev, [id]: { mode: GridRowModes.View } }));
+  };
+
+  const handleCancelClick = (id) => () => {
+    setRowModesModel(prev => ({
+      ...prev,
+      [id]: { mode: GridRowModes.View, ignoreModifications: true },
+    }));
+    setRows(prev => prev.filter(row => !(row.id === id && row.isNew)));
+  };
+
+  const handleEditClick = (id) => () => {
+    setRowModesModel(prev => ({ ...prev, [id]: { mode: GridRowModes.Edit } }));
+  };
+
+  const processRowUpdate = async (newRow) => {
+    let paymentdate = newRow.paymentdate;
+    let reminderdate = newRow.reminderdate;
+    try {
+      paymentdate = formatLocalDateToString(convertToDate(newRow.paymentdate));
+      reminderdate = formatLocalDateToString(convertToDate(newRow.reminderdate));
+    } catch (e) { /* keep as-is if date conversion fails */ }
+
+    const { isNew, ...rest } = newRow;
+    const payload = { ...rest, paymentdate, reminderdate, employeeid: '', extendby: 0 };
+
+    if (isNew) {
+      await apiClient.post("/api/UsersPaymentMapping/create", payload);
+      toast.success("Payment added successfully!", { position: "top-right" });
+    } else {
+      await apiClient.put("/api/UsersPaymentMapping/update", payload);
+      toast.success("Payment updated successfully!", { position: "top-right" });
+    }
+    onPaymentSaved();
+    return { ...newRow, isNew: false };
+  };
+
+  const paymentTypeOptions = paymentTypes.map(pt => ({ value: pt.id, label: pt.name }));
+
+  const columns = [
+    {
+      field: 'actions',
+      type: 'actions',
+      headerName: 'Actions',
+      width: 90,
+      getActions: ({ id }) => {
+        const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
+        if (isInEditMode) {
+          return [
+            <GridActionsCellItem icon={<SaveIcon />} label="Save" onClick={handleSaveClick(id)} color="primary" />,
+            <GridActionsCellItem icon={<CancelIcon />} label="Cancel" onClick={handleCancelClick(id)} />,
+          ];
+        }
+        return [
+          <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={handleEditClick(id)} />,
+        ];
+      },
+    },
+    { field: 'paymentdate', headerName: 'Payment Date', editable: true, flex: 1 },
+    {
+      field: 'paymenttype',
+      headerName: 'Payment Type',
+      editable: true,
+      flex: 1,
+      type: 'singleSelect',
+      valueOptions: paymentTypeOptions,
+    },
+    { field: 'amount', headerName: 'Amount', type: 'number', editable: true, flex: 1 },
+    { field: 'discount', headerName: 'Discount', type: 'number', editable: true, flex: 1 },
+    { field: 'payableamount', headerName: 'Payable Amount', type: 'number', editable: true, flex: 1 },
+    { field: 'roundedpayment', headerName: 'Paid Amount', type: 'number', editable: true, flex: 1 },
+    { field: 'pendingamount', headerName: 'Balance', type: 'number', editable: true, flex: 1 },
+    {
+      field: 'paymentstatus',
+      headerName: 'Status',
+      editable: true,
+      flex: 1,
+      type: 'singleSelect',
+      valueOptions: ['Paid', 'Partial', 'Pending'],
+    },
+    { field: 'transactionid', headerName: 'Transaction ID', editable: true, flex: 1 },
+    { field: 'notes', headerName: 'Notes', editable: true, flex: 1 },
+  ];
+
+  return (
+    <Dialog open={open} onClose={handleClose} PaperProps={{ sx: { minWidth: "95%" } }}>
+      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span>Payments — {member?.name}</span>
+        <Button
+          onClick={handleAddRow}
+          startIcon={<AddIcon />}
+          variant="contained"
+          size="small"
+          disabled={rows.some(r => r.paymentstatus === 'Paid')}
+        >
+          Add Payment
+        </Button>
+      </DialogTitle>
+      <DialogContent sx={{ padding: "1rem 2rem 2rem" }}>
+        <DataGrid
+          rows={rows}
+          columns={columns}
+          editMode="row"
+          rowModesModel={rowModesModel}
+          onRowModesModelChange={setRowModesModel}
+          processRowUpdate={processRowUpdate}
+          onProcessRowUpdateError={(error) =>
+            toast.error("Error saving payment: " + error.message, { position: "top-right" })
+          }
+          pageSizeOptions={[5, 10, 25]}
+          initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+          density="compact"
+          autoHeight
+          disableRowSelectionOnClick
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose} variant="outlined">Close</Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
 
 const ViewDetailsDialog = ({open, handleClose, selectedMember, getPackageName}) => {
   const [packageDetails, setPackageDetails] = useState([]);

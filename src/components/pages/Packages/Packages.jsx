@@ -1,4 +1,4 @@
-import {Box, Button, Card, CardContent, TextField, Dialog, DialogContent, DialogTitle, Typography, MenuItem, Select} from '@mui/material';
+import { Box, Button, Card, CardContent, TextField, Dialog, DialogContent, DialogTitle, Typography, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
 import ListTable from '../../common/components/ListTable';
 import AddIcon from '@mui/icons-material/Add';
 import { useEffect, useState } from 'react';
@@ -35,7 +35,7 @@ const Packages = () => {
   useEffect(() => {
     getData();
   }, []);
-  
+
   const handleEditRoleDiaglog = (id) => {
     setIsEdit(true);
     var data = packages.find(item => item.id === id);
@@ -45,7 +45,7 @@ const Packages = () => {
 
   const handleAddRoleDiaglog = () => {
     setIsEdit(false);
-    setInitialValues({durationtime: 1, duration: "Weeks"});
+    setInitialValues({ name: '', description: '', cost: '', durationtime: 1, duration: "Weeks", noofclasses: 0 });
     setIsDialogOpen(true);
   }
 
@@ -61,7 +61,7 @@ const Packages = () => {
       toast.error("Error while delete " + error, {
         position: "top-right"
       });
-    }); 
+    });
   }
 
   const onDialogClose = () =>{
@@ -72,7 +72,7 @@ const Packages = () => {
     setIsLoading(true);
     values.cost = values.cost.toString();
     if (isEdit) {
-      apiClient.put("/api/Packages/update", values).then((data) => {
+      apiClient.put("/api/Packages/update", values).then(() => {
         getData();
         setIsDialogOpen(false);
         toast.success("Package Updated Successfully !", {
@@ -85,7 +85,7 @@ const Packages = () => {
         });
       });
     } else {
-      apiClient.post("/api/Packages/create", values).then((data) => {
+      apiClient.post("/api/Packages/create", values).then(() => {
         getData();
         setIsDialogOpen(false);
         toast.success("Package Created Successfully !", {
@@ -96,24 +96,25 @@ const Packages = () => {
         toast.error("Error while Create " + error, {
           position: "top-right"
         });
-      });      
-    } 
+      });
+    }
   }
 
   const columns = [
     { id: 'name', label: 'Name' },
     { id: 'description', label: 'Description' },
     { id: 'cost', label: 'Package Amount' },
-    { id: 'packageduration', label: 'Package Duration' }
+    { id: 'packageduration', label: 'Package Duration' },
+    { id: 'noofclasses', label: 'No of Classes' }
   ];
 
   return (
     <div className="container">
       <Box sx={{ width: '100%', overflowX: 'auto' }}>
         <Box sx={{display: "flex", width: "100%", marginBottom: "1rem"}}>
-          <Typography variant='h5' className='header-text'>Packages      
+          <Typography variant='h5' className='header-text'>Packages
             <Button variant="contained" sx={{marginLeft: "auto"}} startIcon={<AddIcon />} onClick={handleAddRoleDiaglog}>Add Packages</Button>
-          </Typography>          
+          </Typography>
         </Box>
         <Card sx={{marginBottom: "10px"}}>
           <CardContent>
@@ -136,18 +137,20 @@ const PackagesDialog = ({open, handleClose, isEdit, initialValues, handleFormSub
     cost: Yup.number().required('Cost is required').min(0, 'Cost must be greater than 0'),
     duration: Yup.string().required('Duration is required'),
     durationtime: Yup.number().positive('Duration Time must be positive').required('Duration Time is required'),
+    noofclasses: Yup.number().min(0, 'Must be 0 or more').required('No of Classes is required'),
   });
 
   return (
     <Dialog open={open} onClose={handleClose} PaperProps={{sx: {maxWidth: 800}}}>
-      <DialogTitle>{isEdit ? 'Edit Packages' : 'Add Packages'}</DialogTitle>
+      <DialogTitle>{isEdit ? 'Edit Package' : 'Add Package'}</DialogTitle>
       <DialogContent sx={{padding: "2rem !important"}}>
         <Formik
           initialValues={initialValues}
           validationSchema={validationSchema}
           onSubmit={handleFormSubmit}
+          enableReinitialize
         >
-          {({ errors, touched }) => (
+          {({ errors, touched, values, setFieldValue }) => (
             <Form>
               <div className='row'>
                 <div className='form-group'>
@@ -199,21 +202,36 @@ const PackagesDialog = ({open, handleClose, isEdit, initialValues, handleFormSub
                   />
                 </div>
                 <div className='form-group'>
+                  <FormControl fullWidth variant="outlined" error={touched.duration && Boolean(errors.duration)}>
+                    <InputLabel id="duration-unit-label">Duration Unit</InputLabel>
+                    <Field
+                      name="duration"
+                      as={Select}
+                      labelId="duration-unit-label"
+                      label="Duration Unit"
+                      value={values?.duration || 'Weeks'}
+                      onChange={(e) => setFieldValue('duration', e.target.value)}
+                    >
+                      <MenuItem value="Weeks">Weeks</MenuItem>
+                      <MenuItem value="Months">Months</MenuItem>
+                      <MenuItem value="Year">Year</MenuItem>
+                    </Field>
+                  </FormControl>
+                </div>
+                <div className='form-group'>
                   <Field
-                    name="duration"
-                    label="Duration"
-                    as={Select}
+                    name="noofclasses"
+                    label="No of Classes"
+                    type="number"
+                    as={TextField}
                     fullWidth
                     variant="outlined"
-                    error={touched.duration && Boolean(errors.duration)}
-                    helperText={touched.duration && errors.duration}
-                  >
-                    <MenuItem value="Weeks">Weeks</MenuItem>
-                    <MenuItem value="Months">Months</MenuItem>
-                    <MenuItem value="Year">Year</MenuItem>
-                  </Field>
+                    error={touched.noofclasses && Boolean(errors.noofclasses)}
+                    helperText={touched.noofclasses && errors.noofclasses}
+                    InputProps={{ inputProps: { min: 0 } }}
+                  />
                 </div>
-              </div>            
+              </div>
               <div className='row save-btn'>
                 <Button type="submit" color="primary" variant="contained">
                   {isEdit ? 'Save Changes' : 'Save'}

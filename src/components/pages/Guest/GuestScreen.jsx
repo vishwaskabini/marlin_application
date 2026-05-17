@@ -3,6 +3,8 @@ import { Formik, Form, Field } from 'formik';
 import Button from '@mui/material/Button';
 import * as Yup from 'yup';
 import { Box, Card, CardContent, Dialog, DialogContent, DialogTitle, FormControl, FormHelperText, InputAdornment, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import apiClient from '../../services/apiClientService';
 import { toast } from 'react-toastify';
 import LoadingIndicator from '../../common/components/LoadingIndicator';
@@ -25,7 +27,7 @@ const emptyValues = {
   paymenttype: '07fcccea-c2ed-4a4a-a7db-1a950913496d',
   transactionid: '',
   noofpersons: 1,
-  registereddate: new Date()
+  registereddate: dayjs()
 };
 
 const GuestScreen = () => {
@@ -60,7 +62,7 @@ const GuestScreen = () => {
 
   const handleAddGuest = () => {
     setIsEdit(false);
-    setDialogInitialValues(emptyValues);
+    setDialogInitialValues({ ...emptyValues, registereddate: dayjs() });
     setIsDialogOpen(true);
   };
 
@@ -68,22 +70,30 @@ const GuestScreen = () => {
     const guest = guestData.find((item) => item.id === id);
     if (!guest) return;
     setIsEdit(true);
+
+    const noofpersons = guest.noofpersons || 1;
+    const duration = guest.duration || 1;
+    const totalamount = guest.totalamount || 0;
+    const amount = guest.amount || (noofpersons > 0 && duration > 0 ? totalamount / (noofpersons * duration) : 0);
+
     setDialogInitialValues({
       id: guest.id,
       firstname: guest.firstname || '',
       lastname: guest.lastname || '',
       contactnumber: guest.contactnumber || '',
       gender: guest.gender || '',
-      amount: guest.amount || 0,
+      amount,
       amountcash: guest.amountcash || 0,
       amountupi: guest.amountupi || 0,
       amountupicompany: guest.amountupicompany || 0,
-      duration: guest.duration || 1,
-      totalamount: guest.totalamount || 0,
+      duration,
+      totalamount,
       paymenttype: guest.paymenttype || '07fcccea-c2ed-4a4a-a7db-1a950913496d',
       transactionid: guest.transactionid || '',
-      noofpersons: guest.noofpersons || 1,
-      registereddate: guest.registereddate || new Date()
+      noofpersons,
+      registereddate: guest.registereddate
+        ? dayjs(guest.registereddate, "DD/MM/YYYY HH:mm:ss")
+        : dayjs()
     });
     setIsDialogOpen(true);
   };
@@ -91,6 +101,9 @@ const GuestScreen = () => {
   const buildPayload = (values) => ({
     ...values,
     upicompany: values.amountupicompany,
+    registereddate: values.registereddate
+      ? (dayjs.isDayjs(values.registereddate) ? values.registereddate.toISOString() : dayjs(values.registereddate).toISOString())
+      : dayjs().toISOString()
   });
 
   const handleSubmit = (values) => {
@@ -195,6 +208,16 @@ const GuestDialog = ({ open, handleClose, initialValues, handleFormSubmit, isEdi
           {({ touched, errors, values, setFieldValue, handleChange }) => (
             <Form>
               <div className='row'>
+                <div className="form-group">
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker
+                      label="Registration Date"
+                      value={values.registereddate ? dayjs(values.registereddate) : null}
+                      onChange={(date) => setFieldValue('registereddate', date)}
+                      sx={{ width: "100%" }}
+                    />
+                  </LocalizationProvider>
+                </div>
                 <div className="form-group">
                   <Field
                     name="firstname"
