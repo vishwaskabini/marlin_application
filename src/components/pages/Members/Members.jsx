@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ListTable from '../../common/components/ListTable';
 import AddIcon from '@mui/icons-material/Add';
-import { DataGrid, GridRowModes, GridActionsCellItem } from '@mui/x-data-grid';
+import { DataGrid, GridRowModes, GridActionsCellItem, GridRowEditStopReasons, useGridApiContext } from '@mui/x-data-grid';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import EditIcon from '@mui/icons-material/Edit';
@@ -1855,6 +1855,23 @@ const PaymentDialog = ({open, handleClose, initialValues, handleFormSubmit, paym
   );
 }
 
+const DatePickerEditCell = ({ id, value, field }) => {
+  const apiRef = useGridApiContext();
+  const handleChange = (newValue) => {
+    apiRef.current.setEditCellValue({ id, field, value: newValue ? newValue.format('DD/MM/YYYY') : '' });
+  };
+  return (
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <DatePicker
+        value={value ? dayjs(value, 'DD/MM/YYYY') : null}
+        onChange={handleChange}
+        format="DD/MM/YYYY"
+        slotProps={{ textField: { size: 'small', variant: 'standard', sx: { width: '100%' } } }}
+      />
+    </LocalizationProvider>
+  );
+};
+
 const PaymentsListDialog = ({ open, handleClose, member, paymentTypes, onPaymentSaved }) => {
   const [rows, setRows] = useState([]);
   const [rowModesModel, setRowModesModel] = useState({});
@@ -1876,6 +1893,12 @@ const PaymentsListDialog = ({ open, handleClose, member, paymentTypes, onPayment
     }
   }, [open, member]);
 
+  const handleRowEditStop = (params, event) => {
+    if (params.reason === GridRowEditStopReasons.rowFocusOut) {
+      event.defaultMuiPrevented = true;
+    }
+  };
+
   const handleDialogClose = () => {
     const cancelledModel = {};
     Object.keys(rowModesModel).forEach(id => {
@@ -1895,17 +1918,19 @@ const PaymentsListDialog = ({ open, handleClose, member, paymentTypes, onPayment
 
   const handleAddRow = () => {
     const id = `new-${Date.now()}`;
+    const packageAmount = rows.length > 0 ? (rows[0]?.amount || 0) : 0;
+    const balanceAmount = rows.length > 0 ? (rows[rows.length - 1]?.pendingamount || 0) : 0;
     const newRow = {
       id,
       userpackagemappingid: getDefaultMappingId(),
       paymenttype: '',
-      amount: 0,
+      amount: packageAmount,
       transactionid: '',
       notes: '',
       roundedpayment: 0,
       paymentstatus: 'Paid',
       pendingamount: 0,
-      payableamount: 0,
+      payableamount: balanceAmount,
       discount: 0,
       reminderdate: dayjs().format('DD/MM/YYYY'),
       paymentdate: dayjs().format('DD/MM/YYYY'),
@@ -1974,7 +1999,13 @@ const PaymentsListDialog = ({ open, handleClose, member, paymentTypes, onPayment
         ];
       },
     },
-    { field: 'paymentdate', headerName: 'Payment Date', editable: true, flex: 1 },
+    {
+      field: 'paymentdate',
+      headerName: 'Payment Date',
+      editable: true,
+      flex: 1,
+      renderEditCell: (params) => <DatePickerEditCell {...params} />,
+    },
     {
       field: 'paymenttype',
       headerName: 'Payment Type',
@@ -1983,7 +2014,7 @@ const PaymentsListDialog = ({ open, handleClose, member, paymentTypes, onPayment
       type: 'singleSelect',
       valueOptions: paymentTypeOptions,
     },
-    { field: 'amount', headerName: 'Amount', type: 'number', editable: true, flex: 1 },
+    { field: 'amount', headerName: 'Package Amount', type: 'number', editable: false, flex: 1 },
     { field: 'discount', headerName: 'Discount', type: 'number', editable: true, flex: 1 },
     { field: 'payableamount', headerName: 'Payable Amount', type: 'number', editable: true, flex: 1 },
     { field: 'roundedpayment', headerName: 'Paid Amount', type: 'number', editable: true, flex: 1 },
@@ -2021,6 +2052,7 @@ const PaymentsListDialog = ({ open, handleClose, member, paymentTypes, onPayment
           editMode="row"
           rowModesModel={rowModesModel}
           onRowModesModelChange={setRowModesModel}
+          onRowEditStop={handleRowEditStop}
           processRowUpdate={processRowUpdate}
           onProcessRowUpdateError={(error) =>
             toast.error("Error saving payment: " + error.message, { position: "top-right" })
