@@ -909,7 +909,7 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
                   <div className='form-group'>
                     <Field
                       name="hardwareuserid"
-                      label="Harware User Id"
+                      label="Hardware User Id"
                       fullWidth
                       as={TextField}
                       variant="outlined"
@@ -943,7 +943,6 @@ const MemberDialog = ({open, handleClose, isEdit, initialValues, handleFormSubmi
                               placeholder="DD/MM/YYYY"                            
                             />
                           )}
-                          disabled={isEdit}
                         />
                       )}
                     </Field>
