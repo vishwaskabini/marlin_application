@@ -1058,7 +1058,6 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
     pendingamount: Yup.number(),
     notes: Yup.string(),
     timeslotid: Yup.string().required("slots is required"),
-    noofclasses: Yup.number().min(0, 'Must be 0 or more'),
     userpackagestatusid: Yup.string(),
     reminderdate: Yup.string().required('Reminder date is required'),
     paymentdate: Yup.string().required('Payment date is required')
@@ -1231,20 +1230,6 @@ const PackageDialog = ({open, handleClose, isEdit, initialValues, handleFormSubm
                             <MenuItem key={slot.id} value={slot.id}>{slot.name} - {slot.time}</MenuItem>
                           ))}
                         </Field>
-                      </div>
-                      <div className='form-group'>
-                        <Field
-                          name="noofclasses"
-                          as={TextField}
-                          label="No of Classes"
-                          type="number"
-                          fullWidth
-                          value={values.noofclasses}
-                          onChange={handleChange}
-                          error={touched.noofclasses && Boolean(errors.noofclasses)}
-                          helperText={touched.noofclasses && errors.noofclasses}
-                          InputProps={{ inputProps: { min: 0 } }}
-                        />
                       </div>
                     </div>
                     {!isEdit && (
@@ -1892,6 +1877,16 @@ const PaymentsListDialog = ({ open, handleClose, member, paymentTypes, onPayment
     }
   }, [open, member]);
 
+  const handleDialogClose = () => {
+    const cancelledModel = {};
+    Object.keys(rowModesModel).forEach(id => {
+      cancelledModel[id] = { mode: GridRowModes.View, ignoreModifications: true };
+    });
+    setRowModesModel(cancelledModel);
+    setRows(prev => prev.filter(r => !r.isNew));
+    handleClose();
+  };
+
   const getDefaultMappingId = () => {
     if (member?.packagepaymentDetails?.length > 0) {
       return member.packagepaymentDetails[0].userpackagemappingid;
@@ -2007,7 +2002,7 @@ const PaymentsListDialog = ({ open, handleClose, member, paymentTypes, onPayment
   ];
 
   return (
-    <Dialog open={open} onClose={handleClose} PaperProps={{ sx: { minWidth: "95%" } }}>
+    <Dialog open={open} onClose={handleDialogClose} PaperProps={{ sx: { minWidth: "95%" } }}>
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span>Payments — {member?.name}</span>
         <Button
@@ -2039,7 +2034,7 @@ const PaymentsListDialog = ({ open, handleClose, member, paymentTypes, onPayment
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} variant="outlined">Close</Button>
+        <Button onClick={handleDialogClose} variant="outlined">Close</Button>
       </DialogActions>
     </Dialog>
   );
