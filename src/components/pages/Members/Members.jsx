@@ -2128,8 +2128,8 @@ const ViewDetailsDialog = ({open, handleClose, selectedMember, getPackageName}) 
         const formattedDataPackage = data[0].packageDetails.map((item) => ({
           ...item,
           packageName: getPackageName(item.packageid),
-          actualstartdate: dayjs(item.updateddate).format("DD/MM/YYYY"),
-          actualenddate: dayjs(item.updateddate).format("DD/MM/YYYY")
+          actualstartdate: dayjs(item.actualstartdate).format("DD/MM/YYYY"),
+          actualenddate: dayjs(item.actualenddate).format("DD/MM/YYYY")
         }));        
         setPackageDetails(formattedDataPackage);      
         const formattedData = data[0].packagepaymentDetails.map((item) => ({

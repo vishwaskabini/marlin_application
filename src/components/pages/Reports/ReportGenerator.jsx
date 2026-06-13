@@ -236,32 +236,32 @@ const ReportGenerator = () => {
     let fromDate, toDate;
   
     switch (value) {
-      case 1: // Today
+      case "1": // Today
         fromDate = today;
         toDate = today.endOf("day");
         break;
-        
-      case 2: // Current Week
-        fromDate = today.startOf("week"); 
+
+      case "2": // Current Week
+        fromDate = today.startOf("week");
         toDate = today.endOf("week");
         break;
-  
-      case 3: // Current Month
-        fromDate = today.startOf("month"); 
+
+      case "3": // Current Month
+        fromDate = today.startOf("month");
         toDate = today.endOf("month");
         break;
-  
-      case 4: // Current Year
-        fromDate = today.startOf("year"); 
+
+      case "4": // Current Year
+        fromDate = today.startOf("year");
         toDate = today.endOf("year");
         break;
-  
-      case 5: // Last Year
+
+      case "5": // Last Year
         fromDate = today.subtract(1, "year").startOf("year");
         toDate = today.subtract(1, "year").endOf("year");
         break;
 
-      case 6: // Custom
+      case "6": // Custom
         fromDate = startDate;
         toDate = endDate;
         break;
@@ -313,12 +313,12 @@ const ReportGenerator = () => {
                   label="Duration"
                   onChange={handleDateChange}
                 >
-                  <MenuItem value={1}>Today</MenuItem>
-                  <MenuItem value={2}>Current Week</MenuItem>
-                  <MenuItem value={3}>Current Month</MenuItem>
-                  <MenuItem value={4}>Current Year</MenuItem>
-                  <MenuItem value={5}>Last Year</MenuItem>
-                  <MenuItem value={6}>Custom</MenuItem>
+                  <MenuItem value="1">Today</MenuItem>
+                  <MenuItem value="2">Current Week</MenuItem>
+                  <MenuItem value="3">Current Month</MenuItem>
+                  <MenuItem value="4">Current Year</MenuItem>
+                  <MenuItem value="5">Last Year</MenuItem>
+                  <MenuItem value="6">Custom</MenuItem>
                 </Select>
               </FormControl>
             </div>
